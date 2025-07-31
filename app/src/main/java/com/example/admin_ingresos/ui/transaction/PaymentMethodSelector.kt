@@ -51,7 +51,7 @@ fun PaymentMethodSelector(
                     supportingText = error?.let { { Text(it) } },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor(),
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
                     colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                 )
                 

@@ -1,6 +1,7 @@
 package com.example.admin_ingresos.ui.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -17,7 +18,7 @@ sealed class BottomNavItem(
 ) {
     object Dashboard : BottomNavItem("dashboard", "Inicio", Icons.Default.Home)
     object Transactions : BottomNavItem("addTransaction", "Transacciones", Icons.Default.Add)
-    object History : BottomNavItem("history", "Historial", Icons.Default.List)
+    object History : BottomNavItem("history", "Historial", Icons.AutoMirrored.Filled.List)
     object Reports : BottomNavItem("reports", "Reportes", Icons.Default.Analytics)
 }
 

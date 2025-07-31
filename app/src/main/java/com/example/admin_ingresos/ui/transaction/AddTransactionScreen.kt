@@ -68,13 +68,17 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
     }
     
     fun validateCategory(categoryId: Int?): String? {
-        return if (categoryId == null) "Selecciona una categoría" else null
+        // Make category optional if no categories exist
+        return if (categories.isEmpty()) null 
+               else if (categoryId == null) "Selecciona una categoría" 
+               else null
     }
     
     // Check if form is valid
     val isFormValid = amountError == null && descriptionError == null && 
                      categoryError == null && amount.isNotBlank() && 
-                     description.isNotBlank() && selectedCategoryId != null
+                     description.isNotBlank() && 
+                     (categories.isEmpty() || selectedCategoryId != null)
 
     Column(
         modifier = Modifier
@@ -185,27 +189,23 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
             modifier = Modifier.fillMaxWidth()
         )
         
-        // Category selector
-        if (categories.isNotEmpty()) {
-            CategorySelector(
-                categories = categories,
-                selectedCategoryId = selectedCategoryId,
-                onCategorySelected = { categoryId ->
-                    selectedCategoryId = categoryId
-                    categoryError = validateCategory(categoryId)
-                },
-                error = categoryError
-            )
-        }
+        // Category selector - Always show, even if empty
+        CategorySelector(
+            categories = categories,
+            selectedCategoryId = selectedCategoryId,
+            onCategorySelected = { categoryId ->
+                selectedCategoryId = categoryId
+                categoryError = validateCategory(categoryId)
+            },
+            error = categoryError
+        )
         
-        // Payment method selector
-        if (paymentMethods.isNotEmpty()) {
-            PaymentMethodSelector(
-                paymentMethods = paymentMethods,
-                selectedPaymentMethodId = selectedPaymentMethodId,
-                onPaymentMethodSelected = { selectedPaymentMethodId = it }
-            )
-        }
+        // Payment method selector - Always show, even if empty
+        PaymentMethodSelector(
+            paymentMethods = paymentMethods,
+            selectedPaymentMethodId = selectedPaymentMethodId,
+            onPaymentMethodSelected = { selectedPaymentMethodId = it }
+        )
         
         // Action buttons
         Row(
