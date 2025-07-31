@@ -3,6 +3,10 @@ package com.example.admin_ingresos
 import android.content.Context
 import androidx.room.Room
 import com.example.admin_ingresos.data.AppDatabase
+import com.example.admin_ingresos.data.SampleDataProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 object AppDatabaseProvider {
     @Volatile
@@ -14,8 +18,17 @@ object AppDatabaseProvider {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "admin_ingresos_db"
-            ).build()
+            )
+            .addMigrations(AppDatabase.MIGRATION_1_2)
+            .build()
+            
             INSTANCE = instance
+            
+            // Initialize sample data in background
+            CoroutineScope(Dispatchers.IO).launch {
+                SampleDataProvider.initializeSampleData(instance)
+            }
+            
             instance
         }
     }

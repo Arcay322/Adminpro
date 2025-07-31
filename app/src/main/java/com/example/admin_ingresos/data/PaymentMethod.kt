@@ -6,5 +6,6 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "payment_methods")
 data class PaymentMethod(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val name: String // Ejemplo: "Efectivo", "Tarjeta de débito", "Tarjeta de crédito"
+    val name: String,
+    val icon: String = "💰" // emoji icon
 )

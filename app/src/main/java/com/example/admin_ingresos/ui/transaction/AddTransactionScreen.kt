@@ -41,12 +41,27 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
     var selectedCategoryId by remember { mutableStateOf<Int?>(null) }
     var categoryError by remember { mutableStateOf<String?>(null) }
     var selectedPaymentMethodId by remember { mutableStateOf<Int?>(null) }
+    var showDuplicateDialog by remember { mutableStateOf(false) }
+    var duplicateTransactions by remember { mutableStateOf<List<com.example.admin_ingresos.data.Transaction>>(emptyList()) }
+    var receiptPhotoUri by remember { mutableStateOf<android.net.Uri?>(null) }
     
     val categories by produceState(initialValue = emptyList<com.example.admin_ingresos.data.Category>(), db) {
         value = db.categoryDao().getAll()
     }
     val paymentMethods by produceState(initialValue = emptyList<com.example.admin_ingresos.data.PaymentMethod>(), db) {
         value = db.paymentMethodDao().getAll()
+    }
+    
+    // Autocomplete suggestions
+    var descriptionSuggestions by remember { mutableStateOf<List<String>>(emptyList()) }
+    
+    // Load suggestions when description changes
+    LaunchedEffect(description) {
+        if (description.length >= 2) {
+            descriptionSuggestions = transactionViewModel.getDescriptionSuggestions(description)
+        } else {
+            descriptionSuggestions = emptyList()
+        }
     }
     
     // Validation functions
@@ -174,18 +189,31 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
             modifier = Modifier.fillMaxWidth()
         )
         
-        // Description field
-        OutlinedTextField(
+        // Description field with autocomplete
+        AutoCompleteTextField(
             value = description,
             onValueChange = { newValue ->
                 description = newValue
                 descriptionError = validateDescription(newValue)
             },
+            suggestions = descriptionSuggestions,
+            onSuggestionSelected = { selectedDescription ->
+                description = selectedDescription
+                descriptionError = validateDescription(selectedDescription)
+                
+                // Auto-suggest category based on description
+                LaunchedEffect(selectedDescription) {
+                    val suggestedCategoryId = transactionViewModel.suggestCategoryForDescription(selectedDescription)
+                    if (suggestedCategoryId != null && selectedCategoryId == null) {
+                        selectedCategoryId = suggestedCategoryId
+                        categoryError = validateCategory(suggestedCategoryId)
+                    }
+                }
+            },
             label = { Text("Descripción") },
             placeholder = { Text("Ej: Compra en supermercado") },
             isError = descriptionError != null,
             supportingText = descriptionError?.let { { Text(it) } },
-            singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
         
@@ -197,6 +225,13 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
                 selectedCategoryId = categoryId
                 categoryError = validateCategory(categoryId)
             },
+            onNewCategoryAdded = { categoryName ->
+                // Add new category to database
+                transactionViewModel.addCategory(categoryName) { newCategoryId ->
+                    selectedCategoryId = newCategoryId
+                    categoryError = validateCategory(newCategoryId)
+                }
+            },
             error = categoryError
         )
         
@@ -205,6 +240,12 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
             paymentMethods = paymentMethods,
             selectedPaymentMethodId = selectedPaymentMethodId,
             onPaymentMethodSelected = { selectedPaymentMethodId = it }
+        )
+        
+        // Receipt photo capture
+        ReceiptCameraCapture(
+            onPhotoTaken = { uri -> receiptPhotoUri = uri },
+            currentPhotoUri = receiptPhotoUri
         )
         
         // Action buttons
@@ -224,15 +265,32 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
                 onClick = {
                     if (isFormValid) {
                         val amountDouble = amount.toDoubleOrNull() ?: 0.0
-                        transactionViewModel.saveTransaction(
-                            amount = amountDouble,
-                            type = type,
-                            categoryId = selectedCategoryId ?: 0,
-                            description = description,
-                            date = System.currentTimeMillis(),
-                            paymentMethodId = selectedPaymentMethodId
-                        )
-                        onSave()
+                        val categoryId = selectedCategoryId ?: 0
+                        
+                        // Check for duplicates before saving
+                        LaunchedEffect(Unit) {
+                            val duplicates = transactionViewModel.checkForDuplicates(
+                                amount = amountDouble,
+                                description = description,
+                                categoryId = categoryId
+                            )
+                            
+                            if (duplicates.isNotEmpty()) {
+                                duplicateTransactions = duplicates
+                                showDuplicateDialog = true
+                            } else {
+                                // No duplicates, save directly
+                                transactionViewModel.saveTransaction(
+                                    amount = amountDouble,
+                                    type = type,
+                                    categoryId = categoryId,
+                                    description = description,
+                                    date = System.currentTimeMillis(),
+                                    paymentMethodId = selectedPaymentMethodId
+                                )
+                                onSave()
+                            }
+                        }
                     }
                 },
                 enabled = isFormValid,
@@ -244,5 +302,54 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
         
         // Bottom spacing for better scrolling
         Spacer(modifier = Modifier.height(80.dp))
+    }
+    
+    // Duplicate Transaction Dialog
+    if (showDuplicateDialog) {
+        AlertDialog(
+            onDismissRequest = { showDuplicateDialog = false },
+            title = { Text("Posible Transacción Duplicada") },
+            text = { 
+                Column {
+                    Text("Se encontraron transacciones similares recientes:")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    duplicateTransactions.take(3).forEach { transaction ->
+                        Text(
+                            text = "• ${transaction.description} - $${String.format("%.2f", transaction.amount)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("¿Estás seguro de que quieres agregar esta transacción?")
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // Save anyway
+                        val amountDouble = amount.toDoubleOrNull() ?: 0.0
+                        val categoryId = selectedCategoryId ?: 0
+                        transactionViewModel.saveTransaction(
+                            amount = amountDouble,
+                            type = type,
+                            categoryId = categoryId,
+                            description = description,
+                            date = System.currentTimeMillis(),
+                            paymentMethodId = selectedPaymentMethodId
+                        )
+                        showDuplicateDialog = false
+                        onSave()
+                    }
+                ) {
+                    Text("Sí, agregar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDuplicateDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }

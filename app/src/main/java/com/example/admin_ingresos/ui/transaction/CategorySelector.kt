@@ -15,9 +15,12 @@ fun CategorySelector(
     categories: List<Category>,
     selectedCategoryId: Int?,
     onCategorySelected: (Int) -> Unit,
+    onNewCategoryAdded: (String) -> Unit = {},
     error: String? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var showAddDialog by remember { mutableStateOf(false) }
+    var newCategoryName by remember { mutableStateOf("") }
     val selectedCategory = categories.find { it.id == selectedCategoryId }
 
     Card(
@@ -61,6 +64,7 @@ fun CategorySelector(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
+                    // Existing categories
                     categories.forEach { category ->
                         DropdownMenuItem(
                             text = { 
@@ -76,8 +80,72 @@ fun CategorySelector(
                             contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                         )
                     }
+                    
+                    // Add new category option
+                    if (categories.isNotEmpty()) {
+                        HorizontalDivider()
+                    }
+                    DropdownMenuItem(
+                        text = { 
+                            Text(
+                                text = "+ Agregar nueva categoría",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            ) 
+                        },
+                        onClick = {
+                            expanded = false
+                            showAddDialog = true
+                        },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                    )
                 }
             }
         }
+    }
+    
+    // Dialog to add new category
+    if (showAddDialog) {
+        AlertDialog(
+            onDismissRequest = { 
+                showAddDialog = false
+                newCategoryName = ""
+            },
+            title = { Text("Nueva Categoría") },
+            text = {
+                OutlinedTextField(
+                    value = newCategoryName,
+                    onValueChange = { newCategoryName = it },
+                    label = { Text("Nombre de la categoría") },
+                    placeholder = { Text("Ej: Comida, Transporte, etc.") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (newCategoryName.isNotBlank()) {
+                            onNewCategoryAdded(newCategoryName.trim())
+                            showAddDialog = false
+                            newCategoryName = ""
+                        }
+                    },
+                    enabled = newCategoryName.isNotBlank()
+                ) {
+                    Text("Agregar")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { 
+                        showAddDialog = false
+                        newCategoryName = ""
+                    }
+                ) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }

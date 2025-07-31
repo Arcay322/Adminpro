@@ -62,6 +62,8 @@ dependencies {
     implementation("androidx.compose.ui:ui-text:1.6.7")
     // Material Icons
     implementation("androidx.compose.material:material-icons-extended:1.6.7")
+    // Coil for image loading
+    implementation("io.coil-kt:coil-compose:2.5.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

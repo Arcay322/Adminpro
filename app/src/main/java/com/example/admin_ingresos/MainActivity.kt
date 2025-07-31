@@ -66,6 +66,9 @@ fun MainNavigation() {
                     onViewReports = { navController.navigate("reports") }
                 )
             }
+            composable("categories") {
+                com.example.admin_ingresos.ui.category.CategoryManagementScreen()
+            }
             composable("reports") {
                 com.example.admin_ingresos.ui.reports.ReportsScreen()
             }

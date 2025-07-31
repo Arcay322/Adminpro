@@ -19,18 +19,20 @@ class DashboardViewModel(private val repository: TransactionRepository) : ViewMo
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
     
-    // Backward compatibility
-    val transactions: StateFlow<List<Transaction>> = MutableStateFlow(_uiState.value.transactions)
+    private val _transactions = MutableStateFlow<List<Transaction>>(emptyList())
+    val transactions: StateFlow<List<Transaction>> = _transactions.asStateFlow()
 
     fun loadTransactions() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                val transactions = repository.getAllTransactions()
+                val transactionsList = repository.getAllTransactions()
                 _uiState.value = _uiState.value.copy(
-                    transactions = transactions,
+                    transactions = transactionsList,
                     isLoading = false
                 )
+                // Update backward compatibility StateFlow
+                _transactions.value = transactionsList
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
