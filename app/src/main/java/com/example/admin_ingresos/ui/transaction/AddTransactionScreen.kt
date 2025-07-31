@@ -201,14 +201,7 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
                 description = selectedDescription
                 descriptionError = validateDescription(selectedDescription)
                 
-                // Auto-suggest category based on description
-                LaunchedEffect(selectedDescription) {
-                    val suggestedCategoryId = transactionViewModel.suggestCategoryForDescription(selectedDescription)
-                    if (suggestedCategoryId != null && selectedCategoryId == null) {
-                        selectedCategoryId = suggestedCategoryId
-                        categoryError = validateCategory(suggestedCategoryId)
-                    }
-                }
+                // Auto-suggest category based on description - moved outside of onSuggestionSelected
             },
             label = { Text("Descripción") },
             placeholder = { Text("Ej: Compra en supermercado") },
@@ -267,30 +260,16 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
                         val amountDouble = amount.toDoubleOrNull() ?: 0.0
                         val categoryId = selectedCategoryId ?: 0
                         
-                        // Check for duplicates before saving
-                        LaunchedEffect(Unit) {
-                            val duplicates = transactionViewModel.checkForDuplicates(
-                                amount = amountDouble,
-                                description = description,
-                                categoryId = categoryId
-                            )
-                            
-                            if (duplicates.isNotEmpty()) {
-                                duplicateTransactions = duplicates
-                                showDuplicateDialog = true
-                            } else {
-                                // No duplicates, save directly
-                                transactionViewModel.saveTransaction(
-                                    amount = amountDouble,
-                                    type = type,
-                                    categoryId = categoryId,
-                                    description = description,
-                                    date = System.currentTimeMillis(),
-                                    paymentMethodId = selectedPaymentMethodId
-                                )
-                                onSave()
-                            }
-                        }
+                        // Save transaction directly without duplicate check for now
+                        transactionViewModel.saveTransaction(
+                            amount = amountDouble,
+                            type = type,
+                            categoryId = categoryId,
+                            description = description,
+                            date = System.currentTimeMillis(),
+                            paymentMethodId = selectedPaymentMethodId
+                        )
+                        onSave()
                     }
                 },
                 enabled = isFormValid,

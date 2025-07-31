@@ -58,7 +58,7 @@ fun AutoCompleteTextField(
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = false)
+                    .menuAnchor()
                     .onFocusChanged { focusState ->
                         if (focusState.isFocused && textFieldValue.text.isNotEmpty()) {
                             expanded = suggestions.isNotEmpty()
@@ -71,8 +71,7 @@ fun AutoCompleteTextField(
             if (expanded && suggestions.isNotEmpty()) {
                 ExposedDropdownMenu(
                     expanded = true,
-                    onDismissRequest = { expanded = false },
-                    properties = PopupProperties(focusable = false)
+                    onDismissRequest = { expanded = false }
                 ) {
                     suggestions.take(5).forEach { suggestion ->
                         DropdownMenuItem(
