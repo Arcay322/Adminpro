@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fondo y básicos -->
+    <color name="bg_slate_50">#F8FAFC</color>
+    <color name="bg_white">#FFFFFF</color>
+    <color name="text_black">#111827</color>
+    <color name="text_gray_800">#1F2937</color>
+    <color name="text_gray_500">#6B7280</color>
+    <!-- Primario/acento -->
+    <color name="indigo_500">#6366F1</color>
+    <!-- Ingresos -->
+    <color name="green_600">#16A34A</color>
+    <!-- Gastos -->
+    <color name="red_500">#EF4444</color>
+    <color name="orange_500">#F97316</color>
+    <!-- Cards y sombras -->
+    <color name="card_bg">#FFFFFF</color>
+    <color name="card_shadow">#E5E7EB</color>
+</resources>
