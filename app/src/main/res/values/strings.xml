@@ -1,3 +1,86 @@
 <resources>
-    <string name="app_name">Admin_ingresos</string>
+    <string name="app_name">CashFlow</string>
+    
+    <!-- Dashboard -->
+    <string name="dashboard_title">Dashboard</string>
+    <string name="dashboard_balance">Balance Total</string>
+    <string name="dashboard_income">Ingresos</string>
+    <string name="dashboard_expenses">Gastos</string>
+    <string name="dashboard_recent_transactions">Transacciones Recientes</string>
+    <string name="dashboard_view_all">Ver todas</string>
+    <string name="dashboard_no_transactions">No hay transacciones recientes</string>
+    
+    <!-- Navigation -->
+    <string name="nav_dashboard">Inicio</string>
+    <string name="nav_budget">Presupuestos</string>
+    <string name="nav_categories">Categorías</string>
+    <string name="nav_history">Historial</string>
+    <string name="nav_reports">Reportes</string>
+    <string name="nav_settings">Configuración</string>
+    
+    <!-- Transactions -->
+    <string name="transaction_add">Añadir transacción</string>
+    <string name="transaction_income">Ingreso</string>
+    <string name="transaction_expense">Gasto</string>
+    <string name="transaction_description">Descripción</string>
+    <string name="transaction_amount">Monto</string>
+    <string name="transaction_category">Categoría</string>
+    <string name="transaction_date">Fecha</string>
+    <string name="transaction_save">Guardar</string>
+    <string name="transaction_cancel">Cancelar</string>
+    
+    <!-- Budget -->
+    <string name="budget_title">Presupuestos</string>
+    <string name="budget_create">Crear presupuesto</string>
+    <string name="budget_progress">Progreso</string>
+    <string name="budget_remaining">Restante</string>
+    <string name="budget_spent">Gastado</string>
+    
+    <!-- Categories -->
+    <string name="categories_title">Categorías</string>
+    <string name="categories_add">Añadir categoría</string>
+    <string name="categories_edit">Editar categoría</string>
+    <string name="categories_delete">Eliminar categoría</string>
+    <string name="categories_name">Nombre</string>
+    <string name="categories_icon">Icono</string>
+    <string name="categories_color">Color</string>
+    
+    <!-- Reports -->
+    <string name="reports_title">Reportes</string>
+    <string name="reports_export_pdf">Exportar PDF</string>
+    <string name="reports_export_excel">Exportar Excel</string>
+    <string name="reports_period">Período</string>
+    <string name="reports_this_month">Este mes</string>
+    <string name="reports_last_month">Mes pasado</string>
+    <string name="reports_custom">Personalizado</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">Configuración</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_currency">Moneda</string>
+    <string name="settings_notifications">Notificaciones</string>
+    <string name="settings_data_management">Gestión de datos</string>
+    <string name="settings_about">Acerca de CashFlow</string>
+    
+    <!-- Common -->
+    <string name="save">Guardar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="delete">Eliminar</string>
+    <string name="edit">Editar</string>
+    <string name="back">Volver</string>
+    <string name="confirm">Confirmar</string>
+    <string name="loading">Cargando...</string>
+    <string name="error">Error</string>
+    <string name="success">Éxito</string>
+    
+    <!-- Onboarding -->
+    <string name="onboarding_welcome">¡Bienvenido a CashFlow!</string>
+    <string name="onboarding_control_finances">Controla tus finanzas personales de manera inteligente</string>
+    <string name="onboarding_track_expenses">Registra gastos e ingresos fácilmente</string>
+    <string name="onboarding_smart_budgets">Crea presupuestos inteligentes</string>
+    <string name="onboarding_detailed_reports">Obtén reportes detallados</string>
+    <string name="onboarding_get_started">Comenzar</string>
+    <string name="onboarding_skip">Saltar</string>
+    <string name="onboarding_next">Siguiente</string>
+    <string name="onboarding_previous">Anterior</string>
 </resources>

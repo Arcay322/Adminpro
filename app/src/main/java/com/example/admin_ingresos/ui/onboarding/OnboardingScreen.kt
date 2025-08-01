@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.graphicsLayer
+import com.example.admin_ingresos.ui.theme.*
 import kotlinx.coroutines.launch
 
 data class OnboardingPage(
@@ -36,28 +37,68 @@ fun OnboardingScreen(
 ) {
     val pages = listOf(
         OnboardingPage(
-            title = "Controla tus Finanzas",
-            description = "Registra tus ingresos y gastos de manera fácil y rápida. Mantén un control total de tu dinero.",
+            title = "¡Bienvenido a CashFlow!",
+            description = "La aplicación inteligente que te ayudará a tomar control total de tus finanzas personales de manera fácil y eficiente.",
             icon = "💰",
-            backgroundColor = Color(0xFF4CAF50)
+            backgroundColor = CashFlowPrimary
+        ),
+        OnboardingPage(
+            title = "Registra tus Transacciones",
+            description = "Lleva un registro detallado de todos tus ingresos y gastos. Categoriza, filtra y organiza tu dinero como nunca antes.",
+            icon = "�",
+            backgroundColor = CashFlowSecondary
         ),
         OnboardingPage(
             title = "Presupuestos Inteligentes",
-            description = "Crea presupuestos personalizados y recibe alertas cuando te acerques a los límites.",
-            icon = "📊",
-            backgroundColor = Color(0xFF2196F3)
+            description = "Crea presupuestos personalizados y recibe alertas inteligentes cuando te acerques a tus límites de gasto.",
+            icon = "🎯",
+            backgroundColor = TertiaryPurple
         ),
         OnboardingPage(
-            title = "Análisis Detallado",
-            description = "Visualiza tendencias, patrones de gasto y obtén insights inteligentes sobre tus finanzas.",
+            title = "Análisis y Reportes",
+            description = "Visualiza tendencias, patrones de gasto y obtén insights detallados sobre tu salud financiera con gráficos interactivos.",
             icon = "📈",
-            backgroundColor = Color(0xFF9C27B0)
+            backgroundColor = Success
         ),
         OnboardingPage(
-            title = "Reportes y Exportación",
-            description = "Genera reportes profesionales en PDF y CSV. Comparte tu información financiera fácilmente.",
+            title = "Exporta y Comparte",
+            description = "Genera reportes profesionales en PDF y Excel. Mantén respaldos seguros y comparte información cuando la necesites.",
             icon = "📄",
-            backgroundColor = Color(0xFFFF9800)
+            backgroundColor = Warning
+        )
+    )
+            val pages = listOf(
+        OnboardingPage(
+            title = "¡Bienvenido a CashFlow!",
+            description = "Tu compañero financiero inteligente que te ayuda a tomar control total de tus finanzas personales con herramientas avanzadas.",
+            icon = "💰",
+            backgroundColor = CashFlowPrimary
+        ),
+        OnboardingPage(
+            title = "Gestión Inteligente",
+            description = "Registra tus ingresos y gastos de manera fácil y rápida. Categoriza automáticamente y obtén insights sobre tus patrones de gasto.",
+            icon = "📱",
+            backgroundColor = CashFlowSecondary
+        ),
+        OnboardingPage(
+            title = "Presupuestos Dinámicos",
+            description = "Crea presupuestos personalizados con alertas inteligentes. Recibe notificaciones cuando te acerques a los límites.",
+            icon = "🎯",
+            backgroundColor = TertiaryPurple
+        ),
+        OnboardingPage(
+            title = "Análisis Avanzado",
+            description = "Visualiza tendencias, patrones de gasto y obtén reportes profesionales con gráficos interactivos y análisis detallados.",
+            icon = "📈",
+            backgroundColor = Success
+        ),
+        OnboardingPage(
+            title = "Reportes Profesionales",
+            description = "Genera reportes detallados en PDF y Excel. Exporta y comparte tu información financiera de manera segura y profesional.",
+            icon = "📄",
+            backgroundColor = Warning
+        )
+    )
         )
     )
     

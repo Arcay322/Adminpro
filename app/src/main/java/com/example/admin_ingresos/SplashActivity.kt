@@ -9,6 +9,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,9 +22,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.graphicsLayer
 import com.example.admin_ingresos.data.PreferencesManager
 import com.example.admin_ingresos.ui.onboarding.OnboardingScreen
-import com.example.admin_ingresos.ui.theme.Admin_ingresosTheme
+import com.example.admin_ingresos.ui.theme.CashFlowTheme
+import com.example.admin_ingresos.ui.theme.CashFlowPrimary
+import com.example.admin_ingresos.ui.theme.CashFlowPrimaryDark
 import kotlinx.coroutines.delay
 
 @SuppressLint("CustomSplashScreen")
@@ -36,7 +40,7 @@ class SplashActivity : ComponentActivity() {
         preferencesManager = PreferencesManager(this)
         
         setContent {
-            Admin_ingresosTheme {
+            CashFlowTheme {
                 var showOnboarding by remember { mutableStateOf(false) }
                 var showSplash by remember { mutableStateOf(true) }
                 
@@ -80,34 +84,27 @@ class SplashActivity : ComponentActivity() {
 fun SplashScreen(onSplashFinished: () -> Unit) {
     var startAnimation by remember { mutableStateOf(false) }
     
-    // Animation values
-    val alphaAnimation by animateFloatAsState(
+    val logoScale by animateFloatAsState(
         targetValue = if (startAnimation) 1f else 0f,
-        animationSpec = tween(durationMillis = 1000),
-        label = "alpha"
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "logoScale"
     )
     
-    val scaleAnimation by animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0.3f,
+    val titleAlpha by animateFloatAsState(
+        targetValue = if (startAnimation) 1f else 0f,
         animationSpec = tween(
             durationMillis = 1000,
-            easing = FastOutSlowInEasing
-        ),
-        label = "scale"
-    )
-    
-    val progressAnimation by animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0f,
-        animationSpec = tween(
-            durationMillis = 2000,
             delayMillis = 500
         ),
-        label = "progress"
+        label = "titleAlpha"
     )
     
     LaunchedEffect(Unit) {
         startAnimation = true
-        delay(3000) // Show splash for 3 seconds
+        delay(2500)
         onSplashFinished()
     }
     
@@ -117,8 +114,8 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             .background(
                 brush = androidx.compose.ui.graphics.Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF1976D2),
-                        Color(0xFF42A5F5)
+                        CashFlowPrimary,
+                        CashFlowPrimaryDark
                     )
                 )
             ),
@@ -128,13 +125,12 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // App Icon/Logo
+            // Logo/Icon
             Card(
                 modifier = Modifier
                     .size(120.dp)
-                    .scale(scaleAnimation)
-                    .alpha(alphaAnimation),
-                shape = androidx.compose.foundation.shape.CircleShape,
+                    .scale(logoScale),
+                shape = CircleShape,
                 colors = CardDefaults.cardColors(
                     containerColor = Color.White
                 ),
@@ -151,67 +147,57 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
                 }
             }
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             
             // App Name
             Text(
-                text = "Admin Ingresos",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.alpha(alphaAnimation)
+                text = "CashFlow",
+                style = MaterialTheme.typography.displayMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                ),
+                modifier = Modifier.alpha(titleAlpha)
             )
             
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // Tagline
             Text(
-                text = "Tu asistente financiero personal",
-                fontSize = 16.sp,
-                color = Color.White.copy(alpha = 0.9f),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.alpha(alphaAnimation)
+                text = "Tu compañero financiero inteligente",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    color = Color.White.copy(alpha = 0.9f)
+                ),
+                modifier = Modifier
+                    .alpha(titleAlpha)
+                    .padding(top = 8.dp)
             )
             
             Spacer(modifier = Modifier.height(48.dp))
             
             // Loading indicator
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.alpha(alphaAnimation)
-            ) {
-                LinearProgressIndicator(
-                    progress = progressAnimation,
-                    modifier = Modifier
-                        .width(200.dp)
-                        .height(4.dp),
-                    color = Color.White,
-                    trackColor = Color.White.copy(alpha = 0.3f)
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text(
-                    text = "Cargando...",
-                    fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.8f)
-                )
-            }
+            CircularProgressIndicator(
+                color = Color.White,
+                modifier = Modifier
+                    .size(32.dp)
+                    .alpha(titleAlpha),
+                strokeWidth = 3.dp
+            )
         }
         
         // Version info at bottom
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 32.dp)
-                .alpha(alphaAnimation),
+                .padding(32.dp)
+                .alpha(titleAlpha),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "Versión 1.0",
-                fontSize = 12.sp,
-                color = Color.White.copy(alpha = 0.7f)
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = Color.White.copy(alpha = 0.7f)
+                )
             )
+        }
+    }
+}
             Text(
                 text = "© 2024 Admin Ingresos",
                 fontSize = 10.sp,

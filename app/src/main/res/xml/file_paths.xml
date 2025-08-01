@@ -3,4 +3,5 @@
     <files-path name="receipts" path="receipts/" />
     <files-path name="exports" path="." />
     <cache-path name="cache" path="." />
+    <external-files-path name="external_files" path="." />
 </paths>

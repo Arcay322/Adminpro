@@ -1,19 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Fondo y básicos -->
-    <color name="bg_slate_50">#F8FAFC</color>
+    <!-- CashFlow Brand Colors -->
+    <color name="cashflow_primary">#1976D2</color>
+    <color name="cashflow_primary_variant">#1565C0</color>
+    <color name="cashflow_secondary">#26A69A</color>
+    <color name="cashflow_secondary_variant">#00695C</color>
+    
+    <!-- Material Design 3 Light Theme -->
+    <color name="md_theme_light_primary">#1976D2</color>
+    <color name="md_theme_light_onPrimary">#FFFFFF</color>
+    <color name="md_theme_light_primaryContainer">#D1E4FF</color>
+    <color name="md_theme_light_onPrimaryContainer">#001D36</color>
+    <color name="md_theme_light_secondary">#26A69A</color>
+    <color name="md_theme_light_onSecondary">#FFFFFF</color>
+    <color name="md_theme_light_secondaryContainer">#B2DFDB</color>
+    <color name="md_theme_light_onSecondaryContainer">#004D40</color>
+    <color name="md_theme_light_tertiary">#7C4DFF</color>
+    <color name="md_theme_light_onTertiary">#FFFFFF</color>
+    <color name="md_theme_light_tertiaryContainer">#E1BEE7</color>
+    <color name="md_theme_light_onTertiaryContainer">#4A148C</color>
+    <color name="md_theme_light_error">#D32F2F</color>
+    <color name="md_theme_light_onError">#FFFFFF</color>
+    <color name="md_theme_light_errorContainer">#FFCDD2</color>
+    <color name="md_theme_light_onErrorContainer">#B71C1C</color>
+    <color name="md_theme_light_background">#FAFAFA</color>
+    <color name="md_theme_light_onBackground">#1A1C1E</color>
+    <color name="md_theme_light_surface">#FFFFFF</color>
+    <color name="md_theme_light_onSurface">#1A1C1E</color>
+    <color name="md_theme_light_surfaceVariant">#F5F5F5</color>
+    <color name="md_theme_light_onSurfaceVariant">#424242</color>
+    <color name="md_theme_light_outline">#BDBDBD</color>
+    <color name="md_theme_light_outlineVariant">#E0E0E0</color>
+    
+    <!-- Material Design 3 Dark Theme -->
+    <color name="md_theme_dark_primary">#42A5F5</color>
+    <color name="md_theme_dark_onPrimary">#001D36</color>
+    <color name="md_theme_dark_primaryContainer">#0D47A1</color>
+    <color name="md_theme_dark_onPrimaryContainer">#D1E4FF</color>
+    <color name="md_theme_dark_secondary">#4DB6AC</color>
+    <color name="md_theme_dark_onSecondary">#004D40</color>
+    <color name="md_theme_dark_secondaryContainer">#00695C</color>
+    <color name="md_theme_dark_onSecondaryContainer">#B2DFDB</color>
+    <color name="md_theme_dark_tertiary">#B39DDB</color>
+    <color name="md_theme_dark_onTertiary">#4A148C</color>
+    <color name="md_theme_dark_tertiaryContainer">#6A1B9A</color>
+    <color name="md_theme_dark_onTertiaryContainer">#E1BEE7</color>
+    <color name="md_theme_dark_error">#EF5350</color>
+    <color name="md_theme_dark_onError">#B71C1C</color>
+    <color name="md_theme_dark_errorContainer">#C62828</color>
+    <color name="md_theme_dark_onErrorContainer">#FFCDD2</color>
+    <color name="md_theme_dark_background">#121212</color>
+    <color name="md_theme_dark_onBackground">#E0E0E0</color>
+    <color name="md_theme_dark_surface">#1E1E1E</color>
+    <color name="md_theme_dark_onSurface">#E0E0E0</color>
+    <color name="md_theme_dark_surfaceVariant">#2E2E2E</color>
+    <color name="md_theme_dark_onSurfaceVariant">#BDBDBD</color>
+    <color name="md_theme_dark_outline">#616161</color>
+    <color name="md_theme_dark_outlineVariant">#424242</color>
+    
+    <!-- Semantic Colors -->
+    <color name="success">#4CAF50</color>
+    <color name="success_container">#C8E6C9</color>
+    <color name="on_success_container">#1B5E20</color>
+    <color name="warning">#FF9800</color>
+    <color name="warning_container">#FFE0B2</color>
+    <color name="on_warning_container">#E65100</color>
+    <color name="info">#2196F3</color>
+    <color name="info_container">#BBDEFB</color>
+    <color name="on_info_container">#0D47A1</color>
+    
+    <!-- Financial Context Colors -->
+    <color name="income_green">#4CAF50</color>
+    <color name="income_green_light">#C8E6C9</color>
+    <color name="expense_red">#F44336</color>
+    <color name="expense_red_light">#FFCDD2</color>
+    <color name="budget_blue">#2196F3</color>
+    <color name="budget_blue_light">#BBDEFB</color>
+    <color name="savings_teal">#009688</color>
+    <color name="savings_teal_light">#B2DFDB</color>
+    
+    <!-- Category Colors -->
+    <color name="category_food">#FF5722</color>
+    <color name="category_transport">#3F51B5</color>
+    <color name="category_entertainment">#E91E63</color>
+    <color name="category_health">#4CAF50</color>
+    <color name="category_shopping">#9C27B0</color>
+    <color name="category_utilities">#607D8B</color>
+    <color name="category_education">#FF9800</color>
+    <color name="category_travel">#00BCD4</color>
+    <color name="category_other">#795548</color>
+    
+    <!-- Legacy colors for compatibility -->
+    <color name="bg_slate_50">#FAFAFA</color>
     <color name="bg_white">#FFFFFF</color>
-    <color name="text_black">#111827</color>
-    <color name="text_gray_800">#1F2937</color>
-    <color name="text_gray_500">#6B7280</color>
-    <!-- Primario/acento -->
-    <color name="indigo_500">#6366F1</color>
-    <!-- Ingresos -->
-    <color name="green_600">#16A34A</color>
-    <!-- Gastos -->
-    <color name="red_500">#EF4444</color>
-    <color name="orange_500">#F97316</color>
-    <!-- Cards y sombras -->
+    <color name="text_black">#1A1C1E</color>
+    <color name="text_gray_800">#424242</color>
+    <color name="text_gray_500">#757575</color>
+    <color name="indigo_500">#1976D2</color>
+    <color name="green_600">#4CAF50</color>
+    <color name="red_500">#F44336</color>
+    <color name="orange_500">#FF9800</color>
     <color name="card_bg">#FFFFFF</color>
-    <color name="card_shadow">#E5E7EB</color>
+    <color name="card_shadow">#E0E0E0</color>
 </resources>

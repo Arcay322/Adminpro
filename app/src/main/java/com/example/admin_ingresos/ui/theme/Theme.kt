@@ -9,63 +9,77 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Indigo500,
-    onPrimary = Color.White,
-    primaryContainer = Indigo700,
-    onPrimaryContainer = Indigo100,
-    secondary = Green600,
-    onSecondary = Color.White,
-    secondaryContainer = Green700,
-    onSecondaryContainer = Green100,
-    tertiary = Orange500,
-    onTertiary = Color.White,
-    error = Red500,
-    onError = Color.White,
-    errorContainer = Red600,
-    onErrorContainer = Red100,
+// CashFlow Dark Color Scheme
+private val CashFlowDarkColorScheme = darkColorScheme(
+    primary = CashFlowPrimary,
+    onPrimary = OnPrimary,
+    primaryContainer = CashFlowPrimaryDark,
+    onPrimaryContainer = CashFlowPrimaryLight,
+    secondary = CashFlowSecondary,
+    onSecondary = OnSecondary,
+    secondaryContainer = CashFlowSecondaryDark,
+    onSecondaryContainer = CashFlowSecondaryLight,
+    tertiary = TertiaryPurple,
+    onTertiary = OnTertiary,
+    tertiaryContainer = TertiaryPurpleDark,
+    onTertiaryContainer = TertiaryPurpleLight,
+    error = Error,
+    onError = OnError,
+    errorContainer = ErrorContainer,
+    onErrorContainer = OnErrorContainer,
     background = BackgroundDark,
-    onBackground = Gray100,
+    onBackground = OnBackgroundDark,
     surface = SurfaceDark,
-    onSurface = Gray100,
+    onSurface = OnSurfaceDark,
     surfaceVariant = SurfaceVariantDark,
-    onSurfaceVariant = Gray300,
-    outline = Gray600,
-    outlineVariant = Gray700
+    onSurfaceVariant = OnSurfaceVariantDark,
+    outline = OutlineDark,
+    outlineVariant = OutlineVariantDark,
+    inverseSurface = OnBackgroundDark,
+    inverseOnSurface = BackgroundDark,
+    inversePrimary = CashFlowPrimary
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Indigo500,
-    onPrimary = Color.White,
-    primaryContainer = Indigo100,
-    onPrimaryContainer = Indigo700,
-    secondary = Green600,
-    onSecondary = Color.White,
-    secondaryContainer = Green100,
-    onSecondaryContainer = Green700,
-    tertiary = Orange500,
-    onTertiary = Color.White,
-    error = Red500,
-    onError = Color.White,
-    errorContainer = Red100,
-    onErrorContainer = Red600,
+// CashFlow Light Color Scheme
+private val CashFlowLightColorScheme = lightColorScheme(
+    primary = CashFlowPrimary,
+    onPrimary = OnPrimary,
+    primaryContainer = CashFlowPrimaryLight,
+    onPrimaryContainer = CashFlowPrimaryDark,
+    secondary = CashFlowSecondary,
+    onSecondary = OnSecondary,
+    secondaryContainer = CashFlowSecondaryLight,
+    onSecondaryContainer = CashFlowSecondaryDark,
+    tertiary = TertiaryPurple,
+    onTertiary = OnTertiary,
+    tertiaryContainer = TertiaryPurpleLight,
+    onTertiaryContainer = TertiaryPurpleDark,
+    error = Error,
+    onError = OnError,
+    errorContainer = ErrorContainerLight,
+    onErrorContainer = OnErrorContainerLight,
     background = BackgroundLight,
-    onBackground = Gray900,
+    onBackground = OnBackgroundLight,
     surface = SurfaceLight,
-    onSurface = Gray900,
+    onSurface = OnSurfaceLight,
     surfaceVariant = SurfaceVariantLight,
-    onSurfaceVariant = Gray700,
-    outline = Gray400,
-    outlineVariant = Gray200
+    onSurfaceVariant = OnSurfaceVariantLight,
+    outline = OutlineLight,
+    outlineVariant = OutlineVariantLight,
+    inverseSurface = OnBackgroundLight,
+    inverseOnSurface = BackgroundLight,
+    inversePrimary = OnPrimary
 )
 
 @Composable
-fun Admin_ingresosTheme(
+fun CashFlowTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
@@ -74,14 +88,37 @@ fun Admin_ingresosTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> CashFlowDarkColorScheme
+        else -> CashFlowLightColorScheme
+    }
+    
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            window.statusBarColor = colorScheme.primary.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+        }
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = CashFlowTypography,
+        shapes = CashFlowShapes,
+        content = content
+    )
+}
+
+// Alias para compatibilidad
+@Composable
+fun Admin_ingresosTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = true,
+    content: @Composable () -> Unit
+) {
+    CashFlowTheme(
+        darkTheme = darkTheme,
+        dynamicColor = dynamicColor,
         content = content
     )
 }
