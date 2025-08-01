@@ -4,9 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.admin_ingresos.data.TransactionRepository
 import com.example.admin_ingresos.data.Transaction
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 data class DashboardUiState(
@@ -19,8 +17,13 @@ class DashboardViewModel(private val repository: TransactionRepository) : ViewMo
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
     
-    private val _transactions = MutableStateFlow<List<Transaction>>(emptyList())
-    val transactions: StateFlow<List<Transaction>> = _transactions.asStateFlow()
+    // Use Flow to automatically listen to database changes
+    val transactions = repository.getAllTransactionsFlow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     fun loadTransactions() {
         viewModelScope.launch {
@@ -31,8 +34,6 @@ class DashboardViewModel(private val repository: TransactionRepository) : ViewMo
                     transactions = transactionsList,
                     isLoading = false
                 )
-                // Update backward compatibility StateFlow
-                _transactions.value = transactionsList
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,

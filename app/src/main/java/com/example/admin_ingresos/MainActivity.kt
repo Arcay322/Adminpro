@@ -138,6 +138,26 @@ fun MainAppNavigation() {
             ) {
                 com.example.admin_ingresos.ui.history.TransactionHistoryScreen()
             }
+            composable(
+                "categories",
+                enterTransition = { getEnterTransition(getTransitionForRoute("categories")) },
+                exitTransition = { getExitTransition(getTransitionForRoute("categories")) },
+                popEnterTransition = { getPopEnterTransition(getTransitionForRoute("categories")) },
+                popExitTransition = { getPopExitTransition(getTransitionForRoute("categories")) }
+            ) {
+                com.example.admin_ingresos.ui.category.CategoryManagementScreen()
+            }
+            composable(
+                "settings",
+                enterTransition = { getEnterTransition(getTransitionForRoute("settings")) },
+                exitTransition = { getExitTransition(getTransitionForRoute("settings")) },
+                popEnterTransition = { getPopEnterTransition(getTransitionForRoute("settings")) },
+                popExitTransition = { getPopExitTransition(getTransitionForRoute("settings")) }
+            ) {
+                com.example.admin_ingresos.ui.settings.SettingsScreen(
+                    onNavigateToDataManagement = { /* TODO: Implement data management */ }
+                )
+            }
         }
     }
 }

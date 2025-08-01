@@ -34,7 +34,7 @@ fun DashboardScreen(onAddTransaction: () -> Unit, onViewHistory: () -> Unit, onV
         }
     })
     
-    val transactions by viewModel.transactions.collectAsState(initial = emptyList())
+    val transactions by viewModel.transactions.collectAsState()
     val categorias by produceState(initialValue = emptyList<com.example.admin_ingresos.data.Category>(), db) {
         value = db.categoryDao().getAll()
     }
@@ -44,9 +44,7 @@ fun DashboardScreen(onAddTransaction: () -> Unit, onViewHistory: () -> Unit, onV
     
     val uiState by viewModel.uiState.collectAsState()
     
-    LaunchedEffect(Unit) { 
-        viewModel.loadTransactions() 
-    }
+    // No need for LaunchedEffect - transactions are automatically updated via Flow
 
     // Cálculos financieros
     val ingresos = transactions.filter { it.type == "Ingreso" }.sumOf { it.amount }

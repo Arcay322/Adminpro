@@ -49,6 +49,13 @@ class BudgetViewModel(
     
     init {
         loadBudgetProgress()
+        
+        // Listen to transaction changes to update budget progress
+        viewModelScope.launch {
+            database.transactionDao().getAllTransactions().collect {
+                loadBudgetProgress()
+            }
+        }
     }
     
     fun createBudget(

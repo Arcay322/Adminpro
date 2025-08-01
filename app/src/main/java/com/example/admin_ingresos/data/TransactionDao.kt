@@ -1,11 +1,15 @@
 package com.example.admin_ingresos.data
 
 import androidx.room.*
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TransactionDao {
     @Query("SELECT * FROM transactions ORDER BY date DESC")
     suspend fun getAll(): List<Transaction>
+    
+    @Query("SELECT * FROM transactions ORDER BY date DESC")
+    fun getAllTransactions(): Flow<List<Transaction>>
 
     @Query("SELECT * FROM transactions WHERE type = :type ORDER BY date DESC")
     suspend fun getByType(type: String): List<Transaction>

@@ -18,6 +18,7 @@ sealed class BottomNavItem(
 ) {
     object Dashboard : BottomNavItem("dashboard", "Inicio", Icons.Default.Home)
     object Budget : BottomNavItem("budget", "Presupuestos", Icons.Default.AccountBalance)
+    object Categories : BottomNavItem("categories", "Categorías", Icons.Default.Category)
     object History : BottomNavItem("history", "Historial", Icons.AutoMirrored.Filled.List)
     object Reports : BottomNavItem("reports", "Reportes", Icons.Default.Analytics)
 }
@@ -27,6 +28,7 @@ fun BottomNavigationBar(navController: NavController) {
     val items = listOf(
         BottomNavItem.Dashboard,
         BottomNavItem.Budget,
+        BottomNavItem.Categories,
         BottomNavItem.History,
         BottomNavItem.Reports
     )
