@@ -4,6 +4,8 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 import androidx.room.Index
+import androidx.room.Embedded
+import androidx.room.Relation
 
 @Entity(
     tableName = "budgets",
@@ -38,7 +40,11 @@ enum class BudgetPeriod(val displayName: String, val durationInMillis: Long) {
 }
 
 data class BudgetWithCategory(
-    val budget: Budget,
+    @Embedded val budget: Budget,
+    @Relation(
+        parentColumn = "categoryId",
+        entityColumn = "id"
+    )
     val category: Category
 )
 
