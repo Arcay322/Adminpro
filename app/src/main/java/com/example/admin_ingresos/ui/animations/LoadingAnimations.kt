@@ -24,6 +24,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.clickable
 import kotlinx.coroutines.delay
 
 // Skeleton loading animations
@@ -341,7 +344,7 @@ fun ErrorAnimation(
             ) {
                 AnimatedVisibility(
                     visible = showIcon,
-                    enter = rotateIn() + scaleIn()
+                    enter = scaleIn() + fadeIn()
                 ) {
                     Icon(
                         imageVector = Icons.Default.Error,

@@ -78,6 +78,15 @@ dependencies {
     // WorkManager for background tasks
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     
+    // Foundation and Lazy components
+    implementation("androidx.compose.foundation:foundation:1.6.7")
+    
+    // Graphics layer
+    implementation("androidx.compose.ui:ui-graphics:1.6.7")
+    
+    // Pull to refresh
+    implementation("androidx.compose.material3:material3:1.2.1")
+    
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
