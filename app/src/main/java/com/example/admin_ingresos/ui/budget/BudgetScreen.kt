@@ -286,7 +286,7 @@ fun BudgetProgressCard(
                             Icon(
                                 imageVector = Icons.Default.Delete,
                                 contentDescription = "Eliminar",
-                                tint = CashFlowError
+                                tint = MaterialTheme.colorScheme.error
                             )
                         }
                     }
