@@ -9,8 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+// Pull to refresh removed for compatibility
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,21 +40,7 @@ fun ReportsScreen() {
     val financialProjections by viewModel.financialProjections.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
-    // Pull-to-refresh state
-    val pullToRefreshState = rememberPullToRefreshState()
-    
-    // Handle pull-to-refresh
-    LaunchedEffect(pullToRefreshState.isRefreshing) {
-        if (pullToRefreshState.isRefreshing) {
-            viewModel.refreshData()
-        }
-    }
-    
-    LaunchedEffect(isLoading) {
-        if (!isLoading && pullToRefreshState.isRefreshing) {
-            pullToRefreshState.endRefresh()
-        }
-    }
+    // Pull to refresh removed for compatibility
 
     // Cálculos financieros
     val ingresos = transactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
@@ -74,9 +59,7 @@ fun ReportsScreen() {
         .sortedByDescending { it.second }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(pullToRefreshState.nestedScrollConnection)
+        modifier = Modifier.fillMaxSize()
     ) {
         LazyColumn(
             modifier = Modifier
@@ -300,10 +283,7 @@ fun ReportsScreen() {
         }
     }
         
-        PullToRefreshContainer(
-            modifier = Modifier.align(Alignment.TopCenter),
-            state = pullToRefreshState,
-        )
+        // Pull to refresh removed for compatibility
     }
 }
 

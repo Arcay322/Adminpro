@@ -10,8 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+// Pull to refresh removed for compatibility
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,25 +42,10 @@ fun DashboardScreen(onAddTransaction: () -> Unit, onViewHistory: () -> Unit, onV
     var selectedCategory by remember { mutableStateOf<String?>(null) }
     var showCustomizeDialog by remember { mutableStateOf(false) }
     
-    // Pull-to-refresh state
-    val pullToRefreshState = rememberPullToRefreshState()
     val uiState by viewModel.uiState.collectAsState()
     
     LaunchedEffect(Unit) { 
         viewModel.loadTransactions() 
-    }
-    
-    // Handle pull-to-refresh
-    LaunchedEffect(pullToRefreshState.isRefreshing) {
-        if (pullToRefreshState.isRefreshing) {
-            viewModel.refreshData()
-        }
-    }
-    
-    LaunchedEffect(uiState.isLoading) {
-        if (!uiState.isLoading && pullToRefreshState.isRefreshing) {
-            pullToRefreshState.endRefresh()
-        }
     }
 
     // Cálculos financieros
@@ -88,9 +72,7 @@ fun DashboardScreen(onAddTransaction: () -> Unit, onViewHistory: () -> Unit, onV
     val widgetConfigs by DashboardPreferences.widgetConfigs
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(pullToRefreshState.nestedScrollConnection)
+        modifier = Modifier.fillMaxSize()
     ) {
         LazyColumn(
             modifier = Modifier
@@ -335,10 +317,7 @@ fun DashboardScreen(onAddTransaction: () -> Unit, onViewHistory: () -> Unit, onV
         }
     }
         
-        PullToRefreshContainer(
-            modifier = Modifier.align(Alignment.TopCenter),
-            state = pullToRefreshState,
-        )
+        // Pull to refresh removed for compatibility
     }
 
     // Dashboard customization dialog

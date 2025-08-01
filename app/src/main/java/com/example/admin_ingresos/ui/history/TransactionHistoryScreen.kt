@@ -11,8 +11,7 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+// Pull to refresh removed for compatibility
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,21 +59,10 @@ fun TransactionHistoryScreen() {
     var isSelectionMode by remember { mutableStateOf(false) }
     var showContextMenu by remember { mutableStateOf<Transaction?>(null) }
     
-    // Pull to refresh state
-    val pullToRefreshState = rememberPullToRefreshState()
-    
-    // Handle pull to refresh
-    LaunchedEffect(pullToRefreshState.isRefreshing) {
-        if (pullToRefreshState.isRefreshing) {
-            viewModel.loadTransactions()
-            pullToRefreshState.endRefresh()
-        }
-    }
+    // Pull to refresh removed for compatibility
     
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(pullToRefreshState.nestedScrollConnection)
+        modifier = Modifier.fillMaxSize()
     ) {
         Column(
             modifier = Modifier
@@ -294,10 +282,7 @@ fun TransactionHistoryScreen() {
             )
         }
         
-        PullToRefreshContainer(
-            modifier = Modifier.align(Alignment.TopCenter),
-            state = pullToRefreshState,
-        )
+        // Pull to refresh removed for compatibility
     }
     
     // Filter bottom sheet
