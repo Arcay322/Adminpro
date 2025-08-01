@@ -126,7 +126,7 @@ fun BalanceOverviewCard(
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    )
+                    }
                     Text(
                         text = formatter.format(monthlyIncome),
                         style = MaterialTheme.typography.titleMedium.copy(
@@ -154,7 +154,7 @@ fun BalanceOverviewCard(
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    )
+                    }
                     Text(
                         text = formatter.format(monthlyExpenses),
                         style = MaterialTheme.typography.titleMedium.copy(
