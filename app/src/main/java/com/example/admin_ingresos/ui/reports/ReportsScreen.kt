@@ -589,4 +589,3 @@ fun FinancialInsightCard(
         }
     }
 }
-}
