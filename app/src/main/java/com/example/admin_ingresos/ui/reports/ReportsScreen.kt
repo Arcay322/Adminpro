@@ -253,14 +253,14 @@ fun ReportsScreen() {
                 ReportCard(
                     title = "Ingresos",
                     amount = ingresos,
-                    color = MaterialTheme.colorScheme.secondary,
+                    color = Color(0xFF4CAF50),
                     icon = Icons.Default.TrendingUp,
                     modifier = Modifier.weight(1f)
                 )
                 ReportCard(
                     title = "Gastos",
                     amount = gastos,
-                    color = MaterialTheme.colorScheme.error,
+                    color = Color(0xFFF44336),
                     icon = Icons.Default.TrendingDown,
                     modifier = Modifier.weight(1f)
                 )
