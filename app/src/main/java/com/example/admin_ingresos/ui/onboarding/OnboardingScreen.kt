@@ -69,39 +69,6 @@ fun OnboardingScreen(
     )
 
     var currentPage by remember { mutableIntStateOf(0) }
-            val pages = listOf(
-        OnboardingPage(
-            title = "¡Bienvenido a CashFlow!",
-            description = "Tu compañero financiero inteligente que te ayuda a tomar control total de tus finanzas personales con herramientas avanzadas.",
-            icon = "💰",
-            backgroundColor = CashFlowPrimary
-        ),
-        OnboardingPage(
-            title = "Gestión Inteligente",
-            description = "Registra tus ingresos y gastos de manera fácil y rápida. Categoriza automáticamente y obtén insights sobre tus patrones de gasto.",
-            icon = "📱",
-            backgroundColor = CashFlowSecondary
-        ),
-        OnboardingPage(
-            title = "Presupuestos Dinámicos",
-            description = "Crea presupuestos personalizados con alertas inteligentes. Recibe notificaciones cuando te acerques a los límites.",
-            icon = "🎯",
-            backgroundColor = TertiaryPurple
-        ),
-        OnboardingPage(
-            title = "Análisis Avanzado",
-            description = "Visualiza tendencias, patrones de gasto y obtén reportes profesionales con gráficos interactivos y análisis detallados.",
-            icon = "📈",
-            backgroundColor = Success
-        ),
-        OnboardingPage(
-            title = "Reportes Profesionales",
-            description = "Genera reportes detallados en PDF y Excel. Exporta y comparte tu información financiera de manera segura y profesional.",
-            icon = "📄",
-            backgroundColor = Warning
-        )
-    )
-    
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
     
