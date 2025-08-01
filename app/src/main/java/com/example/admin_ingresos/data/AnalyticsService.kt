@@ -790,8 +790,8 @@ enum class InsightType {
     WARNING,
     ALERT
 }
-data c
-lass FinancialProjections(
+
+data class FinancialProjections(
     val nextMonthIncome: Double,
     val nextMonthExpenses: Double,
     val nextMonthBalance: Double,

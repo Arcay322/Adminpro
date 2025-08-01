@@ -531,8 +531,8 @@ fun FloatingActionButtonAnimation(
         content()
     }
 }
-// I
-nteractive element animations
+
+// Interactive element animations
 @Composable
 fun AnimatedCard(
     onClick: () -> Unit,

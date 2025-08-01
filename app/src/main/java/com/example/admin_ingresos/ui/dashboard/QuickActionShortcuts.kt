@@ -435,8 +435,8 @@ fun generateSmartSuggestions(
     
     return suggestions.sortedByDescending { it.confidence }.take(5)
 }
-// Hel
-per function to generate quick shortcuts based on frequent transactions
+
+// Helper function to generate quick shortcuts based on frequent transactions
 fun generateQuickShortcuts(
     transactions: List<com.example.admin_ingresos.data.Transaction>,
     categories: List<com.example.admin_ingresos.data.Category>

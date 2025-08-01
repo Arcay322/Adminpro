@@ -504,3 +504,4 @@ fun TransactionItem(
         }
     }
 }
+}
