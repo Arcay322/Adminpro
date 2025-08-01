@@ -279,6 +279,7 @@ fun BalanceOverviewCard(
                         ),
                         color = MaterialTheme.colorScheme.error
                     )
+                    )
                 }
             }
         }

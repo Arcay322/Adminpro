@@ -99,8 +99,6 @@ fun OnboardingScreen(
             backgroundColor = Warning
         )
     )
-        )
-    )
     
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()

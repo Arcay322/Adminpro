@@ -198,11 +198,3 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
         }
     }
 }
-            Text(
-                text = "© 2024 Admin Ingresos",
-                fontSize = 10.sp,
-                color = Color.White.copy(alpha = 0.5f)
-            )
-        }
-    }
-}
