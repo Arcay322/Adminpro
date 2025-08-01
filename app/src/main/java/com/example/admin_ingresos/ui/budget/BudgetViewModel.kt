@@ -10,13 +10,14 @@ import kotlinx.coroutines.launch
 class BudgetViewModel(
     private val database: AppDatabase,
     private val notificationService: NotificationService,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val context: android.content.Context
 ) : ViewModel() {
     
     private val budgetDao = database.budgetDao()
     private val categoryDao = database.categoryDao()
     private val alertService = BudgetAlertService(
-        context = preferencesManager.context,
+        context = context,
         database = database,
         notificationService = notificationService,
         preferencesManager = preferencesManager
@@ -35,7 +36,7 @@ class BudgetViewModel(
         )
     
     // Categories for budget creation
-    val categories = categoryDao.getAll()
+    val categories = flow { emit(categoryDao.getAll()) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

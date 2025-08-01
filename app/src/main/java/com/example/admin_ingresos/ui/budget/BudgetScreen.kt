@@ -36,7 +36,8 @@ fun BudgetScreen() {
             return BudgetViewModel(
                 database = database,
                 notificationService = NotificationService(context),
-                preferencesManager = PreferencesManager(context)
+                preferencesManager = PreferencesManager(context),
+                context = context
             ) as T
         }
     })
