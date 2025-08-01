@@ -271,14 +271,12 @@ fun BalanceOverviewCard(
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    )
                     Text(
                         text = formatter.format(monthlyExpenses),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold
                         ),
                         color = MaterialTheme.colorScheme.error
-                    )
                     )
                 }
             }
