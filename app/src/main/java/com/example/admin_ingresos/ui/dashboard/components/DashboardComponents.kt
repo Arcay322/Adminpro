@@ -1,10 +1,8 @@
 package com.example.admin_ingresos.ui.dashboard.components
 
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -12,128 +10,39 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.admin_ingresos.ui.theme.*
 import java.text.NumberFormat
 import java.util.*
 
 @Composable
-fun CashFlowTopBar(
-    title: String,
-    onSettingsClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Tu finanzas bajo control",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
-            IconButton(
-                onClick = onSettingsClick,
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        MaterialTheme.colorScheme.primaryContainer,
-                        CircleShape
-                    )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Configuración",
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun WelcomeHeader(
-    userName: String,
+fun DashboardHeader(
+    greeting: String,
     currentTime: Int
 ) {
-    val greeting = when (currentTime) {
-        in 5..11 -> "Buenos días"
-        in 12..17 -> "Buenas tardes"
+    val timeGreeting = when (currentTime) {
+        in 6..11 -> "Buenos días"
+        in 12..17 -> "Buenas tardes" 
         else -> "Buenas noches"
     }
     
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        ),
-        shape = CardShape
+    Column(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Avatar
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(
-                        MaterialTheme.colorScheme.primary,
-                        CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = userName.first().toString().uppercase(),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "$greeting, $userName",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "¿Cómo van tus finanzas hoy?",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                )
-            }
-        }
+        Text(
+            text = timeGreeting,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = "CashFlow Dashboard",
+            style = MaterialTheme.typography.headlineMedium,
+            color = CashFlowPrimary,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
@@ -144,86 +53,70 @@ fun BalanceOverviewCard(
     monthlyExpenses: Double,
     balanceChange: Double
 ) {
-    val isPositive = balance >= 0
-    val changeIsPositive = balanceChange >= 0
-    val formatter = NumberFormat.getCurrencyInstance(Locale("en", "US"))
+    val formatter = NumberFormat.getCurrencyInstance(Locale.US)
     
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (isPositive) 
-                MaterialTheme.colorScheme.surface 
-            else 
-                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f)
+            containerColor = CashFlowPrimary
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        shape = CardShape
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
+            modifier = Modifier.padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Balance Title
             Text(
                 text = "Balance Total",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color.White.copy(alpha = 0.9f)
             )
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // Main Balance
             Text(
                 text = formatter.format(balance),
                 style = MaterialTheme.typography.displayMedium.copy(
                     fontWeight = FontWeight.Bold
                 ),
-                color = if (isPositive) 
-                    MaterialTheme.colorScheme.primary 
-                else 
-                    MaterialTheme.colorScheme.error,
-                textAlign = TextAlign.Center
+                color = Color.White
             )
             
-            // Balance Change Indicator
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                Icon(
-                    imageVector = if (changeIsPositive) Icons.Default.TrendingUp else Icons.Default.TrendingDown,
-                    contentDescription = null,
-                    tint = if (changeIsPositive) Success else MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(
-                    text = "${if (changeIsPositive) "+" else ""}${formatter.format(balanceChange)} este mes",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (changeIsPositive) Success else MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(start = 4.dp)
-                )
+            if (balanceChange != 0.0) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = if (balanceChange > 0) Icons.Default.TrendingUp else Icons.Default.TrendingDown,
+                        contentDescription = null,
+                        tint = if (balanceChange > 0) Success else MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${if (balanceChange > 0) "+" else ""}${formatter.format(balanceChange)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
+                }
             }
             
             Spacer(modifier = Modifier.height(20.dp))
             
-            // Income vs Expenses
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                // Income
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f)
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Default.TrendingUp,
-                            contentDescription = "Ingresos",
+                            contentDescription = null,
                             tint = Success,
                             modifier = Modifier.size(20.dp)
                         )
@@ -233,7 +126,7 @@ fun BalanceOverviewCard(
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    }
+                    )
                     Text(
                         text = formatter.format(monthlyIncome),
                         style = MaterialTheme.typography.titleMedium.copy(
@@ -243,25 +136,15 @@ fun BalanceOverviewCard(
                     )
                 }
                 
-                // Divider
-                Box(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .height(40.dp)
-                        .background(MaterialTheme.colorScheme.outline)
-                )
-                
-                // Expenses
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f)
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Default.TrendingDown,
-                            contentDescription = "Gastos",
+                            contentDescription = null,
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(20.dp)
                         )
@@ -271,6 +154,7 @@ fun BalanceOverviewCard(
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    )
                     Text(
                         text = formatter.format(monthlyExpenses),
                         style = MaterialTheme.typography.titleMedium.copy(
@@ -291,49 +175,26 @@ fun QuickStatsRow(
     topCategory: String,
     savingsRate: Double
 ) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("en", "US"))
-    
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Total Transactions
         QuickStatCard(
             title = "Transacciones",
             value = totalTransactions.toString(),
             icon = Icons.Default.Receipt,
-            color = MaterialTheme.colorScheme.primary,
+            color = CashFlowPrimary,
             modifier = Modifier.weight(1f)
         )
-        
-        // Average Daily
         QuickStatCard(
             title = "Promedio Diario",
-            value = formatter.format(averageDaily),
-            icon = Icons.Default.Calculate,
-            color = MaterialTheme.colorScheme.tertiary,
+            value = "$${String.format("%.0f", averageDaily)}",
+            icon = Icons.Default.CalendarToday,
+            color = CashFlowSecondary,
             modifier = Modifier.weight(1f)
         )
-    }
-    
-    Spacer(modifier = Modifier.height(12.dp))
-    
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // Top Category
         QuickStatCard(
-            title = "Top Categoría",
-            value = topCategory.ifEmpty { "N/A" },
-            icon = Icons.Default.Category,
-            color = MaterialTheme.colorScheme.secondary,
-            modifier = Modifier.weight(1f)
-        )
-        
-        // Savings Rate
-        QuickStatCard(
-            title = "Tasa de Ahorro",
+            title = "Tasa Ahorro",
             value = "${String.format("%.1f", savingsRate)}%",
             icon = Icons.Default.Savings,
             color = Success,
@@ -343,7 +204,7 @@ fun QuickStatsRow(
 }
 
 @Composable
-fun QuickStatCard(
+private fun QuickStatCard(
     title: String,
     value: String,
     icon: ImageVector,
@@ -355,13 +216,11 @@ fun QuickStatCard(
         colors = CardDefaults.cardColors(
             containerColor = color.copy(alpha = 0.1f)
         ),
-        shape = RoundedCornerShape(12.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterVertically
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
                 imageVector = icon,
@@ -369,20 +228,350 @@ fun QuickStatCard(
                 tint = color,
                 modifier = Modifier.size(24.dp)
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                color = color,
-                textAlign = TextAlign.Center
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold
             )
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+fun BudgetProgressSection(
+    budgets: List<BudgetProgress>,
+    onViewAll: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Progreso de Presupuestos",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                TextButton(onClick = onViewAll) {
+                    Text("Ver todos")
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            budgets.forEach { budget ->
+                BudgetProgressItem(budget = budget)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun BudgetProgressItem(budget: BudgetProgress) {
+    val progress = (budget.spent / budget.total).coerceIn(0f, 1f)
+    val color = when {
+        progress < 0.7f -> Success
+        progress < 0.9f -> Warning
+        else -> MaterialTheme.colorScheme.error
+    }
+    
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = budget.categoryName,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = "$${String.format("%.0f", budget.spent)} / $${String.format("%.0f", budget.total)}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        LinearProgressIndicator(
+            progress = progress,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp),
+            color = color,
+            trackColor = color.copy(alpha = 0.2f)
+        )
+    }
+}
+
+@Composable
+fun RecentTransactionsSection(
+    transactions: List<com.example.admin_ingresos.data.Transaction>,
+    categories: List<com.example.admin_ingresos.data.Category>,
+    onViewAll: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Transacciones Recientes",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                TextButton(onClick = onViewAll) {
+                    Text("Ver todas")
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            if (transactions.isNotEmpty()) {
+                transactions.take(5).forEach { transaction ->
+                    TransactionItem(
+                        transaction = transaction,
+                        category = categories.find { it.id == transaction.categoryId }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No hay transacciones recientes",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TransactionItem(
+    transaction: com.example.admin_ingresos.data.Transaction,
+    category: com.example.admin_ingresos.data.Category?
+) {
+    val isIncome = transaction.type == "Ingreso"
+    val color = if (isIncome) Success else MaterialTheme.colorScheme.error
+    
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .background(
+                    color.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(8.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = category?.icon ?: "💰",
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+        
+        Spacer(modifier = Modifier.width(12.dp))
+        
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = transaction.description,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = category?.name ?: "Sin categoría",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        
+        Text(
+            text = "${if (isIncome) "+" else "-"}$${String.format("%.2f", transaction.amount)}",
+            style = MaterialTheme.typography.titleMedium,
+            color = color,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+fun FinancialInsightsSection(
+    insights: List<String>
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Lightbulb,
+                    contentDescription = "Insights",
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Insights Financieros",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            insights.forEach { insight ->
+                Text(
+                    text = "• $insight",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.padding(vertical = 2.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun QuickActionsGrid(
+    onAddIncome: () -> Unit,
+    onAddExpense: () -> Unit,
+    onViewReports: () -> Unit,
+    onViewBudgets: () -> Unit,
+    onViewCategories: () -> Unit,
+    onViewHistory: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "Acciones Rápidas",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                QuickActionButton(
+                    icon = Icons.Default.Add,
+                    label = "Ingreso",
+                    color = Success,
+                    onClick = onAddIncome,
+                    modifier = Modifier.weight(1f)
+                )
+                QuickActionButton(
+                    icon = Icons.Default.Remove,
+                    label = "Gasto",
+                    color = MaterialTheme.colorScheme.error,
+                    onClick = onAddExpense,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)  
+            ) {
+                QuickActionButton(
+                    icon = Icons.Default.Analytics,
+                    label = "Reportes",
+                    color = CashFlowPrimary,
+                    onClick = onViewReports,
+                    modifier = Modifier.weight(1f)
+                )
+                QuickActionButton(
+                    icon = Icons.Default.Category,
+                    label = "Categorías",
+                    color = TertiaryPurple,
+                    onClick = onViewCategories,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickActionButton(
+    icon: ImageVector,
+    label: String,
+    color: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = color.copy(alpha = 0.1f)
+        ),
+        onClick = onClick
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = color,
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = color,
+                fontWeight = FontWeight.Medium
             )
         }
     }
@@ -442,3 +631,10 @@ fun EnhancedFAB(
         }
     }
 }
+
+// Data classes
+data class BudgetProgress(
+    val categoryName: String,
+    val spent: Double,
+    val total: Double
+)
