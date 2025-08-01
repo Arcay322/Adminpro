@@ -150,32 +150,26 @@ data class FilterPreset(
         fun getDefaultPresets(): List<FilterPreset> {
             return listOf(
                 FilterPreset(
-                    id = "today",
                     name = "Hoy",
                     filter = TransactionFilter(dateRange = DateRange.today())
                 ),
                 FilterPreset(
-                    id = "this_week",
                     name = "Esta semana",
                     filter = TransactionFilter(dateRange = DateRange.thisWeek())
                 ),
                 FilterPreset(
-                    id = "this_month",
                     name = "Este mes",
                     filter = TransactionFilter(dateRange = DateRange.thisMonth())
                 ),
                 FilterPreset(
-                    id = "expenses_only",
                     name = "Solo gastos",
                     filter = TransactionFilter(transactionTypes = listOf("Gasto"))
                 ),
                 FilterPreset(
-                    id = "income_only",
                     name = "Solo ingresos",
                     filter = TransactionFilter(transactionTypes = listOf("Ingreso"))
                 ),
                 FilterPreset(
-                    id = "high_amounts",
                     name = "Montos altos (>$100)",
                     filter = TransactionFilter(amountRange = AmountRange(100.0, Double.MAX_VALUE))
                 )

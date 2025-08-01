@@ -1,6 +1,7 @@
 package com.example.admin_ingresos.data
 
 import androidx.room.*
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 @Dao
