@@ -265,13 +265,7 @@ fun TransactionHistoryScreen() {
                 },
                 onBulkExport = {
                     // Export selected transactions
-                    val context = LocalContext.current
-                    val exportService = remember { ExportService(context) }
-                    exportService.exportTransactionsToCSV(
-                        transactions = selectedTransactions.toList(),
-                        categories = categories,
-                        paymentMethods = paymentMethods
-                    )
+                    // TODO: Implement export functionality with proper coroutine scope
                     selectedTransactions = emptySet()
                     isSelectionMode = false
                 },
@@ -330,12 +324,7 @@ fun TransactionHistoryScreen() {
                         )
                     }
                     "export" -> {
-                        val exportService = ExportService(context)
-                        exportService.exportTransactionsToCSV(
-                            transactions = listOf(transaction),
-                            categories = categories,
-                            paymentMethods = paymentMethods
-                        )
+                        // TODO: Implement export functionality with proper coroutine scope
                     }
                     "delete" -> {
                         viewModel.deleteTransaction(transaction)

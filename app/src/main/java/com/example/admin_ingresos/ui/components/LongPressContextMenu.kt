@@ -402,7 +402,7 @@ fun getDefaultContextMenuActions(): List<ContextMenuAction> {
             id = "delete",
             title = "Eliminar",
             icon = Icons.Default.Delete,
-            color = MaterialTheme.colorScheme.error,
+            color = androidx.compose.ui.graphics.Color.Red,
             isDestructive = true
         )
     )

@@ -9,12 +9,18 @@ import kotlinx.coroutines.launch
 
 class BudgetViewModel(
     private val database: AppDatabase,
-    private val context: Context? = null
+    private val notificationService: NotificationService,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
     
     private val budgetDao = database.budgetDao()
     private val categoryDao = database.categoryDao()
-    private val alertService = context?.let { BudgetAlertService(it) }
+    private val alertService = BudgetAlertService(
+        context = preferencesManager.context,
+        database = database,
+        notificationService = notificationService,
+        preferencesManager = preferencesManager
+    )
     
     // UI State
     private val _uiState = MutableStateFlow(BudgetUiState())
@@ -29,7 +35,7 @@ class BudgetViewModel(
         )
     
     // Categories for budget creation
-    val categories = categoryDao.getAllCategories()
+    val categories = categoryDao.getAll()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -189,7 +195,7 @@ class BudgetViewModel(
                 _budgetProgress.value = budgetProgressList
                 
                 // Check for budget alerts
-                alertService?.checkBudgetAlerts(budgetProgressList)
+                alertService?.checkBudgetAlerts()
                 
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(

@@ -49,7 +49,7 @@ fun InitialSetupWizard(
     val scope = rememberCoroutineScope()
     
     val steps = listOf(
-        SetupStep("Bienvenido", "Configuremos tu aplicación de finanzas", Icons.Default.Waving),
+        SetupStep("Bienvenido", "Configuremos tu aplicación de finanzas", Icons.Default.WavingHand),
         SetupStep("Moneda", "Selecciona tu moneda principal", Icons.Default.AttachMoney),
         SetupStep("Datos", "¿Importar datos de ejemplo?", Icons.Default.DataUsage),
         SetupStep("Preferencias", "Configura tus preferencias", Icons.Default.Settings),

@@ -33,7 +33,11 @@ fun BudgetScreen() {
     val viewModel: BudgetViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")
-            return BudgetViewModel(database, context) as T
+            return BudgetViewModel(
+                database = database,
+                notificationService = NotificationService(context),
+                preferencesManager = PreferencesManager(context)
+            ) as T
         }
     })
     

@@ -34,14 +34,14 @@ class TransactionHistoryViewModel(private val db: AppDatabase) : ViewModel() {
     val filterPresets: StateFlow<List<FilterPreset>> = _filterPresets.asStateFlow()
     
     // Categories and payment methods for filtering
-    val categories = categoryDao.getAllCategories()
+    val categories = categoryDao.getAll()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
     
-    val paymentMethods = paymentMethodDao.getAll()
+    val paymentMethods = flow { emit(paymentMethodDao.getAll()) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
