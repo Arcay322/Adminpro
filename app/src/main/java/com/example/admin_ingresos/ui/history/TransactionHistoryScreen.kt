@@ -562,4 +562,3 @@ fun TransactionItem(
         }
     }
 }
-}

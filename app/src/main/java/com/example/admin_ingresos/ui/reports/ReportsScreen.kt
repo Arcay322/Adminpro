@@ -129,11 +129,6 @@ fun ReportsScreen() {
                 }
             }
         }
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                    )
-                }
-            }
-        }
         
         // Balance y métricas principales
         item {
@@ -359,9 +354,6 @@ fun ReportsScreen() {
         item {
             Spacer(modifier = Modifier.height(80.dp))
         }
-    }
-        
-        // Pull to refresh removed for compatibility
     }
 }
 
