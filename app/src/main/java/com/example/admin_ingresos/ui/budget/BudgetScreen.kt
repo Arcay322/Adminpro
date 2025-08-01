@@ -405,38 +405,14 @@ fun BudgetProgressCard(
         }
     }
                 
-                LinearProgressIndicator(
-                    progress = budgetProgress.percentage.coerceAtMost(1f),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp)),
-                    color = when (budgetProgress.status) {
-                        BudgetStatus.ON_TRACK -> MaterialTheme.colorScheme.primary
-                        BudgetStatus.WARNING -> Color(0xFFFF9800)
-                        BudgetStatus.EXCEEDED -> MaterialTheme.colorScheme.error
-                        BudgetStatus.OVER_BUDGET -> Color(0xFF8B0000)
-                    },
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "${(budgetProgress.percentage * 100).toInt()}% usado",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    )
-                    Text(
-                        text = "${budgetProgress.daysRemaining} días restantes",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    )
+                color = if (remaining >= 0) CashFlowSuccess else CashFlowError
+                        )
+                    }
                 }
+            }
+        }
+    }
+}
             }
             
             // Status chip
