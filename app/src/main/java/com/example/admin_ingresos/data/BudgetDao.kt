@@ -18,7 +18,7 @@ interface BudgetDao {
     @Query("SELECT * FROM budgets WHERE categoryId = :categoryId AND isActive = 1")
     suspend fun getActiveBudgetByCategory(categoryId: Int): Budget?
     
-    @androidx.room.Transaction
+    @Transaction
     @Query("SELECT * FROM budgets WHERE isActive = 1 ORDER BY createdAt DESC")
     fun getBudgetsWithCategories(): Flow<List<BudgetWithCategory>>
     
