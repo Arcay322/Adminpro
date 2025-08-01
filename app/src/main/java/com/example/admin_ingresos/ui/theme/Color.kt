@@ -2,90 +2,133 @@ package com.example.admin_ingresos.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// CashFlow Brand Colors
-val CashFlowPrimary = Color(0xFF1976D2)
-val CashFlowPrimaryLight = Color(0xFFD1E4FF)
-val CashFlowPrimaryDark = Color(0xFF0D47A1)
-val CashFlowSecondary = Color(0xFF26A69A)
-val CashFlowSecondaryLight = Color(0xFFB2DFDB)
-val CashFlowSecondaryDark = Color(0xFF004D40)
+// Glassmorphism Brand Colors
+val CashFlowPrimary = Color(0xFF6366F1) // Indigo moderno
+val CashFlowPrimaryLight = Color(0xFFA5B4FC) // Indigo claro
+val CashFlowPrimaryDark = Color(0xFF4338CA) // Indigo oscuro
+val CashFlowSecondary = Color(0xFF06B6D4) // Cyan vibrante
+val CashFlowSecondaryLight = Color(0xFF67E8F9) // Cyan claro
+val CashFlowSecondaryDark = Color(0xFF0891B2) // Cyan oscuro
 
-// Tertiary Colors
-val TertiaryPurple = Color(0xFF7C4DFF)
-val TertiaryPurpleLight = Color(0xFFE1BEE7)
-val TertiaryPurpleDark = Color(0xFF4A148C)
+// Glassmorphism Accent Colors
+val TertiaryPurple = Color(0xFF8B5CF6) // Violeta moderno
+val TertiaryPurpleLight = Color(0xFFC4B5FD) // Violeta claro
+val TertiaryPurpleDark = Color(0xFF7C3AED) // Violeta oscuro
 
-// Semantic Colors
-val Error = Color(0xFFD32F2F)
-val ErrorContainer = Color(0xFFB71C1C)
-val OnErrorContainer = Color(0xFFFFCDD2)
-val ErrorContainerLight = Color(0xFFFFCDD2)
-val OnErrorContainerLight = Color(0xFFB71C1C)
+// Glassmorphism Glass Colors
+val GlassWhite = Color(0x1AFFFFFF) // Blanco semi-transparente
+val GlassBlack = Color(0x1A000000) // Negro semi-transparente
+val GlassPrimary = Color(0x336366F1) // Primary glass
+val GlassSecondary = Color(0x3306B6D4) // Secondary glass
 
-val Success = Color(0xFF4CAF50)
-val SuccessContainer = Color(0xFFC8E6C9)
-val OnSuccessContainer = Color(0xFF1B5E20)
+// Gradient Colors
+val GradientStart = Color(0xFF667EEA) // Azul violáceo
+val GradientMiddle = Color(0xFF764BA2) // Violeta
+val GradientEnd = Color(0xFFF093FB) // Rosa claro
 
-val Warning = Color(0xFFFF9800)
-val WarningContainer = Color(0xFFFFE0B2)
-val OnWarningContainer = Color(0xFFE65100)
+// Background Gradients
+val BackgroundGradientStart = Color(0xFFF8FAFC) // Gris muy claro
+val BackgroundGradientEnd = Color(0xFFE2E8F0) // Gris claro
 
-val Info = Color(0xFF2196F3)
-val InfoContainer = Color(0xFFBBDEFB)
-val OnInfoContainer = Color(0xFF0D47A1)
+// Semantic Colors con efecto Glass
+val Success = Color(0xFF10B981) // Verde esmeralda
+val SuccessGlass = Color(0x3310B981) // Verde glass
+val SuccessContainer = Color(0xFFD1FAE5)
+val OnSuccessContainer = Color(0xFF065F46)
 
-// Financial Colors
-val IncomeGreen = Color(0xFF4CAF50)
-val IncomeGreenLight = Color(0xFFC8E6C9)
-val ExpenseRed = Color(0xFFF44336)
-val ExpenseRedLight = Color(0xFFFFCDD2)
-val BudgetBlue = Color(0xFF2196F3)
-val BudgetBlueLight = Color(0xFFBBDEFB)
-val SavingsTeal = Color(0xFF009688)
-val SavingsTealLight = Color(0xFFB2DFDB)
+val Error = Color(0xFFEF4444) // Rojo moderno
+val ErrorGlass = Color(0x33EF4444) // Rojo glass
+val ErrorContainer = Color(0xFFFEE2E2)
+val OnErrorContainer = Color(0xFF991B1B)
 
-// Surface Colors - Light Theme
-val SurfaceLight = Color(0xFFFFFFFF)
-val SurfaceVariantLight = Color(0xFFF5F5F5)
-val BackgroundLight = Color(0xFFFAFAFA)
-val OnSurfaceLight = Color(0xFF1A1C1E)
-val OnSurfaceVariantLight = Color(0xFF424242)
-val OnBackgroundLight = Color(0xFF1A1C1E)
-val OutlineLight = Color(0xFFBDBDBD)
-val OutlineVariantLight = Color(0xFFE0E0E0)
+val Warning = Color(0xFFF59E0B) // Ámbar
+val WarningGlass = Color(0x33F59E0B) // Ámbar glass
+val WarningContainer = Color(0xFFFEF3C7)
+val OnWarningContainer = Color(0xFF92400E)
 
-// Surface Colors - Dark Theme
-val SurfaceDark = Color(0xFF1E1E1E)
-val SurfaceVariantDark = Color(0xFF2E2E2E)
-val BackgroundDark = Color(0xFF121212)
-val OnSurfaceDark = Color(0xFFE0E0E0)
-val OnSurfaceVariantDark = Color(0xFFBDBDBD)
-val OnBackgroundDark = Color(0xFFE0E0E0)
-val OutlineDark = Color(0xFF616161)
-val OutlineVariantDark = Color(0xFF424242)
+val Info = Color(0xFF3B82F6) // Azul moderno
+val InfoGlass = Color(0x333B82F6) // Azul glass
+val InfoContainer = Color(0xFFDBEAFE)
+val OnInfoContainer = Color(0xFF1E40AF)
 
-// Common Colors
-val OnPrimary = Color(0xFFFFFFFF)
-val OnSecondary = Color(0xFFFFFFFF)
-val OnTertiary = Color(0xFFFFFFFF)
-val OnError = Color(0xFFFFFFFF)
+// Financial Colors con Glass Effect
+val IncomeGreen = Color(0xFF10B981)
+val IncomeGreenGlass = Color(0x3310B981)
+val IncomeGreenLight = Color(0xFFD1FAE5)
 
-// Category Colors
-val CategoryFood = Color(0xFFFF5722)
-val CategoryTransport = Color(0xFF3F51B5)
-val CategoryEntertainment = Color(0xFFE91E63)
-val CategoryHealth = Color(0xFF4CAF50)
-val CategoryShopping = Color(0xFF9C27B0)
-val CategoryUtilities = Color(0xFF607D8B)
-val CategoryEducation = Color(0xFFFF9800)
-val CategoryTravel = Color(0xFF00BCD4)
-val CategoryOther = Color(0xFF795548)
+val ExpenseRed = Color(0xFFEF4444)
+val ExpenseRedGlass = Color(0x33EF4444)
+val ExpenseRedLight = Color(0xFFFEE2E2)
 
-// Legacy compatibility colors
+val BudgetBlue = Color(0xFF3B82F6)
+val BudgetBlueGlass = Color(0x333B82F6)
+val BudgetBlueLight = Color(0xFFDBEAFE)
+
+val SavingsTeal = Color(0xFF06B6D4)
+val SavingsTealGlass = Color(0x3306B6D4)
+val SavingsTealLight = Color(0xFFCFFAFE)
+
+// Glassmorphism Surface Colors
+val SurfaceLight = Color(0xFFFFFBFF) // Blanco puro
+val SurfaceVariantLight = Color(0x1AFFFFFF) // Superficie glass
+val BackgroundLight = Color(0xFFF8FAFC) // Fondo claro
+val OnSurfaceLight = Color(0xFF1F2937) // Gris oscuro moderno
+val OnSurfaceVariantLight = Color(0xFF6B7280) // Gris medio
+val OnBackgroundLight = Color(0xFF111827) // Negro suave
+val OutlineLight = Color(0xFFE5E7EB) // Borde claro
+val OutlineVariantLight = Color(0xFFF3F4F6) // Borde muy claro
+
+// Glassmorphism Dark Theme
+val SurfaceDark = Color(0xFF0F172A) // Azul muy oscuro
+val SurfaceVariantDark = Color(0x1AFFFFFF) // Glass dark
+val BackgroundDark = Color(0xFF020617) // Negro azulado
+val OnSurfaceDark = Color(0xFFF1F5F9) // Blanco suave
+val OnSurfaceVariantDark = Color(0xFF94A3B8) // Gris claro
+val OnBackgroundDark = Color(0xFFFAFAFA) // Blanco puro
+val OutlineDark = Color(0xFF334155) // Borde oscuro
+val OutlineVariantDark = Color(0xFF1E293B) // Borde muy oscuro
+
+// Glass Surface Variations
+val GlassSurface1 = Color(0x0DFFFFFF) // 5% opacity
+val GlassSurface2 = Color(0x1AFFFFFF) // 10% opacity
+val GlassSurface3 = Color(0x26FFFFFF) // 15% opacity
+val GlassSurface4 = Color(0x33FFFFFF) // 20% opacity
+
+// Text on Glass
+val OnPrimary = Color(0xFFFFFBFF)
+val OnSecondary = Color(0xFF0F172A)
+val OnTertiary = Color(0xFFFFFBFF)
+val OnError = Color(0xFFFFFBFF)
+
+// Glassmorphism Category Colors
+val CategoryFood = Color(0xFFEF4444) // Rojo moderno
+val CategoryFoodGlass = Color(0x33EF4444)
+val CategoryTransport = Color(0xFF3B82F6) // Azul moderno
+val CategoryTransportGlass = Color(0x333B82F6)
+val CategoryEntertainment = Color(0xFFEC4899) // Rosa moderno
+val CategoryEntertainmentGlass = Color(0x33EC4899)
+val CategoryHealth = Color(0xFF10B981) // Verde esmeralda
+val CategoryHealthGlass = Color(0x3310B981)
+val CategoryShopping = Color(0xFF8B5CF6) // Violeta
+val CategoryShoppingGlass = Color(0x338B5CF6)
+val CategoryUtilities = Color(0xFF6B7280) // Gris neutro
+val CategoryUtilitiesGlass = Color(0x336B7280)
+val CategoryEducation = Color(0xFFF59E0B) // Ámbar
+val CategoryEducationGlass = Color(0x33F59E0B)
+val CategoryTravel = Color(0xFF06B6D4) // Cyan
+val CategoryTravelGlass = Color(0x3306B6D4)
+val CategoryOther = Color(0xFF84CC16) // Lima
+val CategoryOtherGlass = Color(0x3384CC16)
+
+// Shimmer Colors para efectos de carga
+val ShimmerColorLight = Color(0xFFF1F5F9)
+val ShimmerColorDark = Color(0xFF334155)
+
+// Legacy compatibility colors (actualizados)
 val Indigo500 = CashFlowPrimary
 val Indigo100 = CashFlowPrimaryLight
 val Indigo50 = Color(0xFFF0F4FF)
-val Indigo600 = Color(0xFF1565C0)
+val Indigo600 = Color(0xFF4338CA)
 val Indigo700 = CashFlowPrimaryDark
 
 val Green600 = Success
@@ -94,7 +137,7 @@ val Green50 = Color(0xFFF0FDF4)
 val Green700 = Color(0xFF388E3C)
 
 val Red500 = Error
-val Red100 = ErrorContainerLight
+val Red100 = ErrorContainer
 val Red50 = Color(0xFFFEF2F2)
 val Red600 = Color(0xFFD32F2F)
 

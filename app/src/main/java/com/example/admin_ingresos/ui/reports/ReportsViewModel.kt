@@ -28,8 +28,8 @@ class ReportsViewModel(private val database: AppDatabase) : ViewModel() {
     private val _spendingPatterns = MutableStateFlow<SpendingPatterns?>(null)
     val spendingPatterns: StateFlow<SpendingPatterns?> = _spendingPatterns.asStateFlow()
     
-    private val _financialInsights = MutableStateFlow<List<FinancialInsight>>(emptyList())
-    val financialInsights: StateFlow<List<FinancialInsight>> = _financialInsights.asStateFlow()
+    private val _financialInsights = MutableStateFlow<List<com.example.admin_ingresos.data.FinancialInsight>>(emptyList())
+    val financialInsights: StateFlow<List<com.example.admin_ingresos.data.FinancialInsight>> = _financialInsights.asStateFlow()
     
     private val _financialProjections = MutableStateFlow<FinancialProjections?>(null)
     val financialProjections: StateFlow<FinancialProjections?> = _financialProjections.asStateFlow()

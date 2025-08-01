@@ -15,7 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// CashFlow Dark Color Scheme
+// CashFlow Glassmorphism Dark Color Scheme
 private val CashFlowDarkColorScheme = darkColorScheme(
     primary = CashFlowPrimary,
     onPrimary = OnPrimary,
@@ -46,7 +46,7 @@ private val CashFlowDarkColorScheme = darkColorScheme(
     inversePrimary = CashFlowPrimary
 )
 
-// CashFlow Light Color Scheme
+// CashFlow Glassmorphism Light Color Scheme
 private val CashFlowLightColorScheme = lightColorScheme(
     primary = CashFlowPrimary,
     onPrimary = OnPrimary,
@@ -62,8 +62,8 @@ private val CashFlowLightColorScheme = lightColorScheme(
     onTertiaryContainer = TertiaryPurpleDark,
     error = Error,
     onError = OnError,
-    errorContainer = ErrorContainerLight,
-    onErrorContainer = OnErrorContainerLight,
+    errorContainer = ErrorContainer,
+    onErrorContainer = OnErrorContainer,
     background = BackgroundLight,
     onBackground = OnBackgroundLight,
     surface = SurfaceLight,

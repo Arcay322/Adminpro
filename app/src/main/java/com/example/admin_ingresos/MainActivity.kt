@@ -4,6 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -13,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -66,21 +70,39 @@ fun MainNavigation() {
 fun MainAppNavigation() {
     val navController = rememberNavController()
     
-    Scaffold(
-        bottomBar = { BottomNavigationBar(navController) },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate("addTransaction") },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Añadir transacción"
+    // Glassmorphism Background
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                    colors = listOf(
+                        com.example.admin_ingresos.ui.theme.BackgroundGradientStart,
+                        com.example.admin_ingresos.ui.theme.BackgroundGradientEnd
+                    )
                 )
+            )
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            bottomBar = { BottomNavigationBar(navController) },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = { navController.navigate("addTransaction") },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = Color.White,
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 8.dp,
+                        pressedElevation = 12.dp
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Añadir transacción"
+                    )
+                }
             }
-        }
-    ) { paddingValues ->
+        ) { paddingValues ->
         NavHost(
             navController = navController,
             startDestination = "dashboard",
@@ -93,12 +115,10 @@ fun MainAppNavigation() {
                 popEnterTransition = { getPopEnterTransition(getTransitionForRoute("dashboard")) },
                 popExitTransition = { getPopExitTransition(getTransitionForRoute("dashboard")) }
             ) {
-                com.example.admin_ingresos.ui.dashboard.EnhancedDashboardScreen(
-                    onAddTransaction = { navController.navigate("addTransaction") },
+                com.example.admin_ingresos.ui.dashboard.DashboardScreenSimple(
+                    onAddTransaction = { navController.navigate("add_transaction") },
                     onViewHistory = { navController.navigate("history") },
-                    onViewReports = { navController.navigate("reports") },
-                    onViewBudgets = { navController.navigate("budgets") },
-                    onViewCategories = { navController.navigate("categories") }
+                    onViewReports = { navController.navigate("reports") }
                 )
             }
             composable(
@@ -162,6 +182,7 @@ fun MainAppNavigation() {
             }
         }
     }
+}
 }
 
 @Composable

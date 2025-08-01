@@ -1,26 +1,43 @@
 package com.example.admin_ingresos.ui.transaction
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.admin_ingresos.ui.components.*
 import com.example.admin_ingresos.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.text.NumberFormat
+import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
     val context = LocalContext.current
@@ -32,7 +49,7 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
         }
     })
     
-    // Form state with validation
+    // Enhanced form state with validation
     var amount by remember { mutableStateOf("") }
     var amountError by remember { mutableStateOf<String?>(null) }
     var description by remember { mutableStateOf("") }
@@ -44,12 +61,24 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
     var showDuplicateDialog by remember { mutableStateOf(false) }
     var duplicateTransactions by remember { mutableStateOf<List<com.example.admin_ingresos.data.Transaction>>(emptyList()) }
     var receiptPhotoUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var savedTransactionType by remember { mutableStateOf("") }
+    var savedAmount by remember { mutableStateOf("") }
     
     val categories by produceState(initialValue = emptyList<com.example.admin_ingresos.data.Category>(), db) {
         value = db.categoryDao().getAll()
     }
     val paymentMethods by produceState(initialValue = emptyList<com.example.admin_ingresos.data.PaymentMethod>(), db) {
         value = db.paymentMethodDao().getAll()
+    }
+    
+    // Categories state that updates automatically
+    var categoriesList by remember { mutableStateOf(categories) }
+    
+    // Update categories list when categories change
+    LaunchedEffect(categories) {
+        categoriesList = categories
     }
     
     // Autocomplete suggestions
@@ -84,7 +113,7 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
     
     fun validateCategory(categoryId: Int?): String? {
         // Make category optional if no categories exist
-        return if (categories.isEmpty()) null 
+        return if (categoriesList.isEmpty()) null 
                else if (categoryId == null) "Selecciona una categoría" 
                else null
     }
@@ -93,242 +122,304 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
     val isFormValid = amountError == null && descriptionError == null && 
                      categoryError == null && amount.isNotBlank() && 
                      description.isNotBlank() && 
-                     (categories.isEmpty() || selectedCategoryId != null)
+                     (categoriesList.isEmpty() || selectedCategoryId != null)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Header
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "Nueva Transacción",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Text(
-                    text = "Completa los campos para agregar una transacción",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                )
-            }
-        }
-        
-        // Transaction type selector
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "Tipo de transacción",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    FilterChip(
-                        onClick = { type = "Gasto" },
-                        label = { Text("Gasto") },
-                        selected = type == "Gasto",
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.error,
-                            selectedLabelColor = MaterialTheme.colorScheme.onError
-                        ),
-                        modifier = Modifier.weight(1f)
-                    )
-                    FilterChip(
-                        onClick = { type = "Ingreso" },
-                        label = { Text("Ingreso") },
-                        selected = type == "Ingreso",
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.secondary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onSecondary
-                        ),
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
-        
-        // Amount field
-        OutlinedTextField(
-            value = amount,
-            onValueChange = { newValue ->
-                amount = newValue
-                amountError = validateAmount(newValue)
-            },
-            label = { Text("Monto") },
-            placeholder = { Text("0.00") },
-            leadingIcon = { Text("$", style = MaterialTheme.typography.titleMedium) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            isError = amountError != null,
-            supportingText = amountError?.let { { Text(it) } },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+        // Enhanced Header with back button
+        CashFlowHeader(
+            title = "Nueva Transacción",
+            subtitle = "Registra tu ingreso o gasto"
         )
         
-        // Description field with autocomplete
-        AutoCompleteTextField(
-            value = description,
-            onValueChange = { newValue ->
-                description = newValue
-                descriptionError = validateDescription(newValue)
-            },
-            suggestions = descriptionSuggestions,
-            onSuggestionSelected = { selectedDescription ->
-                description = selectedDescription
-                descriptionError = validateDescription(selectedDescription)
-                
-                // Auto-suggest category based on description - moved outside of onSuggestionSelected
-            },
-            label = { Text("Descripción") },
-            placeholder = { Text("Ej: Compra en supermercado") },
-            isError = descriptionError != null,
-            supportingText = descriptionError?.let { { Text(it) } },
-            modifier = Modifier.fillMaxWidth()
-        )
-        
-        // Category selector - Always show, even if empty
-        CategorySelector(
-            categories = categories,
-            selectedCategoryId = selectedCategoryId,
-            onCategorySelected = { categoryId ->
-                selectedCategoryId = categoryId
-                categoryError = validateCategory(categoryId)
-            },
-            onNewCategoryAdded = { categoryName ->
-                // Add new category to database
-                transactionViewModel.addCategory(categoryName) { newCategoryId ->
-                    selectedCategoryId = newCategoryId
-                    categoryError = validateCategory(newCategoryId)
-                }
-            },
-            error = categoryError
-        )
-        
-        // Payment method selector - Always show, even if empty
-        PaymentMethodSelector(
-            paymentMethods = paymentMethods,
-            selectedPaymentMethodId = selectedPaymentMethodId,
-            onPaymentMethodSelected = { selectedPaymentMethodId = it }
-        )
-        
-        // Receipt photo capture
-        ReceiptCameraCapture(
-            onPhotoTaken = { uri -> receiptPhotoUri = uri },
-            currentPhotoUri = receiptPhotoUri
-        )
-        
-        // Action buttons
-        Row(
+        LazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            OutlinedButton(
-                onClick = onCancel,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Cancelar")
+            // Type Selector with visual improvements
+            item {
+                AnimatedVisibility(
+                    visible = true,
+                    enter = slideInVertically() + fadeIn()
+                ) {
+                    TypeSelectorCard(
+                        selectedType = type,
+                        onTypeSelected = { type = it }
+                    )
+                }
             }
-            Button(
-                onClick = {
-                    if (isFormValid) {
-                        val amountDouble = amount.toDoubleOrNull() ?: 0.0
-                        val categoryId = selectedCategoryId ?: 0
-                        
-                        // Save transaction directly without duplicate check for now
-                        transactionViewModel.saveTransaction(
-                            amount = amountDouble,
-                            type = type,
-                            categoryId = categoryId,
-                            description = description,
-                            date = System.currentTimeMillis(),
-                            paymentMethodId = selectedPaymentMethodId
-                        )
-                        onSave()
-                    }
-                },
-                enabled = isFormValid,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Guardar")
+            
+            // Amount Input with better design
+            item {
+                AnimatedVisibility(
+                    visible = true,
+                    enter = slideInVertically(initialOffsetY = { it / 4 }) + fadeIn()
+                ) {
+                    AmountInputCard(
+                        amount = amount,
+                        onAmountChange = { newValue ->
+                            amount = newValue
+                            amountError = validateAmount(newValue)
+                        },
+                        error = amountError,
+                        transactionType = type
+                    )
+                }
+            }
+            
+            // Description with smart suggestions
+            item {
+                AnimatedVisibility(
+                    visible = true,
+                    enter = slideInVertically(initialOffsetY = { it / 3 }) + fadeIn()
+                ) {
+                    DescriptionInputCard(
+                        description = description,
+                        onDescriptionChange = { newValue ->
+                            description = newValue
+                            descriptionError = validateDescription(newValue)
+                        },
+                        suggestions = descriptionSuggestions,
+                        onSuggestionSelected = { selectedDescription ->
+                            description = selectedDescription
+                            descriptionError = validateDescription(selectedDescription)
+                        },
+                        error = descriptionError
+                    )
+                }
+            }
+            
+            // Enhanced Category Selector
+            item {
+                AnimatedVisibility(
+                    visible = true,
+                    enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
+                ) {
+                    EnhancedCategorySelector(
+                        categories = categoriesList,
+                        selectedCategoryId = selectedCategoryId,
+                        onCategorySelected = { categoryId ->
+                            selectedCategoryId = categoryId
+                            categoryError = validateCategory(categoryId)
+                        },
+                        onNewCategoryAdded = { categoryName ->
+                            transactionViewModel.addCategory(categoryName) { newCategoryId ->
+                                selectedCategoryId = newCategoryId
+                                categoryError = validateCategory(newCategoryId)
+                                // Update local categories list immediately
+                                categoriesList = categoriesList + com.example.admin_ingresos.data.Category(
+                                    id = newCategoryId,
+                                    name = categoryName
+                                )
+                            }
+                        },
+                        error = categoryError,
+                        transactionType = type
+                    )
+                }
+            }
+            
+            // Payment Method with modern design (collapsible)
+            item {
+                AnimatedVisibility(
+                    visible = true,
+                    enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
+                ) {
+                    PaymentMethodCard(
+                        paymentMethods = paymentMethods,
+                        selectedPaymentMethodId = selectedPaymentMethodId,
+                        onPaymentMethodSelected = { selectedPaymentMethodId = it },
+                        onNewPaymentMethodAdded = { methodName ->
+                            // Agregar nuevo método de pago a la base de datos
+                            val newPaymentMethod = com.example.admin_ingresos.data.PaymentMethod(
+                                name = methodName
+                            )
+                            // Usar una corrutina para insertar en la base de datos
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val newId = db.paymentMethodDao().insert(newPaymentMethod)
+                                withContext(Dispatchers.Main) {
+                                    selectedPaymentMethodId = newId.toInt()
+                                }
+                            }
+                        },
+                        showExpanded = false
+                    )
+                }
+            }
+            
+            // Receipt Photo Component
+            item {
+                AnimatedVisibility(
+                    visible = true,
+                    enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
+                ) {
+                    ReceiptPhotoCard(
+                        photoUri = receiptPhotoUri,
+                        onPhotoTaken = { uri -> receiptPhotoUri = uri }
+                    )
+                }
+            }
+            
+            // Action buttons with enhanced design
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                ActionButtons(
+                    isFormValid = isFormValid,
+                    isLoading = isLoading,
+                    onSave = {
+                        if (isFormValid) {
+                            isLoading = true
+                            savedTransactionType = type
+                            savedAmount = NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(amount.toDouble())
+                            
+                            // Save the transaction directly for now, we'll improve duplicate detection later
+                            transactionViewModel.saveTransaction(
+                                amount = amount.toDouble(),
+                                type = type,
+                                categoryId = selectedCategoryId ?: 0,
+                                description = description.trim(),
+                                date = System.currentTimeMillis(),
+                                paymentMethodId = selectedPaymentMethodId
+                            )
+                            isLoading = false
+                            showSuccessDialog = true
+                        }
+                    },
+                    onCancel = onCancel
+                )
+            }
+            
+            // Bottom spacer
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
-        
-        // Bottom spacing for better scrolling
-        Spacer(modifier = Modifier.height(80.dp))
     }
     
     // Duplicate Transaction Dialog
     if (showDuplicateDialog) {
-        AlertDialog(
-            onDismissRequest = { showDuplicateDialog = false },
-            title = { Text("Posible Transacción Duplicada") },
-            text = { 
-                Column {
-                    Text("Se encontraron transacciones similares recientes:")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    duplicateTransactions.take(3).forEach { transaction ->
-                        Text(
-                            text = "• ${transaction.description} - $${String.format("%.2f", transaction.amount)}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("¿Estás seguro de que quieres agregar esta transacción?")
-                }
+        DuplicateTransactionDialog(
+            duplicateTransactions = duplicateTransactions,
+            onDismiss = { 
+                showDuplicateDialog = false
+                isLoading = false
             },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        // Save anyway
-                        val amountDouble = amount.toDoubleOrNull() ?: 0.0
-                        val categoryId = selectedCategoryId ?: 0
-                        transactionViewModel.saveTransaction(
-                            amount = amountDouble,
-                            type = type,
-                            categoryId = categoryId,
-                            description = description,
-                            date = System.currentTimeMillis(),
-                            paymentMethodId = selectedPaymentMethodId
-                        )
-                        showDuplicateDialog = false
-                        onSave()
-                    }
-                ) {
-                    Text("Sí, agregar")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDuplicateDialog = false }) {
-                    Text("Cancelar")
-                }
+            onConfirm = {
+                transactionViewModel.saveTransaction(
+                    amount = amount.toDouble(),
+                    type = type,
+                    categoryId = selectedCategoryId ?: 0,
+                    description = description.trim(),
+                    date = System.currentTimeMillis(),
+                    paymentMethodId = selectedPaymentMethodId
+                )
+                showDuplicateDialog = false
+                isLoading = false
+                onSave()
             }
         )
     }
+    
+    // Success Dialog
+    if (showSuccessDialog) {
+        TransactionSuccessDialog(
+            isVisible = showSuccessDialog,
+            transactionType = savedTransactionType,
+            amount = savedAmount,
+            onDismiss = {
+                showSuccessDialog = false
+                // Reset form
+                amount = ""
+                description = ""
+                selectedCategoryId = null
+                selectedPaymentMethodId = null
+                onSave()
+            }
+        )
+    }
+}
+
+@Composable
+private fun DuplicateTransactionDialog(
+    duplicateTransactions: List<com.example.admin_ingresos.data.Transaction>,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { 
+            Text(
+                "⚠️ Posible Duplicado",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold
+                )
+            ) 
+        },
+        text = { 
+            Column {
+                Text(
+                    "Se encontraron transacciones similares recientes:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                duplicateTransactions.take(3).forEach { transaction ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 2.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+                            Text(
+                                text = transaction.description,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(transaction.amount)} • ${transaction.type}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "¿Estás seguro de que quieres agregar esta transacción?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text("Sí, agregar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }

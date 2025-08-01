@@ -301,7 +301,7 @@ fun ReportsScreen() {
             }
             
             items(financialInsights) { insight ->
-                FinancialInsightCard(insight = insight)
+                FinancialInsightCard(insight = insight as com.example.admin_ingresos.data.FinancialInsight)
             }
         }
         
