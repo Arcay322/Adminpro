@@ -64,21 +64,19 @@ fun BudgetScreen() {
         ) {
             Column {
                 Text(
-                    text = "💰 CashFlow",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = InterFontFamily
-                    ),
-                    color = CashFlowPrimary
-                )
-                Text(
-                    text = "Presupuestos",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = InterFontFamily
-                    ),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                            text = "💰 CashFlow",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = CashFlowPrimary
+                        )
+                        Text(
+                            text = "Presupuestos",
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
             }
             
             FloatingActionButton(
@@ -144,7 +142,6 @@ fun BudgetScreen() {
                         Text(
                             text = "No hay presupuestos activos",
                             style = MaterialTheme.typography.titleMedium.copy(
-                                fontFamily = InterFontFamily,
                                 fontWeight = FontWeight.Bold
                             ),
                             color = MaterialTheme.colorScheme.onSurface
@@ -152,9 +149,7 @@ fun BudgetScreen() {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Crea tu primer presupuesto para controlar tus gastos y alcanzar tus metas financieras",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontFamily = InterFontFamily
-                            ),
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             textAlign = TextAlign.Center
                         )
@@ -209,9 +204,9 @@ fun BudgetProgressCard(
     
     // Determine progress color based on percentage
     val progressColor = when {
-        progressPercentage >= 90 -> CashFlowError
+        progressPercentage >= 90 -> MaterialTheme.colorScheme.error
         progressPercentage >= 75 -> Color(0xFFFF9800) // Orange
-        else -> CashFlowSuccess
+        else -> Color(0xFF4CAF50) // Green
     }
     
     Card(
@@ -267,16 +262,13 @@ fun BudgetProgressCard(
                             Text(
                                 text = budgetProgress.category.name,
                                 style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = InterFontFamily
+                                    fontWeight = FontWeight.Bold
                                 ),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = budgetProgress.budget.period.displayName,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontFamily = InterFontFamily
-                                ),
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                         }
@@ -311,16 +303,13 @@ fun BudgetProgressCard(
                         Column {
                             Text(
                                 text = "Gastado",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontFamily = InterFontFamily
-                                ),
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                             Text(
                                 text = "$${String.format("%.2f", budgetProgress.spent)}",
                                 style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = InterFontFamily
+                                    fontWeight = FontWeight.Bold
                                 ),
                                 color = progressColor
                             )
@@ -330,16 +319,13 @@ fun BudgetProgressCard(
                         ) {
                             Text(
                                 text = "Presupuesto",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontFamily = InterFontFamily
-                                ),
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                             Text(
                                 text = "$${String.format("%.2f", budgetProgress.budget.amount)}",
                                 style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = InterFontFamily
+                                    fontWeight = FontWeight.Bold
                                 ),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -384,7 +370,6 @@ fun BudgetProgressCard(
                         Text(
                             text = "${String.format("%.1f", progressPercentage)}% utilizado",
                             style = MaterialTheme.typography.bodySmall.copy(
-                                fontFamily = InterFontFamily,
                                 fontWeight = FontWeight.Medium
                             ),
                             color = progressColor
@@ -394,10 +379,9 @@ fun BudgetProgressCard(
                             text = if (remaining >= 0) "Restante: $${String.format("%.2f", remaining)}" 
                                   else "Excedido: $${String.format("%.2f", -remaining)}",
                             style = MaterialTheme.typography.bodySmall.copy(
-                                fontFamily = InterFontFamily,
                                 fontWeight = FontWeight.Medium
                             ),
-                            color = if (remaining >= 0) CashFlowSuccess else CashFlowError
+                            color = if (remaining >= 0) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
                         )
                     }
                 }
