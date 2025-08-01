@@ -310,9 +310,6 @@ fun CategoryItem(
                     }
                 }
             }
-        }
-    }
-            }
             
             // Action Buttons
             Row {

@@ -171,10 +171,8 @@ fun ReportsScreen() {
                                 contentDescription = null,
                                 tint = if (balance >= 0) Color(0xFF4CAF50) else Color(0xFFF44336),
                                 modifier = Modifier.size(32.dp)
-                            ) 
-                                MaterialTheme.colorScheme.onErrorContainer
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = "Balance",
                                 style = MaterialTheme.typography.bodyMedium.copy(
