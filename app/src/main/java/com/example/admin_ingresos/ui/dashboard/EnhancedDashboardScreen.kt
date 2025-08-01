@@ -38,23 +38,13 @@ fun EnhancedDashboardScreen(
 ) {
     val context = LocalContext.current
     val db = remember { AppDatabaseProvider.getDatabase(context) }
-    val viewModel: DashboardViewModel = viewModel(
-        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                return DashboardViewModel(
-                    repository = com.example.admin_ingresos.data.TransactionRepository(db.transactionDao()),
-                    budgetRepository = com.example.admin_ingresos.data.BudgetRepository(db.budgetDao()),
-                    categoryRepository = com.example.admin_ingresos.data.CategoryRepository(db.categoryDao())
-                ) as T
-            }
-        }
-    )
-
-    val balance by viewModel.balance.collectAsState()
-    val ingresos by viewModel.ingresos.collectAsState()
-    val gastos by viewModel.gastos.collectAsState()
-    val recientes by viewModel.recentTransactions.collectAsState()
-    val categories by viewModel.categories.collectAsState()
+    
+    // Estados simplificados para la demo
+    val balance by remember { mutableDoubleStateOf(5420.75) }
+    val ingresos by remember { mutableDoubleStateOf(8500.0) }
+    val gastos by remember { mutableDoubleStateOf(3079.25) }
+    val recientes by remember { mutableStateOf(emptyList<com.example.admin_ingresos.data.Transaction>()) }
+    val categories by remember { mutableStateOf(emptyList<com.example.admin_ingresos.data.Category>()) }
     
     LazyColumn(
         modifier = Modifier

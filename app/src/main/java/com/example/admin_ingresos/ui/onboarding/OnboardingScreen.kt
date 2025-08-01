@@ -67,6 +67,8 @@ fun OnboardingScreen(
             backgroundColor = Warning
         )
     )
+
+    var currentPage by remember { mutableIntStateOf(0) }
             val pages = listOf(
         OnboardingPage(
             title = "¡Bienvenido a CashFlow!",

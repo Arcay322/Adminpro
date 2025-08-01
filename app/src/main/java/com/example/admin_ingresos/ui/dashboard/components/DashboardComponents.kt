@@ -283,7 +283,7 @@ fun BudgetProgressSection(
 
 @Composable
 private fun BudgetProgressItem(budget: BudgetProgress) {
-    val progress = (budget.spent / budget.total).coerceIn(0f, 1f)
+    val progress = (budget.spent / budget.total).coerceIn(0.0, 1.0).toFloat()
     val color = when {
         progress < 0.7f -> Success
         progress < 0.9f -> Warning
@@ -310,7 +310,7 @@ private fun BudgetProgressItem(budget: BudgetProgress) {
         Spacer(modifier = Modifier.height(4.dp))
         
         LinearProgressIndicator(
-            progress = progress,
+            progress = { progress },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(6.dp),
@@ -617,8 +617,7 @@ fun EnhancedFAB(
         ExtendedFloatingActionButton(
             onClick = if (expanded) onToggleExpanded else onMainClick,
             containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            expanded = !expanded
+            contentColor = MaterialTheme.colorScheme.onPrimary
         ) {
             Icon(
                 imageVector = if (expanded) Icons.Default.Close else Icons.Default.Add,
