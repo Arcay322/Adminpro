@@ -404,45 +404,6 @@ fun BudgetProgressCard(
             }
         }
     }
-                
-                color = if (remaining >= 0) CashFlowSuccess else CashFlowError
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-            }
-            
-            // Status chip
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            AssistChip(
-                onClick = { },
-                label = { 
-                    Text(
-                        text = budgetProgress.status.displayName,
-                        style = MaterialTheme.typography.labelSmall
-                    ) 
-                },
-                colors = AssistChipDefaults.assistChipColors(
-                    containerColor = when (budgetProgress.status) {
-                        BudgetStatus.ON_TRACK -> MaterialTheme.colorScheme.primaryContainer
-                        BudgetStatus.WARNING -> Color(0xFFFF9800).copy(alpha = 0.2f)
-                        BudgetStatus.EXCEEDED -> MaterialTheme.colorScheme.errorContainer
-                        BudgetStatus.OVER_BUDGET -> Color(0xFF8B0000).copy(alpha = 0.2f)
-                    },
-                    labelColor = when (budgetProgress.status) {
-                        BudgetStatus.ON_TRACK -> MaterialTheme.colorScheme.onPrimaryContainer
-                        BudgetStatus.WARNING -> Color(0xFFFF9800)
-                        BudgetStatus.EXCEEDED -> MaterialTheme.colorScheme.onErrorContainer
-                        BudgetStatus.OVER_BUDGET -> Color(0xFF8B0000)
-                    }
-                )
-            )
-        }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
