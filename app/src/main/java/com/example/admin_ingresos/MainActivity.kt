@@ -18,6 +18,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.admin_ingresos.ui.animations.getEnterTransition
+import com.example.admin_ingresos.ui.animations.getExitTransition
+import com.example.admin_ingresos.ui.animations.getPopEnterTransition
+import com.example.admin_ingresos.ui.animations.getPopExitTransition
+import com.example.admin_ingresos.ui.animations.getTransitionForRoute
 import com.example.admin_ingresos.ui.navigation.BottomNavigationBar
 import com.example.admin_ingresos.ui.theme.Admin_ingresosTheme
 
@@ -37,6 +42,28 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainNavigation() {
+    val context = LocalContext.current
+    val preferencesManager = remember { com.example.admin_ingresos.data.PreferencesManager(context) }
+    
+    // Check if initial setup is completed
+    var isSetupCompleted by remember { mutableStateOf(preferencesManager.isSetupCompleted()) }
+    
+    if (!isSetupCompleted) {
+        // Show initial setup wizard
+        com.example.admin_ingresos.ui.setup.InitialSetupWizard(
+            onSetupComplete = {
+                preferencesManager.setSetupCompleted(true)
+                isSetupCompleted = true
+            }
+        )
+    } else {
+        // Show main app navigation
+        MainAppNavigation()
+    }
+}
+
+@Composable
+fun MainAppNavigation() {
     val navController = rememberNavController()
     
     Scaffold(
@@ -59,37 +86,57 @@ fun MainNavigation() {
             startDestination = "dashboard",
             modifier = Modifier.padding(paddingValues)
         ) {
-            composable("dashboard") {
+            composable(
+                "dashboard",
+                enterTransition = { getEnterTransition(getTransitionForRoute("dashboard")) },
+                exitTransition = { getExitTransition(getTransitionForRoute("dashboard")) },
+                popEnterTransition = { getPopEnterTransition(getTransitionForRoute("dashboard")) },
+                popExitTransition = { getPopExitTransition(getTransitionForRoute("dashboard")) }
+            ) {
                 com.example.admin_ingresos.ui.dashboard.DashboardScreen(
                     onAddTransaction = { navController.navigate("addTransaction") },
                     onViewHistory = { navController.navigate("history") },
                     onViewReports = { navController.navigate("reports") }
                 )
             }
-            composable("categories") {
-                com.example.admin_ingresos.ui.category.CategoryManagementScreen()
+            composable(
+                "budget",
+                enterTransition = { getEnterTransition(getTransitionForRoute("budget")) },
+                exitTransition = { getExitTransition(getTransitionForRoute("budget")) },
+                popEnterTransition = { getPopEnterTransition(getTransitionForRoute("budget")) },
+                popExitTransition = { getPopExitTransition(getTransitionForRoute("budget")) }
+            ) {
+                com.example.admin_ingresos.ui.budget.BudgetScreen()
             }
-            composable("reports") {
+            composable(
+                "reports",
+                enterTransition = { getEnterTransition(getTransitionForRoute("reports")) },
+                exitTransition = { getExitTransition(getTransitionForRoute("reports")) },
+                popEnterTransition = { getPopEnterTransition(getTransitionForRoute("reports")) },
+                popExitTransition = { getPopExitTransition(getTransitionForRoute("reports")) }
+            ) {
                 com.example.admin_ingresos.ui.reports.ReportsScreen()
             }
-            composable("addTransaction") {
+            composable(
+                "addTransaction",
+                enterTransition = { getEnterTransition(getTransitionForRoute("addTransaction")) },
+                exitTransition = { getExitTransition(getTransitionForRoute("addTransaction")) },
+                popEnterTransition = { getPopEnterTransition(getTransitionForRoute("addTransaction")) },
+                popExitTransition = { getPopExitTransition(getTransitionForRoute("addTransaction")) }
+            ) {
                 com.example.admin_ingresos.ui.transaction.AddTransactionScreen(
                     onSave = { navController.popBackStack() },
                     onCancel = { navController.popBackStack() }
                 )
             }
-            composable("history") {
-                val context = LocalContext.current
-                val db = com.example.admin_ingresos.AppDatabaseProvider.getDatabase(context)
-                val viewModel: com.example.admin_ingresos.ui.history.TransactionHistoryViewModel = viewModel(factory = object : ViewModelProvider.Factory {
-                    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                        @Suppress("UNCHECKED_CAST")
-                        return com.example.admin_ingresos.ui.history.TransactionHistoryViewModel(db) as T
-                    }
-                })
-                val transactions by viewModel.transactions.collectAsState()
-                com.example.admin_ingresos.ui.history.TransactionHistoryScreen(transactions)
-                LaunchedEffect(Unit) { viewModel.loadTransactions() }
+            composable(
+                "history",
+                enterTransition = { getEnterTransition(getTransitionForRoute("history")) },
+                exitTransition = { getExitTransition(getTransitionForRoute("history")) },
+                popEnterTransition = { getPopEnterTransition(getTransitionForRoute("history")) },
+                popExitTransition = { getPopExitTransition(getTransitionForRoute("history")) }
+            ) {
+                com.example.admin_ingresos.ui.history.TransactionHistoryScreen()
             }
         }
     }

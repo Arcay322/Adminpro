@@ -9,10 +9,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,12 +33,28 @@ fun ReportsScreen() {
     })
     
     val transactions by viewModel.transactions.collectAsState()
-    val categorias by produceState(initialValue = emptyList<com.example.admin_ingresos.data.Category>(), db) {
-        value = db.categoryDao().getAll()
+    val categories by viewModel.categories.collectAsState()
+    val monthlyTrends by viewModel.monthlyTrends.collectAsState()
+    val categoryTrends by viewModel.categoryTrends.collectAsState()
+    val spendingPatterns by viewModel.spendingPatterns.collectAsState()
+    val financialInsights by viewModel.financialInsights.collectAsState()
+    val financialProjections by viewModel.financialProjections.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
+    // Pull-to-refresh state
+    val pullToRefreshState = rememberPullToRefreshState()
+    
+    // Handle pull-to-refresh
+    LaunchedEffect(pullToRefreshState.isRefreshing) {
+        if (pullToRefreshState.isRefreshing) {
+            viewModel.refreshData()
+        }
     }
     
-    LaunchedEffect(Unit) { 
-        viewModel.loadTransactions() 
+    LaunchedEffect(isLoading) {
+        if (!isLoading && pullToRefreshState.isRefreshing) {
+            pullToRefreshState.endRefresh()
+        }
     }
 
     // Cálculos financieros
@@ -45,7 +64,7 @@ fun ReportsScreen() {
     val totalTransactions = transactions.size
     
     fun getCategoryName(catId: Int?): String {
-        return categorias.find { it.id == catId }?.name ?: "Sin categoría"
+        return categories.find { it.id == catId }?.name ?: "Sin categoría"
     }
     
     // Análisis por categoría
@@ -54,13 +73,18 @@ fun ReportsScreen() {
         .toList()
         .sortedByDescending { it.second }
 
-    LazyColumn(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .nestedScroll(pullToRefreshState.nestedScrollConnection)
     ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
         // Header
         item {
             Card(
@@ -189,32 +213,41 @@ fun ReportsScreen() {
             }
         }
         
-        // Gráfico de barras
-        if (ingresos > 0 || gastos > 0) {
+        // Tendencias mensuales
+        if (monthlyTrends.isNotEmpty()) {
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Comparación Ingresos vs Gastos",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
-                        com.example.admin_ingresos.ui.reports.IncomeExpenseBarChart(
-                            context = context,
-                            ingresos = ingresos,
-                            gastos = gastos,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(220.dp)
-                        )
-                    }
-                }
+                IncomeExpenseBarChart(
+                    monthlyTrends = monthlyTrends,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+        
+        // Proyecciones financieras
+        financialProjections?.let { projections ->
+            item {
+                FinancialProjectionsCard(
+                    projections = projections,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+        
+        // Insights financieros
+        if (financialInsights.isNotEmpty()) {
+            item {
+                Text(
+                    text = "Insights Financieros",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            
+            items(financialInsights) { insight ->
+                FinancialInsightCard(insight = insight)
             }
         }
         
@@ -265,6 +298,12 @@ fun ReportsScreen() {
         item {
             Spacer(modifier = Modifier.height(80.dp))
         }
+    }
+        
+        PullToRefreshContainer(
+            modifier = Modifier.align(Alignment.TopCenter),
+            state = pullToRefreshState,
+        )
     }
 }
 
@@ -359,6 +398,80 @@ fun CategoryAnalysisItem(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+@Composable
+fun FinancialInsightCard(
+    insight: com.example.admin_ingresos.data.FinancialInsight
+) {
+    val containerColor = when (insight.type) {
+        com.example.admin_ingresos.data.InsightType.INFO -> MaterialTheme.colorScheme.primaryContainer
+        com.example.admin_ingresos.data.InsightType.TIP -> MaterialTheme.colorScheme.secondaryContainer
+        com.example.admin_ingresos.data.InsightType.WARNING -> Color(0xFFFF9800).copy(alpha = 0.2f)
+        com.example.admin_ingresos.data.InsightType.ALERT -> MaterialTheme.colorScheme.errorContainer
+    }
+    
+    val contentColor = when (insight.type) {
+        com.example.admin_ingresos.data.InsightType.INFO -> MaterialTheme.colorScheme.onPrimaryContainer
+        com.example.admin_ingresos.data.InsightType.TIP -> MaterialTheme.colorScheme.onSecondaryContainer
+        com.example.admin_ingresos.data.InsightType.WARNING -> Color(0xFFFF9800)
+        com.example.admin_ingresos.data.InsightType.ALERT -> MaterialTheme.colorScheme.onErrorContainer
+    }
+    
+    val icon = when (insight.type) {
+        com.example.admin_ingresos.data.InsightType.INFO -> "ℹ️"
+        com.example.admin_ingresos.data.InsightType.TIP -> "💡"
+        com.example.admin_ingresos.data.InsightType.WARNING -> "⚠️"
+        com.example.admin_ingresos.data.InsightType.ALERT -> "🚨"
+    }
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Text(
+                text = icon,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(end = 12.dp)
+            )
+            
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = insight.title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = contentColor
+                )
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                Text(
+                    text = insight.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = contentColor.copy(alpha = 0.8f)
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    text = "💡 ${insight.recommendation}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = contentColor.copy(alpha = 0.7f)
+                )
+            }
         }
     }
 }

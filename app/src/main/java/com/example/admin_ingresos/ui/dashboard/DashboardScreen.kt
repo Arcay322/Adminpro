@@ -1,17 +1,22 @@
 package com.example.admin_ingresos.ui.dashboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -35,8 +40,28 @@ fun DashboardScreen(onAddTransaction: () -> Unit, onViewHistory: () -> Unit, onV
         value = db.categoryDao().getAll()
     }
     
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
+    var showCustomizeDialog by remember { mutableStateOf(false) }
+    
+    // Pull-to-refresh state
+    val pullToRefreshState = rememberPullToRefreshState()
+    val uiState by viewModel.uiState.collectAsState()
+    
     LaunchedEffect(Unit) { 
         viewModel.loadTransactions() 
+    }
+    
+    // Handle pull-to-refresh
+    LaunchedEffect(pullToRefreshState.isRefreshing) {
+        if (pullToRefreshState.isRefreshing) {
+            viewModel.refreshData()
+        }
+    }
+    
+    LaunchedEffect(uiState.isLoading) {
+        if (!uiState.isLoading && pullToRefreshState.isRefreshing) {
+            pullToRefreshState.endRefresh()
+        }
     }
 
     // Cálculos financieros
@@ -48,50 +73,90 @@ fun DashboardScreen(onAddTransaction: () -> Unit, onViewHistory: () -> Unit, onV
     fun getCategoryName(catId: Int?): String {
         return categorias.find { it.id == catId }?.name ?: "Sin categoría"
     }
+    
+    // Generate smart suggestions based on transaction history
+    val smartSuggestions = remember(transactions, categorias) {
+        generateSmartSuggestions(transactions, categorias)
+    }
+    
+    // Generate quick action shortcuts based on frequent transactions
+    val quickShortcuts = remember(transactions, categorias) {
+        generateQuickShortcuts(transactions, categorias)
+    }
+    
+    // Widget configuration from preferences
+    val widgetConfigs by DashboardPreferences.widgetConfigs
 
-    LazyColumn(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .nestedScroll(pullToRefreshState.nestedScrollConnection)
     ) {
-        // Header con balance
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+        // Dashboard header with customization
         item {
-            Card(
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Balance Total",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "$${String.format("%.2f", balance)}",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = if (balance >= 0) 
-                            MaterialTheme.colorScheme.primary 
-                        else 
-                            MaterialTheme.colorScheme.error
+                Text(
+                    text = "Dashboard",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Bold
+                )
+                IconButton(onClick = { showCustomizeDialog = true }) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Personalizar dashboard",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
         }
+
+        // Balance Widget
+        widgetConfigs.find { it.type == WidgetType.BALANCE }?.let { config ->
+            item {
+                DashboardWidget(
+                    config = config,
+                    content = {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Balance Total",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "$${String.format("%.2f", balance)}",
+                                style = MaterialTheme.typography.headlineMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = if (balance >= 0) 
+                                    MaterialTheme.colorScheme.primary 
+                                else 
+                                    MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                )
+            }
+        }
         
-        // Cards de resumen financiero
+        // Income and Expenses Cards
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -99,98 +164,168 @@ fun DashboardScreen(onAddTransaction: () -> Unit, onViewHistory: () -> Unit, onV
             ) {
                 DashboardCard(
                     title = "Ingresos", 
-                    amount = "$${String.format("%.2f", ingresos)}", 
+                    amount = "${String.format("%.2f", ingresos)}", 
                     color = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.weight(1f)
                 )
                 DashboardCard(
                     title = "Gastos", 
-                    amount = "$${String.format("%.2f", gastos)}", 
+                    amount = "${String.format("%.2f", gastos)}", 
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.weight(1f)
                 )
             }
         }
-        
-        // Gráfico de gastos por categoría
-        if (gastos > 0) {
+
+        // Quick Actions Widget
+        widgetConfigs.find { it.type == WidgetType.QUICK_ACTIONS }?.let { config ->
             item {
-                val gastosPorCategoria: Map<String, Double> = transactions
-                    .filter { it.type == "Gasto" }
-                    .groupBy { getCategoryName(it.categoryId) }
-                    .mapValues { entry -> entry.value.sumOf { it.amount } }
-                
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Gastos por Categoría",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
-                        com.example.admin_ingresos.ui.dashboard.ExpensePieChart(
-                            context = context,
-                            expensesByCategory = gastosPorCategoria,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                        )
-                    }
-                }
+                QuickActionWidget(
+                    onAddIncome = { 
+                        // Navigate to add transaction with income pre-selected
+                        onAddTransaction()
+                    },
+                    onAddExpense = { 
+                        // Navigate to add transaction with expense pre-selected
+                        onAddTransaction()
+                    },
+                    onViewReports = onViewReports,
+                    onViewHistory = onViewHistory
+                )
             }
         }
         
-        // Header de transacciones recientes
+        // Smart Suggestions Widget
+        if (smartSuggestions.isNotEmpty()) {
+            item {
+                SmartSuggestionsWidget(
+                    suggestions = smartSuggestions,
+                    onSuggestionClick = { suggestion ->
+                        // Navigate to add transaction with pre-filled data
+                        onAddTransaction()
+                    },
+                    onDismissSuggestion = { suggestion ->
+                        // Handle suggestion dismissal
+                    }
+                )
+            }
+        }
+        
+        // Quick Action Shortcuts Widget
         item {
-            Text(
-                text = "Transacciones Recientes",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(vertical = 8.dp)
+            QuickActionShortcutsWidget(
+                shortcuts = quickShortcuts,
+                onShortcutClick = { shortcut ->
+                    // Navigate to add transaction with pre-filled data from shortcut
+                    onAddTransaction()
+                },
+                onAddShortcut = {
+                    // Navigate to shortcut management screen
+                }
             )
         }
         
-        // Lista de transacciones recientes
-        if (recientes.isNotEmpty()) {
-            items(recientes) { tx ->
-                RecentTransactionItem(
-                    category = tx.description,
-                    type = tx.type,
-                    amount = if (tx.type == "Ingreso") tx.amount else -tx.amount,
-                    description = getCategoryName(tx.categoryId),
-                    color = if (tx.type == "Ingreso") 
-                        MaterialTheme.colorScheme.secondary
-                    else 
-                        MaterialTheme.colorScheme.error
-                )
-            }
-        } else {
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+        // Interactive Expense Chart
+        if (gastos > 0) {
+            widgetConfigs.find { it.type == WidgetType.EXPENSE_CHART }?.let { config ->
+                item {
+                    val gastosPorCategoria: Map<String, Double> = transactions
+                        .filter { it.type == "Gasto" }
+                        .groupBy { getCategoryName(it.categoryId) }
+                        .mapValues { entry -> entry.value.sumOf { it.amount } }
+                    
+                    DashboardWidget(
+                        config = config,
+                        content = {
+                            Column(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Text(
+                                    text = "Gastos por Categoría",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                )
+                                InteractiveExpensePieChart(
+                                    context = context,
+                                    expensesByCategory = gastosPorCategoria,
+                                    onCategorySelected = { category, amount ->
+                                        selectedCategory = category
+                                        // Could navigate to filtered transaction list
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        },
+                        onWidgetClick = {
+                            // Navigate to detailed analytics
+                            onViewReports()
+                        }
                     )
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No hay transacciones recientes\nToca el botón + para agregar una",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                    }
                 }
+            }
+        }
+        
+        // Recent Transactions Widget
+        widgetConfigs.find { it.type == WidgetType.RECENT_TRANSACTIONS }?.let { config ->
+            item {
+                DashboardWidget(
+                    config = config,
+                    content = {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Transacciones Recientes",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                TextButton(onClick = onViewHistory) {
+                                    Text("Ver todas")
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            if (recientes.isNotEmpty()) {
+                                recientes.forEach { tx ->
+                                    RecentTransactionItem(
+                                        category = tx.description,
+                                        type = tx.type,
+                                        amount = if (tx.type == "Ingreso") tx.amount else -tx.amount,
+                                        description = getCategoryName(tx.categoryId),
+                                        color = if (tx.type == "Ingreso") 
+                                            MaterialTheme.colorScheme.secondary
+                                        else 
+                                            MaterialTheme.colorScheme.error
+                                    )
+                                    if (tx != recientes.last()) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                    }
+                                }
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "No hay transacciones recientes",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    onWidgetClick = onViewHistory
+                )
             }
         }
         
@@ -198,6 +333,23 @@ fun DashboardScreen(onAddTransaction: () -> Unit, onViewHistory: () -> Unit, onV
         item {
             Spacer(modifier = Modifier.height(80.dp))
         }
+    }
+        
+        PullToRefreshContainer(
+            modifier = Modifier.align(Alignment.TopCenter),
+            state = pullToRefreshState,
+        )
+    }
+
+    // Dashboard customization dialog
+    if (showCustomizeDialog) {
+        DashboardCustomizationDialog(
+            widgetConfigs = widgetConfigs,
+            onConfigsChanged = { newConfigs ->
+                DashboardPreferences.updateWidgetConfigs(newConfigs)
+            },
+            onDismiss = { showCustomizeDialog = false }
+        )
     }
 }
 
@@ -249,7 +401,7 @@ fun RecentTransactionItem(
                 )
             }
             Text(
-                text = if (amount > 0) "+$${String.format("%.2f", amount)}" else "-$${String.format("%.2f", kotlin.math.abs(amount))}",
+                text = if (amount > 0) "+${String.format("%.2f", amount)}" else "-${String.format("%.2f", kotlin.math.abs(amount))}",
                 color = color,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
             )
@@ -282,7 +434,7 @@ fun DashboardCard(title: String, amount: String, color: Color, modifier: Modifie
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "$${amount}",
+                text = "${amount}",
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                 color = color
             )

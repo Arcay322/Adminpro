@@ -50,20 +50,35 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    // Room
+    
+    // ViewModel Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    
+    // Room Database
     implementation("androidx.room:room-runtime:2.6.1")
     kapt("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
+    
     // Navigation Compose
     implementation("androidx.navigation:navigation-compose:2.7.7")
-    // MPAndroidChart para gráficos
+    
+    // Charts
     implementation("com.github.PhilJay:MPAndroidChart:3.1.0")
-    // Fuentes personalizadas (Inter)
-    implementation("androidx.compose.ui:ui-text:1.6.7")
-    // Material Icons
+    
+    // Material Icons Extended
     implementation("androidx.compose.material:material-icons-extended:1.6.7")
+    
     // Coil for image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
+    
+    // PDF generation
+    implementation("com.itextpdf:itext7-core:7.2.5")
+    implementation("com.itextpdf:layout:7.2.5")
+    
+    // WorkManager for background tasks
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

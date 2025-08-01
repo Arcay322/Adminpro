@@ -41,4 +41,8 @@ class DashboardViewModel(private val repository: TransactionRepository) : ViewMo
             }
         }
     }
+    
+    fun refreshData() {
+        loadTransactions()
+    }
 }
