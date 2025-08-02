@@ -3,6 +3,7 @@ package com.example.admin_ingresos.ui.transaction
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -27,8 +29,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.admin_ingresos.ui.components.*
+import com.example.admin_ingresos.ui.theme.*
 import com.example.admin_ingresos.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -124,211 +128,491 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
                      description.isNotBlank() && 
                      (categoriesList.isEmpty() || selectedCategoryId != null)
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        // Enhanced Header with back button
-        CashFlowHeader(
-            title = "Nueva Transacción",
-            subtitle = "Registra tu ingreso o gasto"
-        )
-        
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+    // Fondo glassmorphism con efectos
+    GlassmorphismScreen {
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            // Type Selector with visual improvements
-            item {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = slideInVertically() + fadeIn()
+            // Header glassmorphism
+            GlassCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                cornerRadius = 24.dp,
+                backgroundColor = GlassWhiteStrong
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TypeSelectorCard(
-                        selectedType = type,
-                        onTypeSelected = { type = it }
-                    )
+                    IconButton(onClick = onCancel) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = TextPrimary
+                        )
+                    }
+                    
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Nueva Transacción",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "Registra tu ingreso o gasto",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextSecondary
+                        )
+                    }
+                    
+                    Box(modifier = Modifier.size(48.dp)) // Spacer para balance
                 }
             }
             
-            // Amount Input with better design
-            item {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = slideInVertically(initialOffsetY = { it / 4 }) + fadeIn()
-                ) {
-                    AmountInputCard(
-                        amount = amount,
-                        onAmountChange = { newValue ->
-                            amount = newValue
-                            amountError = validateAmount(newValue)
-                        },
-                        error = amountError,
-                        transactionType = type
-                    )
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Type Selector con nuevo diseño glassmorphism
+                item {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = slideInVertically() + fadeIn()
+                    ) {
+                        ModernSegmentedButton(
+                            selectedOption = type,
+                            options = listOf("Ingreso", "Gasto"),
+                            onOptionSelected = { type = it },
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
                 }
-            }
-            
-            // Description with smart suggestions
-            item {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = slideInVertically(initialOffsetY = { it / 3 }) + fadeIn()
-                ) {
-                    DescriptionInputCard(
-                        description = description,
-                        onDescriptionChange = { newValue ->
-                            description = newValue
-                            descriptionError = validateDescription(newValue)
-                        },
-                        suggestions = descriptionSuggestions,
-                        onSuggestionSelected = { selectedDescription ->
-                            description = selectedDescription
-                            descriptionError = validateDescription(selectedDescription)
-                        },
-                        error = descriptionError
-                    )
-                }
-            }
-            
-            // Enhanced Category Selector
-            item {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
-                ) {
-                    EnhancedCategorySelector(
-                        categories = categoriesList,
-                        selectedCategoryId = selectedCategoryId,
-                        onCategorySelected = { categoryId ->
-                            selectedCategoryId = categoryId
-                            categoryError = validateCategory(categoryId)
-                        },
-                        onNewCategoryAdded = { categoryName ->
-                            transactionViewModel.addCategory(categoryName) { newCategoryId ->
-                                selectedCategoryId = newCategoryId
-                                categoryError = validateCategory(newCategoryId)
-                                // Update local categories list immediately
-                                categoriesList = categoriesList + com.example.admin_ingresos.data.Category(
-                                    id = newCategoryId,
-                                    name = categoryName
+                
+                // Amount Input glassmorphism
+                item {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = slideInVertically(initialOffsetY = { it / 4 }) + fadeIn()
+                    ) {
+                        GlassCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = GlassWhite,
+                            borderColor = if (amountError != null) ExpenseRed.copy(alpha = 0.6f) else GlassBorder
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text(
+                                    text = "Monto",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TextSecondary
                                 )
-                            }
-                        },
-                        error = categoryError,
-                        transactionType = type
-                    )
-                }
-            }
-            
-            // Payment Method with modern design (collapsible)
-            item {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
-                ) {
-                    PaymentMethodCard(
-                        paymentMethods = paymentMethods,
-                        selectedPaymentMethodId = selectedPaymentMethodId,
-                        onPaymentMethodSelected = { selectedPaymentMethodId = it },
-                        onNewPaymentMethodAdded = { methodName ->
-                            // Agregar nuevo método de pago a la base de datos
-                            val newPaymentMethod = com.example.admin_ingresos.data.PaymentMethod(
-                                name = methodName
-                            )
-                            // Usar una corrutina para insertar en la base de datos
-                            CoroutineScope(Dispatchers.IO).launch {
-                                val newId = db.paymentMethodDao().insert(newPaymentMethod)
-                                withContext(Dispatchers.Main) {
-                                    selectedPaymentMethodId = newId.toInt()
+                                
+                                // Campo de entrada con estilo glassmorphism
+                                OutlinedTextField(
+                                    value = amount,
+                                    onValueChange = { newValue ->
+                                        amount = newValue
+                                        amountError = validateAmount(newValue)
+                                    },
+                                    placeholder = {
+                                        Text(
+                                            "0.00",
+                                            color = TextSecondary,
+                                            fontSize = 24.sp
+                                        )
+                                    },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    isError = amountError != null,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = AccentVibrantStart,
+                                        unfocusedBorderColor = GlassBorderSubtle,
+                                        focusedTextColor = TextPrimary,
+                                        unfocusedTextColor = TextPrimary,
+                                        cursorColor = AccentVibrantStart,
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedContainerColor = Color.Transparent
+                                    ),
+                                    textStyle = LocalTextStyle.current.copy(
+                                        fontSize = 24.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                                
+                                amountError?.let { error ->
+                                    Text(
+                                        text = error,
+                                        color = ExpenseRed,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
                                 }
                             }
-                        },
-                        showExpanded = false
-                    )
-                }
-            }
-            
-            // Receipt Photo Component
-            item {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
-                ) {
-                    ReceiptPhotoCard(
-                        photoUri = receiptPhotoUri,
-                        onPhotoTaken = { uri -> receiptPhotoUri = uri }
-                    )
-                }
-            }
-            
-            // Action buttons with enhanced design
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                ActionButtons(
-                    isFormValid = isFormValid,
-                    isLoading = isLoading,
-                    onSave = {
-                        if (isFormValid) {
-                            isLoading = true
-                            savedTransactionType = type
-                            savedAmount = NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(amount.toDouble())
-                            
-                            // Save the transaction directly for now, we'll improve duplicate detection later
-                            transactionViewModel.saveTransaction(
-                                amount = amount.toDouble(),
-                                type = type,
-                                categoryId = selectedCategoryId ?: 0,
-                                description = description.trim(),
-                                date = System.currentTimeMillis(),
-                                paymentMethodId = selectedPaymentMethodId
-                            )
-                            isLoading = false
-                            showSuccessDialog = true
                         }
-                    },
-                    onCancel = onCancel
-                )
-            }
-            
-            // Bottom spacer
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+                
+                // Description glassmorphism
+                item {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = slideInVertically(initialOffsetY = { it / 3 }) + fadeIn()
+                    ) {
+                        GlassCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = GlassWhite,
+                            borderColor = if (descriptionError != null) ExpenseRed.copy(alpha = 0.6f) else GlassBorder
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text(
+                                    text = "Descripción",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TextSecondary
+                                )
+                                
+                                OutlinedTextField(
+                                    value = description,
+                                    onValueChange = { newValue ->
+                                        description = newValue
+                                        descriptionError = validateDescription(newValue)
+                                    },
+                                    placeholder = {
+                                        Text(
+                                            "¿Para qué fue este ${type.lowercase()}?",
+                                            color = TextSecondary
+                                        )
+                                    },
+                                    isError = descriptionError != null,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = AccentVibrantStart,
+                                        unfocusedBorderColor = GlassBorderSubtle,
+                                        focusedTextColor = TextPrimary,
+                                        unfocusedTextColor = TextPrimary,
+                                        cursorColor = AccentVibrantStart,
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedContainerColor = Color.Transparent
+                                    )
+                                )
+                                
+                                // Suggestions
+                                if (descriptionSuggestions.isNotEmpty()) {
+                                    LazyRow(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        items(descriptionSuggestions.take(5)) { suggestion ->
+                                            AssistChip(
+                                                onClick = {
+                                                    description = suggestion
+                                                    descriptionError = validateDescription(suggestion)
+                                                },
+                                                label = { Text(suggestion, fontSize = 12.sp) },
+                                                colors = AssistChipDefaults.assistChipColors(
+                                                    containerColor = GlassWhiteSubtle,
+                                                    labelColor = TextSecondary
+                                                ),
+                                                border = BorderStroke(
+                                                    width = 1.dp,
+                                                    color = GlassBorderSubtle
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                                
+                                descriptionError?.let { error ->
+                                    Text(
+                                        text = error,
+                                        color = ExpenseRed,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Enhanced Category Selector glassmorphism
+                item {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
+                    ) {
+                        GlassCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = GlassWhite,
+                            borderColor = if (categoryError != null) ExpenseRed.copy(alpha = 0.6f) else GlassBorder
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text(
+                                    text = "Categoría",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TextSecondary
+                                )
+                                
+                                if (categoriesList.isNotEmpty()) {
+                                    LazyRow(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        items(categoriesList) { category ->
+                                            val isSelected = selectedCategoryId == category.id
+                                            FilterChip(
+                                                selected = isSelected,
+                                                onClick = {
+                                                    selectedCategoryId = if (isSelected) null else category.id
+                                                    categoryError = validateCategory(selectedCategoryId)
+                                                },
+                                                label = { Text(category.name) }
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    Text(
+                                        text = "No hay categorías disponibles",
+                                        color = TextSecondary,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                                
+                                categoryError?.let { error ->
+                                    Text(
+                                        text = error,
+                                        color = ExpenseRed,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Payment Method glassmorphism - colapsible
+                item {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
+                    ) {
+                        var isExpanded by remember { mutableStateOf(false) }
+                        
+                        GlassCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = GlassWhite,
+                            onClick = { isExpanded = !isExpanded }
+                        ) {
+                            Column {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Método de Pago",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = TextSecondary
+                                    )
+                                    
+                                    Icon(
+                                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                        contentDescription = null,
+                                        tint = TextSecondary
+                                    )
+                                }
+                                
+                                selectedPaymentMethodId?.let { id ->
+                                    val selectedMethod = paymentMethods.find { it.id == id }
+                                    selectedMethod?.let {
+                                        Text(
+                                            text = it.name,
+                                            fontSize = 14.sp,
+                                            color = AccentVibrantStart,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
+                                
+                                AnimatedVisibility(visible = isExpanded) {
+                                    if (paymentMethods.isNotEmpty()) {
+                                        LazyRow(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(top = 12.dp)
+                                        ) {
+                                            items(paymentMethods) { method ->
+                                                val isSelected = selectedPaymentMethodId == method.id
+                                                FilterChip(
+                                                    selected = isSelected,
+                                                    onClick = {
+                                                        selectedPaymentMethodId = if (isSelected) null else method.id
+                                                    },
+                                                    label = { Text(method.name) }
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Receipt Photo glassmorphism (opcional)
+                item {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
+                    ) {
+                        var showReceiptSection by remember { mutableStateOf(false) }
+                        
+                        GlassCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = GlassWhiteSubtle,
+                            onClick = { showReceiptSection = !showReceiptSection }
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CameraAlt,
+                                        contentDescription = null,
+                                        tint = TextSecondary
+                                    )
+                                    Text(
+                                        text = "Agregar Comprobante",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = TextSecondary
+                                    )
+                                }
+                                
+                                Icon(
+                                    imageVector = if (showReceiptSection) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                    contentDescription = null,
+                                    tint = TextSecondary
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                // Action buttons glassmorphism
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Cancel button
+                        GlassCard(
+                            modifier = Modifier.weight(1f),
+                            backgroundColor = GlassWhiteSubtle,
+                            borderColor = OutlineVariant,
+                            onClick = onCancel
+                        ) {
+                            Text(
+                                text = "Cancelar",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextSecondary,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                        
+                        // Save button
+                        GlassCard(
+                            modifier = Modifier.weight(1f),
+                            backgroundColor = if (isFormValid) Color.Transparent else GlassWhite,
+                            onClick = if (isFormValid) {
+                                {
+                                    if (isFormValid) {
+                                        isLoading = true
+                                        savedTransactionType = type
+                                        savedAmount = NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(amount.toDouble())
+                                        
+                                        // Save the transaction
+                                        transactionViewModel.saveTransaction(
+                                            amount = amount.toDouble(),
+                                            type = type,
+                                            categoryId = selectedCategoryId ?: 0,
+                                            description = description.trim(),
+                                            date = System.currentTimeMillis(),
+                                            paymentMethodId = selectedPaymentMethodId
+                                        )
+                                        isLoading = false
+                                        showSuccessDialog = true
+                                    }
+                                }
+                            } else null
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        if (isFormValid) {
+                                            Brush.linearGradient(
+                                                colors = listOf(AccentVibrantStart, AccentVibrantEnd)
+                                            )
+                                        } else {
+                                            Brush.linearGradient(
+                                                colors = listOf(Color.Transparent, Color.Transparent)
+                                            )
+                                        },
+                                        shape = RoundedCornerShape(16.dp)
+                                    )
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .padding(vertical = 4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (isLoading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = TextOnAccent,
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Text(
+                                        text = "Guardar",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isFormValid) TextOnAccent else TextSecondary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Bottom spacer
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
             }
         }
     }
     
-    // Duplicate Transaction Dialog
-    if (showDuplicateDialog) {
-        DuplicateTransactionDialog(
-            duplicateTransactions = duplicateTransactions,
-            onDismiss = { 
-                showDuplicateDialog = false
-                isLoading = false
-            },
-            onConfirm = {
-                transactionViewModel.saveTransaction(
-                    amount = amount.toDouble(),
-                    type = type,
-                    categoryId = selectedCategoryId ?: 0,
-                    description = description.trim(),
-                    date = System.currentTimeMillis(),
-                    paymentMethodId = selectedPaymentMethodId
-                )
-                showDuplicateDialog = false
-                isLoading = false
-                onSave()
-            }
-        )
-    }
-    
-    // Success Dialog
+    // Success Dialog glassmorphism
     if (showSuccessDialog) {
-        TransactionSuccessDialog(
+        GlassSuccessDialog(
             isVisible = showSuccessDialog,
             transactionType = savedTransactionType,
             amount = savedAmount,
@@ -346,6 +630,63 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
 }
 
 @Composable
+private fun GlassSuccessDialog(
+    isVisible: Boolean,
+    transactionType: String,
+    amount: String,
+    onDismiss: () -> Unit
+) {
+    if (isVisible) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { 
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = IncomeGreen,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        "¡${transactionType} Guardado!",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                    )
+                }
+            },
+            text = { 
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Tu $transactionType por $amount ha sido registrado exitosamente.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextSecondary
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AccentVibrantStart
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Continuar", color = TextOnAccent, fontWeight = FontWeight.SemiBold)
+                }
+            },
+            containerColor = SurfaceGlass,
+            titleContentColor = TextPrimary,
+            textContentColor = TextSecondary
+        )
+    }
+}
+
+@Composable
 private fun DuplicateTransactionDialog(
     duplicateTransactions: List<com.example.admin_ingresos.data.Transaction>,
     onDismiss: () -> Unit,
@@ -354,55 +695,60 @@ private fun DuplicateTransactionDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { 
-            Text(
-                "⚠️ Posible Duplicado",
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = WarningAmber,
+                    modifier = Modifier.size(24.dp)
                 )
-            ) 
+                Text(
+                    "Posible Duplicado",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                )
+            }
         },
         text = { 
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     "Se encontraron transacciones similares recientes:",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = TextSecondary
                 )
-                Spacer(modifier = Modifier.height(12.dp))
                 
                 duplicateTransactions.take(3).forEach { transaction ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 2.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                        )
+                    GlassCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = GlassWhiteSubtle,
+                        borderColor = GlassBorderSubtle
                     ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp)
-                        ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(
                                 text = transaction.description,
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontWeight = FontWeight.Medium
                                 ),
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = TextPrimary
                             )
                             Text(
                                 text = "${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(transaction.amount)} • ${transaction.type}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = TextSecondary
                             )
                         }
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     "¿Estás seguro de que quieres agregar esta transacción?",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = TextPrimary
                 )
             }
         },
@@ -410,16 +756,25 @@ private fun DuplicateTransactionDialog(
             Button(
                 onClick = onConfirm,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                    containerColor = AccentVibrantStart
+                ),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Sí, agregar")
+                Text("Sí, agregar", color = TextOnAccent, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = TextSecondary
+                )
+            ) {
+                Text("Cancelar", fontWeight = FontWeight.Medium)
             }
-        }
+        },
+        containerColor = SurfaceGlass,
+        titleContentColor = TextPrimary,
+        textContentColor = TextSecondary
     )
 }

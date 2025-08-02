@@ -2,157 +2,134 @@ package com.example.admin_ingresos.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Glassmorphism Brand Colors
-val CashFlowPrimary = Color(0xFF6366F1) // Indigo moderno
-val CashFlowPrimaryLight = Color(0xFFA5B4FC) // Indigo claro
-val CashFlowPrimaryDark = Color(0xFF4338CA) // Indigo oscuro
-val CashFlowSecondary = Color(0xFF06B6D4) // Cyan vibrante
-val CashFlowSecondaryLight = Color(0xFF67E8F9) // Cyan claro
-val CashFlowSecondaryDark = Color(0xFF0891B2) // Cyan oscuro
+// === SISTEMA DE COLORES GLASSMORPHISM AVANZADO ===
 
-// Glassmorphism Accent Colors
-val TertiaryPurple = Color(0xFF8B5CF6) // Violeta moderno
-val TertiaryPurpleLight = Color(0xFFC4B5FD) // Violeta claro
-val TertiaryPurpleDark = Color(0xFF7C3AED) // Violeta oscuro
+// Background Principal - Degradado Nocturno Profundo
+val BackgroundStart = Color(0xFF0D1117) // Azul noche profundo
+val BackgroundEnd = Color(0xFF1D1335) // Morado oscuro
+val BackgroundMid = Color(0xFF141627) // Punto medio del degradado
 
-// Glassmorphism Glass Colors
-val GlassWhite = Color(0x1AFFFFFF) // Blanco semi-transparente
-val GlassBlack = Color(0x1A000000) // Negro semi-transparente
-val GlassPrimary = Color(0x336366F1) // Primary glass
-val GlassSecondary = Color(0x3306B6D4) // Secondary glass
+// Colores de Acento Vibrantes para CTAs
+val AccentVibrantStart = Color(0xFF00FFA3) // Verde lima brillante
+val AccentVibrantEnd = Color(0xFF03E1FF) // Cian brillante
+val AccentVibrantMid = Color(0xFF00C8D4) // Punto medio del degradado
 
-// Gradient Colors
-val GradientStart = Color(0xFF667EEA) // Azul violáceo
-val GradientMiddle = Color(0xFF764BA2) // Violeta
-val GradientEnd = Color(0xFFF093FB) // Rosa claro
+// Colores Semánticos Modernos
+val IncomeGreen = Color(0xFF20BF55) // Verde brillante y positivo
+val ExpenseRed = Color(0xFFF45B69) // Rosa enérgico pero no alarmante
+val WarningAmber = Color(0xFFFFB300) // Naranja/amarillo intenso
 
-// Background Gradients
-val BackgroundGradientStart = Color(0xFFF8FAFC) // Gris muy claro
-val BackgroundGradientEnd = Color(0xFFE2E8F0) // Gris claro
+// Glassmorphism - Superficies de Vidrio
+val GlassWhite = Color(0x26FFFFFF) // Blanco 15% opacidad
+val GlassWhiteSubtle = Color(0x1AFFFFFF) // Blanco 10% opacidad 
+val GlassWhiteStrong = Color(0x33FFFFFF) // Blanco 20% opacidad
+val GlassBlur = Color(0x0DFFFFFF) // Para efectos de blur
 
-// Semantic Colors con efecto Glass
-val Success = Color(0xFF10B981) // Verde esmeralda
-val SuccessGlass = Color(0x3310B981) // Verde glass
-val SuccessContainer = Color(0xFFD1FAE5)
-val OnSuccessContainer = Color(0xFF065F46)
+// Bordes de Vidrio
+val GlassBorder = Color(0x33FFFFFF) // Borde translúcido 20%
+val GlassBorderSubtle = Color(0x1AFFFFFF) // Borde sutil 10%
 
-val Error = Color(0xFFEF4444) // Rojo moderno
-val ErrorGlass = Color(0x33EF4444) // Rojo glass
-val ErrorContainer = Color(0xFFFEE2E2)
-val OnErrorContainer = Color(0xFF991B1B)
+// Texto sobre Vidrio
+val TextPrimary = Color(0xFFF0F0F0) // Blanco casi puro
+val TextSecondary = Color(0xFFA8A8A8) // Gris claro para subtítulos
+val TextOnAccent = Color(0xFF000000) // Negro para texto sobre acentos vibrantes
 
-val Warning = Color(0xFFF59E0B) // Ámbar
-val WarningGlass = Color(0x33F59E0B) // Ámbar glass
-val WarningContainer = Color(0xFFFEF3C7)
-val OnWarningContainer = Color(0xFF92400E)
+// Categorías con Colores Vibrantes Armónicos
+val CategoryFood = Color(0xFFFF6B6B) // Rojo coral
+val CategoryTransport = Color(0xFF4ECDC4) // Turquesa
+val CategoryEntertainment = Color(0xFFFFE66D) // Amarillo suave
+val CategoryHealth = Color(0xFF95E1D3) // Verde menta
+val CategoryShopping = Color(0xFFA8E6CF) // Verde claro
+val CategoryUtilities = Color(0xFFFFD93D) // Amarillo brillante
+val CategoryEducation = Color(0xFF6C5CE7) // Violeta
+val CategoryTravel = Color(0xFF74B9FF) // Azul cielo
+val CategoryOther = Color(0xFFFD79A8) // Rosa
 
-val Info = Color(0xFF3B82F6) // Azul moderno
-val InfoGlass = Color(0x333B82F6) // Azul glass
-val InfoContainer = Color(0xFFDBEAFE)
-val OnInfoContainer = Color(0xFF1E40AF)
+// Efectos Interactivos
+val HoverEffect = Color(0x1AFFFFFF) // Para estados hover
+val PressedEffect = Color(0x33FFFFFF) // Para estados pressed
+val SelectedEffect = Color(0x26FFFFFF) // Para elementos seleccionados
 
-// Financial Colors con Glass Effect
-val IncomeGreen = Color(0xFF10B981)
-val IncomeGreenGlass = Color(0x3310B981)
-val IncomeGreenLight = Color(0xFFD1FAE5)
+// Superficies y Fondos
+val SurfaceGlass = Color(0x26FFFFFF) // Superficie principal de vidrio
+val SurfaceVariant = Color(0x1AFFFFFF) // Superficie secundaria
+val Background = BackgroundStart // Fondo principal
+val OnSurface = TextPrimary // Texto sobre superficie
+val OnSurfaceVariant = TextSecondary // Texto secundario
+val OnBackground = TextPrimary // Texto sobre fondo
 
-val ExpenseRed = Color(0xFFEF4444)
-val ExpenseRedGlass = Color(0x33EF4444)
-val ExpenseRedLight = Color(0xFFFEE2E2)
+// Esquema de colores para Material Theme
+val Primary = AccentVibrantStart
+val PrimaryContainer = GlassWhiteStrong  
+val OnPrimary = TextOnAccent
+val OnPrimaryContainer = TextPrimary
 
-val BudgetBlue = Color(0xFF3B82F6)
-val BudgetBlueGlass = Color(0x333B82F6)
-val BudgetBlueLight = Color(0xFFDBEAFE)
+val Secondary = AccentVibrantEnd
+val SecondaryContainer = GlassWhite
+val OnSecondary = TextOnAccent
+val OnSecondaryContainer = TextPrimary
 
-val SavingsTeal = Color(0xFF06B6D4)
-val SavingsTealGlass = Color(0x3306B6D4)
-val SavingsTealLight = Color(0xFFCFFAFE)
+val Error = ExpenseRed
+val OnError = TextPrimary
+val ErrorContainer = Color(0x33F45B69)
+val OnErrorContainer = TextPrimary
 
-// Glassmorphism Surface Colors
-val SurfaceLight = Color(0xFFFFFBFF) // Blanco puro
-val SurfaceVariantLight = Color(0x1AFFFFFF) // Superficie glass
-val BackgroundLight = Color(0xFFF8FAFC) // Fondo claro
-val OnSurfaceLight = Color(0xFF1F2937) // Gris oscuro moderno
-val OnSurfaceVariantLight = Color(0xFF6B7280) // Gris medio
-val OnBackgroundLight = Color(0xFF111827) // Negro suave
-val OutlineLight = Color(0xFFE5E7EB) // Borde claro
-val OutlineVariantLight = Color(0xFFF3F4F6) // Borde muy claro
+val Outline = GlassBorderSubtle
+val OutlineVariant = GlassBorder
 
-// Glassmorphism Dark Theme
-val SurfaceDark = Color(0xFF0F172A) // Azul muy oscuro
-val SurfaceVariantDark = Color(0x1AFFFFFF) // Glass dark
-val BackgroundDark = Color(0xFF020617) // Negro azulado
-val OnSurfaceDark = Color(0xFFF1F5F9) // Blanco suave
-val OnSurfaceVariantDark = Color(0xFF94A3B8) // Gris claro
-val OnBackgroundDark = Color(0xFFFAFAFA) // Blanco puro
-val OutlineDark = Color(0xFF334155) // Borde oscuro
-val OutlineVariantDark = Color(0xFF1E293B) // Borde muy oscuro
+// Legacy compatibility colors manteniendo compatibilidad
+val Success = IncomeGreen
+val SuccessGlass = Color(0x3320BF55)
+val SuccessContainer = Color(0x3320BF55)
+val OnSuccessContainer = TextPrimary
 
-// Glass Surface Variations
-val GlassSurface1 = Color(0x0DFFFFFF) // 5% opacity
-val GlassSurface2 = Color(0x1AFFFFFF) // 10% opacity
-val GlassSurface3 = Color(0x26FFFFFF) // 15% opacity
-val GlassSurface4 = Color(0x33FFFFFF) // 20% opacity
+val Warning = WarningAmber
+val WarningGlass = Color(0x33FFB300)
+val WarningContainer = Color(0x33FFB300)
+val OnWarningContainer = TextPrimary
 
-// Text on Glass
-val OnPrimary = Color(0xFFFFFBFF)
-val OnSecondary = Color(0xFF0F172A)
-val OnTertiary = Color(0xFFFFFBFF)
-val OnError = Color(0xFFFFFBFF)
+val Info = Color(0xFF03E1FF)
+val InfoGlass = Color(0x3303E1FF)
+val InfoContainer = Color(0x3303E1FF)
+val OnInfoContainer = TextPrimary
 
-// Glassmorphism Category Colors
-val CategoryFood = Color(0xFFEF4444) // Rojo moderno
-val CategoryFoodGlass = Color(0x33EF4444)
-val CategoryTransport = Color(0xFF3B82F6) // Azul moderno
-val CategoryTransportGlass = Color(0x333B82F6)
-val CategoryEntertainment = Color(0xFFEC4899) // Rosa moderno
-val CategoryEntertainmentGlass = Color(0x33EC4899)
-val CategoryHealth = Color(0xFF10B981) // Verde esmeralda
-val CategoryHealthGlass = Color(0x3310B981)
-val CategoryShopping = Color(0xFF8B5CF6) // Violeta
-val CategoryShoppingGlass = Color(0x338B5CF6)
-val CategoryUtilities = Color(0xFF6B7280) // Gris neutro
-val CategoryUtilitiesGlass = Color(0x336B7280)
-val CategoryEducation = Color(0xFFF59E0B) // Ámbar
-val CategoryEducationGlass = Color(0x33F59E0B)
-val CategoryTravel = Color(0xFF06B6D4) // Cyan
-val CategoryTravelGlass = Color(0x3306B6D4)
-val CategoryOther = Color(0xFF84CC16) // Lima
-val CategoryOtherGlass = Color(0x3384CC16)
+// Colores adicionales para compatibilidad
+val Gray900 = Color(0xFF0D1117)
+val Gray800 = Color(0xFF1D1335)
+val Gray700 = Color(0xFF374151)
+val Gray600 = Color(0xFF4B5563)
+val Gray500 = Color(0xFF6B7280)
+val Gray400 = Color(0xFF9CA3AF)
+val Gray300 = Color(0xFFD1D5DB)
+val Gray200 = Color(0xFFE5E7EB)
+val Gray100 = Color(0xFFF3F4F6)
+val Gray50 = Color(0xFFF9FAFB)
 
-// Shimmer Colors para efectos de carga
-val ShimmerColorLight = Color(0xFFF1F5F9)
-val ShimmerColorDark = Color(0xFF334155)
+// === LEGACY COMPATIBILITY COLORS ===
+// Añadimos colores para mantener compatibilidad con código existente
 
-// Legacy compatibility colors (actualizados)
-val Indigo500 = CashFlowPrimary
-val Indigo100 = CashFlowPrimaryLight
-val Indigo50 = Color(0xFFF0F4FF)
-val Indigo600 = Color(0xFF4338CA)
-val Indigo700 = CashFlowPrimaryDark
+// Colores principales legacy
+val CashFlowPrimary = AccentVibrantStart
+val CashFlowPrimaryDark = AccentVibrantEnd
+val CashFlowSecondary = Color(0xFF74B9FF)
+val TertiaryPurple = Color(0xFF6C5CE7)
 
-val Green600 = Success
-val Green100 = SuccessContainer
-val Green50 = Color(0xFFF0FDF4)
-val Green700 = Color(0xFF388E3C)
+// Gradientes legacy
+val BackgroundGradientStart = BackgroundStart
+val BackgroundGradientEnd = BackgroundEnd
+val GradientStart = BackgroundStart
+val GradientMiddle = BackgroundMid
+val GradientEnd = BackgroundEnd
 
-val Red500 = Error
-val Red100 = ErrorContainer
-val Red50 = Color(0xFFFEF2F2)
-val Red600 = Color(0xFFD32F2F)
+// Superficies de vidrio legacy
+val GlassSurface1 = GlassWhite
+val GlassSurface2 = GlassWhiteSubtle
+val GlassSurface3 = GlassWhiteStrong
+val GlassSurface4 = GlassBlur
 
-val Orange500 = Warning
-val Orange100 = WarningContainer
-val Orange50 = Color(0xFFFFF7ED)
+// === CATEGORY COLORS ===
+// Colores para categorías de transacciones (eliminadas las duplicadas)
 
-// Neutral grays
-val Gray900 = Color(0xFF212121)
-val Gray800 = Color(0xFF424242)
-val Gray700 = Color(0xFF616161)
-val Gray600 = Color(0xFF757575)
-val Gray500 = Color(0xFF9E9E9E)
-val Gray400 = Color(0xFFBDBDBD)
-val Gray300 = Color(0xFFE0E0E0)
-val Gray200 = Color(0xFFEEEEEE)
-val Gray100 = Color(0xFFF5F5F5)
-val Gray50 = Color(0xFFFAFAFA)
+// Colores para alertas y estados
+val InfoBlue = Color(0xFF3B82F6)
+val SuccessGreen = IncomeGreen

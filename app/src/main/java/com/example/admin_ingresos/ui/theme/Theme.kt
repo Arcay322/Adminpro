@@ -15,89 +15,55 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// CashFlow Glassmorphism Dark Color Scheme
-private val CashFlowDarkColorScheme = darkColorScheme(
-    primary = CashFlowPrimary,
+// Glassmorphism Avanzado - Esquema de Colores Principal
+private val GlassmorphismColorScheme = darkColorScheme(
+    primary = Primary,
     onPrimary = OnPrimary,
-    primaryContainer = CashFlowPrimaryDark,
-    onPrimaryContainer = CashFlowPrimaryLight,
-    secondary = CashFlowSecondary,
+    primaryContainer = PrimaryContainer,
+    onPrimaryContainer = OnPrimaryContainer,
+    secondary = Secondary,
     onSecondary = OnSecondary,
-    secondaryContainer = CashFlowSecondaryDark,
-    onSecondaryContainer = CashFlowSecondaryLight,
-    tertiary = TertiaryPurple,
-    onTertiary = OnTertiary,
-    tertiaryContainer = TertiaryPurpleDark,
-    onTertiaryContainer = TertiaryPurpleLight,
+    secondaryContainer = SecondaryContainer,
+    onSecondaryContainer = OnSecondaryContainer,
+    tertiary = AccentVibrantStart,
+    onTertiary = TextOnAccent,
+    tertiaryContainer = GlassWhiteStrong,
+    onTertiaryContainer = TextPrimary,
     error = Error,
     onError = OnError,
     errorContainer = ErrorContainer,
     onErrorContainer = OnErrorContainer,
-    background = BackgroundDark,
-    onBackground = OnBackgroundDark,
-    surface = SurfaceDark,
-    onSurface = OnSurfaceDark,
-    surfaceVariant = SurfaceVariantDark,
-    onSurfaceVariant = OnSurfaceVariantDark,
-    outline = OutlineDark,
-    outlineVariant = OutlineVariantDark,
-    inverseSurface = OnBackgroundDark,
-    inverseOnSurface = BackgroundDark,
-    inversePrimary = CashFlowPrimary
+    background = Background,
+    onBackground = OnBackground,
+    surface = SurfaceGlass,
+    onSurface = OnSurface,
+    surfaceVariant = SurfaceVariant,
+    onSurfaceVariant = OnSurfaceVariant,
+    outline = Outline,
+    outlineVariant = OutlineVariant,
+    inverseSurface = TextPrimary,
+    inverseOnSurface = Background,
+    inversePrimary = AccentVibrantEnd
 )
 
-// CashFlow Glassmorphism Light Color Scheme
-private val CashFlowLightColorScheme = lightColorScheme(
-    primary = CashFlowPrimary,
-    onPrimary = OnPrimary,
-    primaryContainer = CashFlowPrimaryLight,
-    onPrimaryContainer = CashFlowPrimaryDark,
-    secondary = CashFlowSecondary,
-    onSecondary = OnSecondary,
-    secondaryContainer = CashFlowSecondaryLight,
-    onSecondaryContainer = CashFlowSecondaryDark,
-    tertiary = TertiaryPurple,
-    onTertiary = OnTertiary,
-    tertiaryContainer = TertiaryPurpleLight,
-    onTertiaryContainer = TertiaryPurpleDark,
-    error = Error,
-    onError = OnError,
-    errorContainer = ErrorContainer,
-    onErrorContainer = OnErrorContainer,
-    background = BackgroundLight,
-    onBackground = OnBackgroundLight,
-    surface = SurfaceLight,
-    onSurface = OnSurfaceLight,
-    surfaceVariant = SurfaceVariantLight,
-    onSurfaceVariant = OnSurfaceVariantLight,
-    outline = OutlineLight,
-    outlineVariant = OutlineVariantLight,
-    inverseSurface = OnBackgroundLight,
-    inverseOnSurface = BackgroundLight,
-    inversePrimary = OnPrimary
-)
+
 
 @Composable
 fun CashFlowTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    darkTheme: Boolean = true, // Forzamos dark theme para glassmorphism
+    dynamicColor: Boolean = false, // Deshabilitamos colores dinámicos
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> CashFlowDarkColorScheme
-        else -> CashFlowLightColorScheme
-    }
+    // Siempre usamos el esquema glassmorphism
+    val colorScheme = GlassmorphismColorScheme
     
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            // Usar color de fondo nocturno para la barra de estado
+            window.statusBarColor = BackgroundStart.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
         }
     }
 
@@ -109,16 +75,16 @@ fun CashFlowTheme(
     )
 }
 
-// Alias para compatibilidad
+// Alias para compatibilidad - siempre usa glassmorphism
 @Composable
 fun Admin_ingresosTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    darkTheme: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     CashFlowTheme(
-        darkTheme = darkTheme,
-        dynamicColor = dynamicColor,
+        darkTheme = true,
+        dynamicColor = false,
         content = content
     )
 }

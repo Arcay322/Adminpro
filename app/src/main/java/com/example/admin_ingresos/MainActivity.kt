@@ -115,10 +115,11 @@ fun MainAppNavigation() {
                 popEnterTransition = { getPopEnterTransition(getTransitionForRoute("dashboard")) },
                 popExitTransition = { getPopExitTransition(getTransitionForRoute("dashboard")) }
             ) {
-                com.example.admin_ingresos.ui.dashboard.DashboardScreenSimple(
-                    onAddTransaction = { navController.navigate("add_transaction") },
-                    onViewHistory = { navController.navigate("history") },
-                    onViewReports = { navController.navigate("reports") }
+                com.example.admin_ingresos.ui.dashboard.DashboardScreen(
+                    onNavigateToTransactions = { navController.navigate("history") },
+                    onNavigateToAddTransaction = { navController.navigate("addTransaction") },
+                    onNavigateToReports = { navController.navigate("reports") },
+                    onNavigateToSettings = { navController.navigate("settings") }
                 )
             }
             composable(
