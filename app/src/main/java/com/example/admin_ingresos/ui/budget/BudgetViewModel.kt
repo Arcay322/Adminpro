@@ -36,7 +36,7 @@ class BudgetViewModel(
         )
 
     // Categories for budget creation
-    val categories = flow { emit(categoryDao.getAll()) }
+    val categories = categoryDao.getAllCategories()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
