@@ -89,8 +89,8 @@ fun CategoryManagementScreenNew() {
         CategoryDialogNew(
             category = uiState.editingCategory,
             onDismiss = { viewModel.dismissCategoryDialog() },
-            onSave = { name, icon, isFavorite ->
-                viewModel.saveCategory(name, icon, isFavorite)
+            onSave = { name, icon, color, isFavorite ->
+                viewModel.saveCategory(name, icon, color, isFavorite)
             }
         )
     }

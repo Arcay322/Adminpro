@@ -90,6 +90,9 @@ dependencies {
     // Pull to refresh
     implementation("androidx.compose.material3:material3:1.2.1")
     
+    // Color Picker
+    implementation("com.github.skydoves:colorpicker-compose:1.0.0")
+    
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
