@@ -16,11 +16,31 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.admin_ingresos.data.BudgetProgress
 import com.example.admin_ingresos.data.BudgetStatus
 import kotlin.math.cos
 import kotlin.math.sin
+import java.text.NumberFormat
+import java.util.*
+
+// Función para formatear números grandes
+private fun formatLargeNumber(amount: Double): String {
+    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
+    return when {
+        amount >= 1_000_000 -> {
+            val millions = amount / 1_000_000
+            "$${String.format("%.1f", millions)}M"
+        }
+        amount >= 1_000 -> {
+            val thousands = amount / 1_000
+            "$${String.format("%.1f", thousands)}K"
+        }
+        else -> formatter.format(amount)
+    }
+}
 
 @Composable
 fun BudgetProgressChart(
@@ -77,19 +97,19 @@ fun BudgetProgressChart(
             ) {
                 BudgetSummaryItem(
                     title = "Total Presupuestado",
-                    value = "$${String.format("%.2f", budgetProgress.sumOf { it.budget.amount })}",
+                    value = formatLargeNumber(budgetProgress.sumOf { it.budget.amount }),
                     color = MaterialTheme.colorScheme.primary
                 )
                 
                 BudgetSummaryItem(
                     title = "Total Gastado",
-                    value = "$${String.format("%.2f", budgetProgress.sumOf { it.spent })}",
+                    value = formatLargeNumber(budgetProgress.sumOf { it.spent }),
                     color = MaterialTheme.colorScheme.secondary
                 )
                 
                 BudgetSummaryItem(
                     title = "Restante",
-                    value = "$${String.format("%.2f", budgetProgress.sumOf { it.remaining })}",
+                    value = formatLargeNumber(budgetProgress.sumOf { it.remaining }),
                     color = MaterialTheme.colorScheme.tertiary
                 )
             }
@@ -121,20 +141,29 @@ fun BudgetSummaryItem(
     color: Color
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(80.dp)
     ) {
         Text(
             text = value,
             style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                fontSize = if (value.length > 8) 12.sp else 16.sp
             ),
-            color = color
+            color = color,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center
         )
         Text(
             text = title,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontSize = 10.sp
+            ),
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

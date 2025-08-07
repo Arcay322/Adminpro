@@ -7,18 +7,18 @@ import kotlin.random.Random
 
 object SampleDataProvider {
     
-    // Default categories with icons and colors
+    // Default categories with Lucide icons and colors
     val defaultCategories = listOf(
-        Category(name = "Alimentación", icon = "🍔", color = "#FF6B6B"),
-        Category(name = "Transporte", icon = "🚗", color = "#4ECDC4"),
-        Category(name = "Entretenimiento", icon = "🎬", color = "#45B7D1"),
-        Category(name = "Salud", icon = "🏥", color = "#96CEB4"),
-        Category(name = "Educación", icon = "📚", color = "#FFEAA7"),
-        Category(name = "Compras", icon = "🛒", color = "#DDA0DD"),
-        Category(name = "Servicios", icon = "🔧", color = "#98D8C8"),
-        Category(name = "Trabajo", icon = "💼", color = "#F7DC6F"),
-        Category(name = "Hogar", icon = "🏠", color = "#BB8FCE"),
-        Category(name = "Otros", icon = "📦", color = "#85C1E9")
+        Category(name = "Alimentación", icon = "UtensilsCrossed", color = "#FF6B6B", isActive = true),
+        Category(name = "Transporte", icon = "Car", color = "#4ECDC4", isActive = true),
+        Category(name = "Entretenimiento", icon = "Gamepad2", color = "#45B7D1", isActive = true),
+        Category(name = "Salud", icon = "Heart", color = "#96CEB4", isActive = true),
+        Category(name = "Educación", icon = "BookOpen", color = "#FFEAA7", isActive = true),
+        Category(name = "Compras", icon = "ShoppingCart", color = "#DDA0DD", isActive = true),
+        Category(name = "Servicios", icon = "Settings", color = "#98D8C8", isActive = true),
+        Category(name = "Trabajo", icon = "Briefcase", color = "#F7DC6F", isActive = true),
+        Category(name = "Hogar", icon = "Home", color = "#BB8FCE", isActive = true),
+        Category(name = "Otros", icon = "Package", color = "#85C1E9", isActive = true)
     )
     
     // Default payment methods
@@ -77,7 +77,7 @@ object SampleDataProvider {
     
     suspend fun initializeSampleData(database: AppDatabase) = withContext(Dispatchers.IO) {
         // Check if data already exists
-        val existingCategories = database.categoryDao().getAll()
+        val existingCategories = database.categoryDao().getAllCategories()
         val existingPaymentMethods = database.paymentMethodDao().getAll()
         val existingTransactions = database.transactionDao().getAll()
         
@@ -87,7 +87,7 @@ object SampleDataProvider {
             // Insert default categories
             val categoryIds = mutableMapOf<String, Int>()
             defaultCategories.forEach { category ->
-                val id = database.categoryDao().insert(category).toInt()
+                val id = database.categoryDao().insertCategory(category).toInt()
                 categoryIds[category.name] = id
             }
             
@@ -175,6 +175,28 @@ object SampleDataProvider {
         // Insert all transactions
         transactions.forEach { transaction ->
             database.transactionDao().insert(transaction)
+        }
+    }
+    
+    /**
+     * Asegura que las categorías necesarias para las plantillas de presupuesto existan
+     */
+    suspend fun ensureBudgetTemplateCategories(database: AppDatabase) = withContext(Dispatchers.IO) {
+        val existingCategories = database.categoryDao().getAllCategories()
+        val requiredCategories = listOf("Alimentación", "Transporte", "Entretenimiento", "Compras")
+        
+        requiredCategories.forEach { requiredName ->
+            val exists = existingCategories.any { it.name.equals(requiredName, ignoreCase = true) }
+            if (!exists) {
+                val category = when (requiredName) {
+                    "Alimentación" -> Category(name = "Alimentación", icon = "UtensilsCrossed", color = "#FF6B6B", isActive = true)
+                    "Transporte" -> Category(name = "Transporte", icon = "Car", color = "#4ECDC4", isActive = true)
+                    "Entretenimiento" -> Category(name = "Entretenimiento", icon = "Gamepad2", color = "#45B7D1", isActive = true)
+                    "Compras" -> Category(name = "Compras", icon = "ShoppingCart", color = "#DDA0DD", isActive = true)
+                    else -> Category(name = requiredName, icon = "Package", color = "#85C1E9", isActive = true)
+                }
+                database.categoryDao().insertCategory(category)
+            }
         }
     }
 }

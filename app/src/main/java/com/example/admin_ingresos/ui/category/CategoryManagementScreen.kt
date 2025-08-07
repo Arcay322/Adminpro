@@ -1,6 +1,10 @@
 package com.example.admin_ingresos.ui.category
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,9 +25,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.admin_ingresos.data.Category
+import com.example.admin_ingresos.AppDatabaseProvider
+import com.example.admin_ingresos.data.*
 import com.example.admin_ingresos.ui.theme.*
+import com.example.admin_ingresos.ui.components.*
+import com.example.admin_ingresos.ui.icons.LucideIconMapper
+import kotlinx.coroutines.launch
 
 @Composable
 fun CategoryManagementScreen() {
@@ -32,7 +41,7 @@ fun CategoryManagementScreen() {
     val viewModel: CategoryViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")
-            return CategoryViewModel(db) as T
+            return CategoryViewModel(db.categoryDao()) as T
         }
     })
     
@@ -171,7 +180,7 @@ fun CategoryManagementScreen() {
                 if (editingCategory != null) {
                     viewModel.updateCategory(editingCategory!!.copy(name = name, icon = icon, color = color))
                 } else {
-                    viewModel.addCategory(name, icon, color)
+                    viewModel.insertCategory(Category(name = name, icon = icon, color = color))
                 }
                 showAddDialog = false
                 editingCategory = null

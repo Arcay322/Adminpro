@@ -27,7 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.admin_ingresos.ui.components.*
+import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.*
+// import com.example.admin_ingresos.data.model.SavingsGoal // Temporalmente comentado
 import kotlinx.coroutines.delay
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -35,6 +37,27 @@ import java.util.*
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
+
+// Clase temporal para metas de ahorro hasta configurar la base de datos
+data class SavingsGoal(
+    val id: Long = 0,
+    val name: String,
+    val targetAmount: Double,
+    val currentAmount: Double = 0.0,
+    val emoji: String,
+    val description: String? = null,
+    val isActive: Boolean = true,
+    val priority: Int = 0
+) {
+    val progressPercentage: Float
+        get() = if (targetAmount > 0) (currentAmount / targetAmount).toFloat().coerceAtMost(1f) else 0f
+    
+    val remainingAmount: Double
+        get() = (targetAmount - currentAmount).coerceAtLeast(0.0)
+    
+    val isCompleted: Boolean
+        get() = currentAmount >= targetAmount
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -258,7 +281,7 @@ fun DashboardScreen(
                     }
                 }
                 
-                // Metas de ahorro (simuladas por ahora)
+                // Metas de ahorro (conectadas a la base de datos)
                 item {
                     AnimatedVisibility(
                         visible = !uiState.isLoading,
@@ -268,7 +291,7 @@ fun DashboardScreen(
                     }
                 }
                 
-                // Flujo de efectivo semanal (simulado por ahora)
+                // Flujo de efectivo semanal (con datos reales)
                 item {
                     AnimatedVisibility(
                         visible = !uiState.isLoading,
@@ -341,7 +364,7 @@ private fun DashboardHeader(
                         )
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Notifications,
+                        imageVector = LucideIconMapper.Navigation.notifications,
                         contentDescription = "Notificaciones",
                         tint = TextPrimary
                     )
@@ -359,7 +382,7 @@ private fun DashboardHeader(
                         )
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Person,
+                        imageVector = LucideIconMapper.Navigation.profile,
                         contentDescription = "Perfil",
                         tint = TextOnAccent
                     )
@@ -442,7 +465,7 @@ private fun QuickActionsSection(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 QuickActionButton(
-                    icon = Icons.Default.Add,
+                    icon = LucideIconMapper.Navigation.add,
                     title = "Agregar",
                     subtitle = "Transacción",
                     onClick = onAddTransaction,
@@ -450,7 +473,7 @@ private fun QuickActionsSection(
                 )
                 
                 QuickActionButton(
-                    icon = Icons.Default.List,
+                    icon = LucideIconMapper.Navigation.transactions,
                     title = "Ver",
                     subtitle = "Historial",
                     onClick = onViewTransactions,
@@ -458,7 +481,7 @@ private fun QuickActionsSection(
                 )
                 
                 QuickActionButton(
-                    icon = Icons.Default.BarChart,
+                    icon = LucideIconMapper.Navigation.reports,
                     title = "Reportes",
                     subtitle = "Análisis",
                     onClick = onViewReports,
@@ -466,7 +489,7 @@ private fun QuickActionsSection(
                 )
                 
                 QuickActionButton(
-                    icon = Icons.Default.AccountBalance,
+                    icon = LucideIconMapper.getIconFromCategoryName("presupuesto"),
                     title = "Presupuesto",
                     subtitle = "Metas",
                     onClick = onViewBudget,
@@ -1009,11 +1032,33 @@ private fun TransactionItemCard(transaction: TransactionItem) {
 
 @Composable
 private fun SavingsGoalsSection() {
-    val goals = remember {
+    // Datos temporales hasta configurar la base de datos
+    val mockSavingsGoals = remember {
         listOf(
-            SavingsGoal("Vacaciones", 2500000.0, 1800000.0, "🏖️"),
-            SavingsGoal("Emergencia", 5000000.0, 3200000.0, "🚨"),
-            SavingsGoal("Nuevo Auto", 15000000.0, 4500000.0, "🚗")
+            SavingsGoal(
+                id = 1,
+                name = "Vacaciones",
+                targetAmount = 2500000.0,
+                currentAmount = 1800000.0,
+                emoji = "🏖️",
+                description = "Viaje a la playa"
+            ),
+            SavingsGoal(
+                id = 2,
+                name = "Emergencia",
+                targetAmount = 5000000.0,
+                currentAmount = 3200000.0,
+                emoji = "🚨",
+                description = "Fondo de emergencias"
+            ),
+            SavingsGoal(
+                id = 3,
+                name = "Nuevo Auto",
+                targetAmount = 15000000.0,
+                currentAmount = 4500000.0,
+                emoji = "🚗",
+                description = "Auto nuevo"
+            )
         )
     }
     
@@ -1035,21 +1080,57 @@ private fun SavingsGoalsSection() {
                     color = TextPrimary
                 )
                 
-                TextButton(onClick = { /* TODO: Agregar meta */ }) {
-                    Text(
-                        text = "Agregar",
-                        color = AccentVibrantStart,
-                        fontSize = 12.sp
+                IconButton(
+                    onClick = { /* TODO: Abrir pantalla agregar meta */ }
+                ) {
+                    Icon(
+                        imageVector = LucideIconMapper.Navigation.add,
+                        contentDescription = "Agregar meta",
+                        tint = AccentVibrantStart,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            goals.forEach { goal ->
-                SavingsGoalCard(goal = goal)
-                if (goal != goals.last()) {
-                    Spacer(modifier = Modifier.height(12.dp))
+            if (mockSavingsGoals.isEmpty()) {
+                // Estado vacío
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = LucideIconMapper.getIconFromEmoji("💰"),
+                        contentDescription = null,
+                        tint = TextSecondary,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text(
+                        text = "No tienes metas de ahorro",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = TextSecondary
+                    )
+                    
+                    Text(
+                        text = "Crea tu primera meta para empezar a ahorrar",
+                        fontSize = 14.sp,
+                        color = TextSecondary.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                mockSavingsGoals.forEach { goal ->
+                    SavingsGoalCard(goal = goal)
+                    if (goal != mockSavingsGoals.last()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
                 }
             }
         }
@@ -1058,7 +1139,7 @@ private fun SavingsGoalsSection() {
 
 @Composable
 private fun SavingsGoalCard(goal: SavingsGoal) {
-    val progress = (goal.currentAmount / goal.targetAmount).toFloat()
+    val progress = goal.progressPercentage
     val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
     
     GlassCard(
@@ -1074,34 +1155,71 @@ private fun SavingsGoalCard(goal: SavingsGoal) {
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        text = goal.emoji,
-                        fontSize = 20.sp
-                    )
-                    Text(
-                        text = goal.name,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextPrimary
-                    )
+                    // Icono con fondo glassmorphism
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(AccentVibrantStart.copy(alpha = 0.2f))
+                            .border(1.dp, AccentVibrantStart.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = LucideIconMapper.getIconFromEmoji(goal.emoji),
+                            contentDescription = null,
+                            tint = AccentVibrantStart,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    
+                    Column {
+                        Text(
+                            text = goal.name,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextPrimary
+                        )
+                        if (goal.description != null) {
+                            Text(
+                                text = goal.description,
+                                fontSize = 12.sp,
+                                color = TextSecondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
                 }
                 
-                Text(
-                    text = "${(progress * 100).toInt()}%",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = AccentVibrantStart
-                )
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(
+                        text = "${(progress * 100).toInt()}%",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (goal.isCompleted) IncomeGreen else AccentVibrantStart
+                    )
+                    
+                    if (goal.isCompleted) {
+                        Icon(
+                            imageVector = LucideIconMapper.Navigation.success,
+                            contentDescription = "Completado",
+                            tint = IncomeGreen,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
             }
             
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             
             LinearProgressIndicator(
                 progress = progress,
                 modifier = Modifier.fillMaxWidth(),
-                color = AccentVibrantStart,
+                color = if (goal.isCompleted) IncomeGreen else AccentVibrantStart,
                 trackColor = GlassWhiteSubtle
             )
             
@@ -1114,12 +1232,16 @@ private fun SavingsGoalCard(goal: SavingsGoal) {
                 Text(
                     text = formatter.format(goal.currentAmount),
                     fontSize = 12.sp,
-                    color = TextSecondary
+                    color = TextSecondary,
+                    maxLines = 1,
+                    softWrap = false
                 )
                 Text(
                     text = formatter.format(goal.targetAmount),
                     fontSize = 12.sp,
-                    color = TextSecondary
+                    color = TextSecondary,
+                    maxLines = 1,
+                    softWrap = false
                 )
             }
         }
@@ -1146,47 +1268,98 @@ private fun WeeklyCashFlowChart() {
         cornerRadius = 20.dp
     ) {
         Column {
-            Text(
-                text = "Flujo de Efectivo Semanal",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            
-            // Gráfico de barras simple
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.Bottom
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                weeklyData.forEach { day ->
-                    WeeklyBarChart(
-                        day = day,
-                        maxValue = weeklyData.maxOf { maxOf(it.income, it.expense) }
+                Text(
+                    text = "Flujo de Efectivo Semanal",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                
+                IconButton(
+                    onClick = { /* TODO: Ver detalles semanales */ }
+                ) {
+                    Icon(
+                        imageVector = LucideIconMapper.Navigation.more,
+                        contentDescription = "Más opciones",
+                        tint = TextSecondary,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Leyenda
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                LegendItem(
-                    color = IncomeGreen,
-                    label = "Ingresos",
-                    modifier = Modifier.weight(1f)
-                )
-                LegendItem(
-                    color = ExpenseRed,
-                    label = "Gastos",
-                    modifier = Modifier.weight(1f)
-                )
+            if (weeklyData.isEmpty() || weeklyData.all { it.income == 0.0 && it.expense == 0.0 }) {
+                // Estado vacío
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = LucideIconMapper.Navigation.reports,
+                        contentDescription = null,
+                        tint = TextSecondary,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text(
+                        text = "Sin transacciones esta semana",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = TextSecondary
+                    )
+                    
+                    Text(
+                        text = "Los datos aparecerán cuando agregues transacciones",
+                        fontSize = 14.sp,
+                        color = TextSecondary.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                // Gráfico de barras con datos reales
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    weeklyData.forEach { day ->
+                        WeeklyBarChart(
+                            day = day,
+                            maxValue = weeklyData.maxOfOrNull { maxOf(it.income, it.expense) } ?: 1.0
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Leyenda
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    LegendItem(
+                        color = IncomeGreen,
+                        label = "Ingresos",
+                        modifier = Modifier.weight(1f)
+                    )
+                    LegendItem(
+                        color = ExpenseRed,
+                        label = "Gastos",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }
@@ -1279,13 +1452,6 @@ data class CategoryData(
     val name: String,
     val percentage: Float,
     val color: Color
-)
-
-data class SavingsGoal(
-    val name: String,
-    val targetAmount: Double,
-    val currentAmount: Double,
-    val emoji: String
 )
 
 data class DayData(

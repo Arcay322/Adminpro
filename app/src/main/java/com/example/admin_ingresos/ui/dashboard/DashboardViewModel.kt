@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.admin_ingresos.data.TransactionRepository
 import com.example.admin_ingresos.data.Transaction
 import com.example.admin_ingresos.data.AppDatabase
+import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.Color
@@ -63,6 +64,29 @@ class DashboardViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList<com.example.admin_ingresos.data.Category>()
         )
+    
+    // TODO: Listen to savings goals changes (commented out until database migration is complete)
+    /*
+    val savingsGoals = database.savingsGoalDao().getAllActiveFlow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+    */
+    
+    // TODO: Weekly cash flow data based on real transactions (commented out until complete)
+    /*
+    val weeklyData = transactions
+        .map { transactionList ->
+            getWeeklyFlowData(transactionList)
+        }
+        .stateIn(
+            scope = viewModelScope, 
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+    */
 
     init {
         // Load data when ViewModel is created
@@ -264,46 +288,85 @@ class DashboardViewModel(
         }
     }
     
-    private fun getCategoryIconFromData(category: com.example.admin_ingresos.data.Category): androidx.compose.ui.graphics.vector.ImageVector {
-        // Si el ícono es un string/emoji, convertirlo a un ImageVector apropiado
-        // o usar un mapeo basado en el ícono almacenado
-        return when {
-            category.icon.isNotEmpty() -> {
-                // Mapear íconos comunes a ImageVectors
-                when (category.icon) {
-                    "🍕", "🍔", "🥘", "🍽️", "🥗", "🍎" -> Icons.Default.Restaurant
-                    "🚗", "🚌", "🚕", "⛽", "🚊" -> Icons.Default.DirectionsCar
-                    "🎬", "🎮", "🎪", "🎭", "🎵" -> Icons.Default.MovieCreation
-                    "💡", "🔌", "💧", "📶", "📺" -> Icons.Default.ElectricBolt
-                    "🛍️", "👕", "👔", "👗", "🛒" -> Icons.Default.ShoppingCart
-                    "🏥", "💊", "🩺", "⚕️", "🏩" -> Icons.Default.LocalHospital
-                    "📚", "🎓", "✏️", "📝", "🏫" -> Icons.Default.School
-                    "✈️", "🏨", "🗺️", "🧳", "🏖️" -> Icons.Default.Flight
-                    "💰", "💳", "🏦", "💵", "💸" -> Icons.Default.AccountBalance
-                    "🏠", "🔧", "🏡", "🛠️", "🔨" -> Icons.Default.Home
-                    "🎁", "🎉", "🎈", "🎂", "💝" -> Icons.Default.CardGiftcard
-                    "📱", "💻", "⌚", "🖥️", "📟" -> Icons.Default.DevicesOther
-                    else -> {
-                        // Para otros íconos, usar el mapeo basado en el nombre de la categoría
-                        getCategoryIcon(category.name)
-                    }
-                }
-            }
-            else -> getCategoryIcon(category.name)
+    /*
+    private fun getWeeklyFlowData(transactions: List<com.example.admin_ingresos.data.Transaction>): List<DayData> {
+        val calendar = Calendar.getInstance()
+        val currentWeekData = mutableMapOf<Int, Pair<Double, Double>>() // dayOfWeek to (income, expense)
+        
+        // Initialize with zeros for all days of the week (Monday = 1, Sunday = 7)
+        for (i in 1..7) {
+            currentWeekData[i] = Pair(0.0, 0.0)
         }
+        
+        // Get current week's start (Monday)
+        calendar.firstDayOfWeek = Calendar.MONDAY
+        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val weekStart = calendar.time
+        
+        // Get week's end (Sunday)
+        calendar.add(Calendar.DAY_OF_WEEK, 6)
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        val weekEnd = calendar.time
+        
+        // Filter transactions for current week
+        val weekTransactions = transactions.filter { transaction ->
+            transaction.date.time >= weekStart.time && transaction.date.time <= weekEnd.time
+        }
+        
+        // Group by day of week
+        weekTransactions.forEach { transaction ->
+            val transactionCalendar = Calendar.getInstance()
+            transactionCalendar.time = transaction.date
+            transactionCalendar.firstDayOfWeek = Calendar.MONDAY
+            
+            val dayOfWeek = transactionCalendar.get(Calendar.DAY_OF_WEEK)
+            val adjustedDay = if (dayOfWeek == Calendar.SUNDAY) 7 else dayOfWeek - 1
+            
+            val currentData = currentWeekData[adjustedDay] ?: Pair(0.0, 0.0)
+            
+            if (transaction.type == "Ingreso") {
+                currentWeekData[adjustedDay] = Pair(
+                    currentData.first + transaction.amount,
+                    currentData.second
+                )
+            } else {
+                currentWeekData[adjustedDay] = Pair(
+                    currentData.first,
+                    currentData.second + transaction.amount
+                )
+            }
+        }
+        
+        // Convert to DayData list
+        val dayLabels = listOf("L", "M", "X", "J", "V", "S", "D")
+        return (1..7).map { dayIndex ->
+            val data = currentWeekData[dayIndex] ?: Pair(0.0, 0.0)
+            DayData(
+                day = dayLabels[dayIndex - 1],
+                income = data.first,
+                expense = data.second
+            )
+        }
+    }
+    */
+    
+    private fun getCategoryIconFromData(category: com.example.admin_ingresos.data.Category): androidx.compose.ui.graphics.vector.ImageVector {
+        // Usar el sistema de iconos Lucide para obtener iconos profesionales y consistentes
+        return LucideIconMapper.getCategoryIcon(category)
     }
 
     private fun getCategoryIcon(categoryName: String?): androidx.compose.ui.graphics.vector.ImageVector {
-        return when (categoryName?.lowercase()) {
-            "alimentación", "comida", "restaurante" -> Icons.Default.Restaurant
-            "transporte", "gasolina", "uber" -> Icons.Default.DirectionsCar
-            "entretenimiento", "cine", "diversión" -> Icons.Default.MovieCreation
-            "servicios", "luz", "agua", "internet" -> Icons.Default.ElectricBolt
-            "compras", "ropa", "shopping" -> Icons.Default.ShoppingCart
-            "salud", "médico", "farmacia" -> Icons.Default.LocalHospital
-            "educación", "curso", "libros" -> Icons.Default.School
-            "viajes", "hotel", "vuelo" -> Icons.Default.Flight
-            else -> Icons.Default.Category
+        // Fallback usando el nombre de categoría si no hay datos completos
+        return if (categoryName != null) {
+            LucideIconMapper.getIconFromCategoryName(categoryName)
+        } else {
+            LucideIconMapper.Navigation.add // Default fallback
         }
     }
     

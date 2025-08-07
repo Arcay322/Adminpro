@@ -3,19 +3,24 @@ package com.example.admin_ingresos.data
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.admin_ingresos.data.model.SavingsGoal
+import com.example.admin_ingresos.data.dao.SavingsGoalDao
 
 @Database(
-    entities = [Category::class, PaymentMethod::class, Transaction::class, Budget::class],
-    version = 3,
+    entities = [Category::class, PaymentMethod::class, Transaction::class, Budget::class, SavingsGoal::class],
+    version = 4,
     exportSchema = false
 )
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
     abstract fun paymentMethodDao(): PaymentMethodDao
     abstract fun transactionDao(): TransactionDao
     abstract fun budgetDao(): BudgetDao
+    abstract fun savingsGoalDao(): SavingsGoalDao
     
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -48,6 +53,26 @@ abstract class AppDatabase : RoomDatabase() {
                 
                 // Create index for categoryId
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_budgets_categoryId ON budgets(categoryId)")
+            }
+        }
+        
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create savings_goals table
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS savings_goals (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL,
+                        targetAmount REAL NOT NULL,
+                        currentAmount REAL NOT NULL DEFAULT 0.0,
+                        emoji TEXT NOT NULL,
+                        description TEXT,
+                        targetDate INTEGER,
+                        createdAt INTEGER NOT NULL,
+                        isActive INTEGER NOT NULL DEFAULT 1,
+                        priority INTEGER NOT NULL DEFAULT 0
+                    )
+                """)
             }
         }
     }

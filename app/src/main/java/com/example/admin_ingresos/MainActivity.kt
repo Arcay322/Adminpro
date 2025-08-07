@@ -138,7 +138,7 @@ fun MainAppNavigation() {
                 popEnterTransition = { getPopEnterTransition(getTransitionForRoute("reports")) },
                 popExitTransition = { getPopExitTransition(getTransitionForRoute("reports")) }
             ) {
-                com.example.admin_ingresos.ui.reports.ReportsScreen()
+                com.example.admin_ingresos.ui.reports.ReportsScreenNew()
             }
             composable(
                 "addTransaction",
@@ -168,7 +168,7 @@ fun MainAppNavigation() {
                 popEnterTransition = { getPopEnterTransition(getTransitionForRoute("categories")) },
                 popExitTransition = { getPopExitTransition(getTransitionForRoute("categories")) }
             ) {
-                com.example.admin_ingresos.ui.category.CategoryManagementScreen()
+                com.example.admin_ingresos.ui.category.CategoryManagementScreenNew()
             }
             composable(
                 "settings",

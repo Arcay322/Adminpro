@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.admin_ingresos.AppDatabaseProvider
 import com.example.admin_ingresos.ui.theme.*
+import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import java.text.NumberFormat
 import java.util.*
 
@@ -249,14 +250,14 @@ private fun CashFlowQuickActions(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 EnhancedQuickActionButton(
-                    icon = Icons.Default.Add,
+                    icon = LucideIconMapper.Navigation.add,
                     label = "Ingreso",
                     color = Success,
                     onClick = onAddIncome,
                     modifier = Modifier.weight(1f)
                 )
                 EnhancedQuickActionButton(
-                    icon = Icons.Default.Remove,
+                    icon = LucideIconMapper.getTransactionTypeIcon("gasto"),
                     label = "Gasto",
                     color = MaterialTheme.colorScheme.error,
                     onClick = onAddExpense,
@@ -271,14 +272,14 @@ private fun CashFlowQuickActions(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 EnhancedQuickActionButton(
-                    icon = Icons.Default.Category,
+                    icon = LucideIconMapper.getNavigationIcon("Tag"),
                     label = "Categorías",
                     color = TertiaryPurple,
                     onClick = onViewCategories,
                     modifier = Modifier.weight(1f)
                 )
                 EnhancedQuickActionButton(
-                    icon = Icons.Default.AccountBalance,
+                    icon = LucideIconMapper.Navigation.reports,
                     label = "Presupuestos",
                     color = CashFlowSecondary,
                     onClick = onViewBudgets,

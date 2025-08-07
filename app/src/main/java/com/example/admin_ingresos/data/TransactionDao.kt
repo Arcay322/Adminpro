@@ -106,6 +106,9 @@ interface TransactionDao {
         sortBy: String = "DATE_DESC"
     ): List<Transaction>
     
+    @Query("SELECT * FROM transactions WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
+    suspend fun getTransactionsByDateRange(startDate: Long, endDate: Long): List<Transaction>
+    
     // Get search suggestions
     @Query("""
         SELECT DISTINCT description FROM transactions 

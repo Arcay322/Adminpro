@@ -156,6 +156,49 @@ class BudgetViewModel(
         }
     }
     
+    fun showEditDialog(budget: Budget) {
+        _uiState.value = _uiState.value.copy(
+            showEditDialog = true,
+            editingBudget = budget
+        )
+    }
+    
+    fun hideEditDialog() {
+        _uiState.value = _uiState.value.copy(
+            showEditDialog = false,
+            editingBudget = null
+        )
+    }
+    
+    fun updateBudgetAmount(budgetId: Int, newAmount: Double) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+                
+                val existingBudget = budgetDao.getBudgetById(budgetId)
+                existingBudget?.let { budget ->
+                    val updatedBudget = budget.copy(
+                        amount = newAmount,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                    budgetDao.updateBudget(updatedBudget)
+                    loadBudgetProgress()
+                    
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        showEditDialog = false,
+                        editingBudget = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Error al actualizar presupuesto: ${e.message}"
+                )
+            }
+        }
+    }
+    
     private fun loadBudgetProgress() {
         viewModelScope.launch {
             try {
@@ -230,5 +273,7 @@ class BudgetViewModel(
 data class BudgetUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
-    val showCreateDialog: Boolean = false
+    val showCreateDialog: Boolean = false,
+    val showEditDialog: Boolean = false,
+    val editingBudget: Budget? = null
 )

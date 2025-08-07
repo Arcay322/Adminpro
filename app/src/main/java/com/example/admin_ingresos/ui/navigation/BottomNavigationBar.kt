@@ -1,8 +1,5 @@
 package com.example.admin_ingresos.ui.navigation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -10,17 +7,18 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.admin_ingresos.ui.icons.LucideIconMapper
 
 sealed class BottomNavItem(
     val route: String,
     val title: String,
     val icon: ImageVector
 ) {
-    object Dashboard : BottomNavItem("dashboard", "Inicio", Icons.Default.Home)
-    object Budget : BottomNavItem("budget", "Presupuestos", Icons.Default.AccountBalance)
-    object Categories : BottomNavItem("categories", "Categorías", Icons.Default.Category)
-    object History : BottomNavItem("history", "Historial", Icons.AutoMirrored.Filled.List)
-    object Reports : BottomNavItem("reports", "Reportes", Icons.Default.Analytics)
+    object Dashboard : BottomNavItem("dashboard", "Inicio", LucideIconMapper.Navigation.home)
+    object Budget : BottomNavItem("budget", "Presupuestos", LucideIconMapper.getNavigationIcon("DollarSign"))
+    object Categories : BottomNavItem("categories", "Categorías", LucideIconMapper.getNavigationIcon("Tag"))
+    object History : BottomNavItem("history", "Historial", LucideIconMapper.Navigation.transactions)
+    object Reports : BottomNavItem("reports", "Reportes", LucideIconMapper.Navigation.reports)
 }
 
 @Composable

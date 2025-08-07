@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.admin_ingresos.ui.components.*
+import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.*
 import com.example.admin_ingresos.R
 import kotlinx.coroutines.CoroutineScope
@@ -148,7 +149,7 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
                 ) {
                     IconButton(onClick = onCancel) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = LucideIconMapper.Navigation.back,
                             contentDescription = "Volver",
                             tint = TextPrimary
                         )
@@ -491,7 +492,7 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.CameraAlt,
+                                        imageVector = LucideIconMapper.Navigation.camera,
                                         contentDescription = null,
                                         tint = TextSecondary
                                     )
