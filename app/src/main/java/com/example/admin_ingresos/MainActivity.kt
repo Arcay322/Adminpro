@@ -29,12 +29,21 @@ import com.example.admin_ingresos.ui.animations.getPopExitTransition
 import com.example.admin_ingresos.ui.animations.getTransitionForRoute
 import com.example.admin_ingresos.ui.navigation.BottomNavigationBar
 import com.example.admin_ingresos.ui.theme.Admin_ingresosTheme
+import com.example.admin_ingresos.ui.setup.InitialSetupWizard
+import com.example.admin_ingresos.ui.dashboard.DashboardScreen
+import com.example.admin_ingresos.ui.budget.BudgetScreen
+import com.example.admin_ingresos.ui.reports.ReportsScreenNew
+import com.example.admin_ingresos.ui.transaction.AddTransactionScreen
+import com.example.admin_ingresos.ui.history.TransactionHistoryScreen
+import com.example.admin_ingresos.ui.category.CategoryManagementScreenNew
+import com.example.admin_ingresos.ui.settings.SettingsScreen
+import com.example.admin_ingresos.data.PreferencesManager
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        // Inicializar la base de datos Room
+        // Initialize the Room database
         val db = AppDatabaseProvider.getDatabase(applicationContext)
         setContent {
             Admin_ingresosTheme {
@@ -47,14 +56,14 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainNavigation() {
     val context = LocalContext.current
-    val preferencesManager = remember { com.example.admin_ingresos.data.PreferencesManager(context) }
+    val preferencesManager = remember { PreferencesManager(context) }
     
     // Check if initial setup is completed
     var isSetupCompleted by remember { mutableStateOf(preferencesManager.isSetupCompleted()) }
     
     if (!isSetupCompleted) {
         // Show initial setup wizard
-        com.example.admin_ingresos.ui.setup.InitialSetupWizard(
+        InitialSetupWizard(
             onSetupComplete = {
                 preferencesManager.setSetupCompleted(true)
                 isSetupCompleted = true
@@ -115,7 +124,7 @@ fun MainAppNavigation() {
                 popEnterTransition = { getPopEnterTransition(getTransitionForRoute("dashboard")) },
                 popExitTransition = { getPopExitTransition(getTransitionForRoute("dashboard")) }
             ) {
-                com.example.admin_ingresos.ui.dashboard.DashboardScreen(
+                DashboardScreen(
                     onNavigateToTransactions = { navController.navigate("history") },
                     onNavigateToAddTransaction = { navController.navigate("addTransaction") },
                     onNavigateToReports = { navController.navigate("reports") },
@@ -129,7 +138,7 @@ fun MainAppNavigation() {
                 popEnterTransition = { getPopEnterTransition(getTransitionForRoute("budget")) },
                 popExitTransition = { getPopExitTransition(getTransitionForRoute("budget")) }
             ) {
-                com.example.admin_ingresos.ui.budget.BudgetScreen()
+                BudgetScreen()
             }
             composable(
                 "reports",
@@ -138,7 +147,7 @@ fun MainAppNavigation() {
                 popEnterTransition = { getPopEnterTransition(getTransitionForRoute("reports")) },
                 popExitTransition = { getPopExitTransition(getTransitionForRoute("reports")) }
             ) {
-                com.example.admin_ingresos.ui.reports.ReportsScreenNew()
+                ReportsScreenNew()
             }
             composable(
                 "addTransaction",
@@ -147,7 +156,7 @@ fun MainAppNavigation() {
                 popEnterTransition = { getPopEnterTransition(getTransitionForRoute("addTransaction")) },
                 popExitTransition = { getPopExitTransition(getTransitionForRoute("addTransaction")) }
             ) {
-                com.example.admin_ingresos.ui.transaction.AddTransactionScreen(
+                AddTransactionScreen(
                     onSave = { navController.popBackStack() },
                     onCancel = { navController.popBackStack() }
                 )
@@ -159,7 +168,7 @@ fun MainAppNavigation() {
                 popEnterTransition = { getPopEnterTransition(getTransitionForRoute("history")) },
                 popExitTransition = { getPopExitTransition(getTransitionForRoute("history")) }
             ) {
-                com.example.admin_ingresos.ui.history.TransactionHistoryScreen()
+                TransactionHistoryScreen()
             }
             composable(
                 "categories",
@@ -168,7 +177,7 @@ fun MainAppNavigation() {
                 popEnterTransition = { getPopEnterTransition(getTransitionForRoute("categories")) },
                 popExitTransition = { getPopExitTransition(getTransitionForRoute("categories")) }
             ) {
-                com.example.admin_ingresos.ui.category.CategoryManagementScreenNew()
+                CategoryManagementScreenNew()
             }
             composable(
                 "settings",
@@ -177,7 +186,7 @@ fun MainAppNavigation() {
                 popEnterTransition = { getPopEnterTransition(getTransitionForRoute("settings")) },
                 popExitTransition = { getPopExitTransition(getTransitionForRoute("settings")) }
             ) {
-                com.example.admin_ingresos.ui.settings.SettingsScreen(
+                SettingsScreen(
                     onNavigateToDataManagement = { /* TODO: Implement data management */ }
                 )
             }
