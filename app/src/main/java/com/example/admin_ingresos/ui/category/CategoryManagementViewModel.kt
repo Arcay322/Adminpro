@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -30,19 +31,21 @@ class CategoryManagementViewModel(private val categoryDao: CategoryDao) : ViewMo
         loadCategories()
     }
 
-    fun loadCategories() {
+    private fun loadCategories() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            categoryDao.getAllCategories().catch { e ->
-                _uiState.update { it.copy(error = "Error al cargar categorías: ${e.message}", isLoading = false) }
-            }.collect { categories ->
-                _uiState.update {
-                    it.copy(
-                        categories = categories,
-                        isLoading = false
-                    )
+            categoryDao.getAllCategories()
+                .onStart { _uiState.update { it.copy(isLoading = true) } }
+                .catch { e ->
+                    _uiState.update { it.copy(error = "Error al cargar categorías: ${e.message}", isLoading = false) }
                 }
-            }
+                .collect { categories ->
+                    _uiState.update {
+                        it.copy(
+                            categories = categories,
+                            isLoading = false
+                        )
+                    }
+                }
         }
     }
 
@@ -64,8 +67,17 @@ class CategoryManagementViewModel(private val categoryDao: CategoryDao) : ViewMo
 
     fun saveCategory(name: String, icon: String, color: String, isFavorite: Boolean) {
         viewModelScope.launch {
-            val category = _uiState.value.editingCategory?.copy(name = name, icon = icon, color = color, isFavorite = isFavorite)
-                ?: Category(name = name, icon = icon, color = color, isFavorite = isFavorite)
+            val category = _uiState.value.editingCategory?.copy(
+                name = name,
+                icon = icon,
+                color = color,
+                isFavorite = isFavorite
+            ) ?: Category(
+                name = name,
+                icon = icon,
+                color = color,
+                isFavorite = isFavorite
+            )
 
             if (category.id == 0) {
                 categoryDao.insert(category)
