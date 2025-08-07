@@ -4,6 +4,7 @@ package com.example.admin_ingresos.ui.category
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.admin_ingresos.data.Category
@@ -37,7 +38,7 @@ fun CategoryDialogNew(
                         label = { Text("Icono (Emoji)") }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
                             checked = isFavorite,
                             onCheckedChange = { isFavorite = it }
