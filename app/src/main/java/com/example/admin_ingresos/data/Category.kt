@@ -8,6 +8,7 @@ data class Category(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
     val icon: String = "📦", // emoji icon or icon name
+    val color: String = "#85C1E9", // hex color code
     val isFavorite: Boolean = false
 )
 
@@ -16,6 +17,7 @@ data class CategoryWithCount(
     val id: Int,
     val name: String,
     val icon: String,
+    val color: String,
     val isFavorite: Boolean,
     val transactionCount: Int
 )
@@ -25,6 +27,7 @@ data class CategoryStats(
     val id: Int,
     val name: String,
     val icon: String,
+    val color: String,
     val isFavorite: Boolean,
     val usageCount: Int,
     val totalExpenses: Double,

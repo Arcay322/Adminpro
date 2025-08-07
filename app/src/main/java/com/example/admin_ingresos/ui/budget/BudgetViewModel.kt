@@ -13,7 +13,7 @@ class BudgetViewModel(
     private val preferencesManager: PreferencesManager,
     private val context: android.content.Context
 ) : ViewModel() {
-    
+
     private val budgetDao = database.budgetDao()
     private val categoryDao = database.categoryDao()
     private val alertService = BudgetAlertService(
@@ -22,11 +22,11 @@ class BudgetViewModel(
         notificationService = notificationService,
         preferencesManager = preferencesManager
     )
-    
+
     // UI State
     private val _uiState = MutableStateFlow(BudgetUiState())
     val uiState: StateFlow<BudgetUiState> = _uiState.asStateFlow()
-    
+
     // Budget list
     val budgetsWithCategories = budgetDao.getBudgetsWithCategories()
         .stateIn(
@@ -34,7 +34,7 @@ class BudgetViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
-    
+
     // Categories for budget creation
     val categories = flow { emit(categoryDao.getAll()) }
         .stateIn(
@@ -42,14 +42,14 @@ class BudgetViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
-    
+
     // Budget progress data
     private val _budgetProgress = MutableStateFlow<List<BudgetProgress>>(emptyList())
     val budgetProgress: StateFlow<List<BudgetProgress>> = _budgetProgress.asStateFlow()
-    
+
     init {
         loadBudgetProgress()
-        
+
         // Listen to transaction changes to update budget progress
         viewModelScope.launch {
             database.transactionDao().getAllTransactions().collect {
@@ -57,7 +57,7 @@ class BudgetViewModel(
             }
         }
     }
-    
+
     fun createBudget(
         categoryId: Int,
         amount: Double,
@@ -67,16 +67,16 @@ class BudgetViewModel(
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                
+
                 val endDate = startDate + period.durationInMillis
-                
+
                 // Check for overlapping budgets
                 val overlappingCount = budgetDao.countOverlappingBudgets(
                     categoryId = categoryId,
                     newStartDate = startDate,
                     newEndDate = endDate
                 )
-                
+
                 if (overlappingCount > 0) {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -84,7 +84,7 @@ class BudgetViewModel(
                     )
                     return@launch
                 }
-                
+
                 val budget = Budget(
                     categoryId = categoryId,
                     amount = amount,
@@ -92,16 +92,16 @@ class BudgetViewModel(
                     startDate = startDate,
                     endDate = endDate
                 )
-                
+
                 budgetDao.insertBudget(budget)
-                
+
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     showCreateDialog = false
                 )
-                
+
                 loadBudgetProgress()
-                
+
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -110,17 +110,17 @@ class BudgetViewModel(
             }
         }
     }
-    
+
     fun updateBudget(budget: Budget) {
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                
+
                 budgetDao.updateBudget(budget.copy(updatedAt = System.currentTimeMillis()))
-                
+
                 _uiState.value = _uiState.value.copy(isLoading = false)
                 loadBudgetProgress()
-                
+
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -129,7 +129,7 @@ class BudgetViewModel(
             }
         }
     }
-    
+
     fun deleteBudget(budget: Budget) {
         viewModelScope.launch {
             try {
@@ -142,7 +142,7 @@ class BudgetViewModel(
             }
         }
     }
-    
+
     fun deactivateBudget(budgetId: Int) {
         viewModelScope.launch {
             try {
@@ -155,26 +155,26 @@ class BudgetViewModel(
             }
         }
     }
-    
+
     fun showEditDialog(budget: Budget) {
         _uiState.value = _uiState.value.copy(
             showEditDialog = true,
             editingBudget = budget
         )
     }
-    
+
     fun hideEditDialog() {
         _uiState.value = _uiState.value.copy(
             showEditDialog = false,
             editingBudget = null
         )
     }
-    
+
     fun updateBudgetAmount(budgetId: Int, newAmount: Double) {
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                
+
                 val existingBudget = budgetDao.getBudgetById(budgetId)
                 existingBudget?.let { budget ->
                     val updatedBudget = budget.copy(
@@ -183,7 +183,7 @@ class BudgetViewModel(
                     )
                     budgetDao.updateBudget(updatedBudget)
                     loadBudgetProgress()
-                    
+
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         showEditDialog = false,
@@ -198,13 +198,13 @@ class BudgetViewModel(
             }
         }
     }
-    
+
     private fun loadBudgetProgress() {
         viewModelScope.launch {
             try {
                 val currentTime = System.currentTimeMillis()
                 val progressData = budgetDao.getCurrentBudgetProgress(currentTime)
-                
+
                 val budgetProgressList = progressData.map { raw ->
                     val category = Category(
                         id = raw.categoryId,
@@ -212,7 +212,7 @@ class BudgetViewModel(
                         icon = raw.categoryIcon,
                         color = raw.categoryColor
                     )
-                    
+
                     val budget = Budget(
                         id = raw.id,
                         categoryId = raw.categoryId,
@@ -224,14 +224,14 @@ class BudgetViewModel(
                         createdAt = raw.createdAt,
                         updatedAt = raw.updatedAt
                     )
-                    
+
                     val remaining = (budget.amount - raw.spent).coerceAtLeast(0.0)
                     val percentage = if (budget.amount > 0) (raw.spent / budget.amount).toFloat() else 0f
                     val isOverBudget = raw.spent > budget.amount
-                    
+
                     val daysRemaining = ((budget.endDate - currentTime) / (24 * 60 * 60 * 1000)).toInt()
                         .coerceAtLeast(0)
-                    
+
                     BudgetProgress(
                         budget = budget,
                         category = category,
@@ -242,12 +242,12 @@ class BudgetViewModel(
                         daysRemaining = daysRemaining
                     )
                 }
-                
+
                 _budgetProgress.value = budgetProgressList
-                
+
                 // Check for budget alerts
                 alertService?.checkBudgetAlerts()
-                
+
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     error = "Error al cargar progreso de presupuestos: ${e.message}"
@@ -255,16 +255,16 @@ class BudgetViewModel(
             }
         }
     }
-    
+
     // UI Actions
     fun showCreateDialog() {
         _uiState.value = _uiState.value.copy(showCreateDialog = true)
     }
-    
+
     fun hideCreateDialog() {
         _uiState.value = _uiState.value.copy(showCreateDialog = false, error = null)
     }
-    
+
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }

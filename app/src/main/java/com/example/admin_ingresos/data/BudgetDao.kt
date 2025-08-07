@@ -6,23 +6,23 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface BudgetDao {
-    
+
     @Query("SELECT * FROM budgets WHERE isActive = 1 ORDER BY createdAt DESC")
     fun getAllActiveBudgets(): Flow<List<Budget>>
-    
+
     @Query("SELECT * FROM budgets ORDER BY createdAt DESC")
     fun getAllBudgets(): Flow<List<Budget>>
-    
+
     @Query("SELECT * FROM budgets WHERE id = :id")
     suspend fun getBudgetById(id: Int): Budget?
-    
+
     @Query("SELECT * FROM budgets WHERE categoryId = :categoryId AND isActive = 1")
     suspend fun getActiveBudgetByCategory(categoryId: Int): Budget?
-    
+
     @Transaction
     @Query("SELECT * FROM budgets WHERE isActive = 1 ORDER BY createdAt DESC")
     fun getBudgetsWithCategories(): Flow<List<BudgetWithCategory>>
-    
+
     @Query("""
         SELECT b.*, c.name as categoryName, c.icon as categoryIcon, c.color as categoryColor,
                COALESCE(SUM(CASE WHEN t.type = 'Gasto' AND t.date >= b.startDate AND t.date <= b.endDate THEN t.amount ELSE 0 END), 0) as spent
@@ -34,14 +34,14 @@ interface BudgetDao {
         ORDER BY b.createdAt DESC
     """)
     suspend fun getCurrentBudgetProgress(currentTime: Long): List<BudgetProgressRaw>
-    
+
     @Query("""
         SELECT COALESCE(SUM(CASE WHEN t.type = 'Gasto' AND t.date >= :startDate AND t.date <= :endDate THEN t.amount ELSE 0 END), 0)
         FROM transactions t
         WHERE t.categoryId = :categoryId
     """)
     suspend fun getSpentAmountForPeriod(categoryId: Int, startDate: Long, endDate: Long): Double
-    
+
     @Query("""
         SELECT b.*, c.name as categoryName, c.icon as categoryIcon, c.color as categoryColor,
                COALESCE(SUM(CASE WHEN t.type = 'Gasto' AND t.date >= b.startDate AND t.date <= b.endDate THEN t.amount ELSE 0 END), 0) as spent
@@ -53,22 +53,22 @@ interface BudgetDao {
         LIMIT 1
     """)
     suspend fun getBudgetProgressForCategory(categoryId: Int, currentTime: Long): BudgetProgressRaw?
-    
+
     @Insert
     suspend fun insertBudget(budget: Budget): Long
-    
+
     @Update
     suspend fun updateBudget(budget: Budget)
-    
+
     @Delete
     suspend fun deleteBudget(budget: Budget)
-    
+
     @Query("UPDATE budgets SET isActive = 0 WHERE id = :id")
     suspend fun deactivateBudget(id: Int)
-    
+
     @Query("DELETE FROM budgets WHERE categoryId = :categoryId")
     suspend fun deleteBudgetsByCategory(categoryId: Int)
-    
+
     @Query("""
         SELECT COUNT(*) FROM budgets 
         WHERE categoryId = :categoryId AND isActive = 1 

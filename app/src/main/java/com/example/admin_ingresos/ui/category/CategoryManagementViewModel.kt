@@ -62,10 +62,10 @@ class CategoryManagementViewModel(private val categoryDao: CategoryDao) : ViewMo
         _uiState.update { it.copy(showDialog = false, editingCategory = null) }
     }
 
-    fun saveCategory(name: String, icon: String, isFavorite: Boolean) {
+    fun saveCategory(name: String, icon: String, color: String, isFavorite: Boolean) {
         viewModelScope.launch {
-            val category = _uiState.value.editingCategory?.copy(name = name, icon = icon, isFavorite = isFavorite)
-                ?: Category(name = name, icon = icon, isFavorite = isFavorite)
+            val category = _uiState.value.editingCategory?.copy(name = name, icon = icon, color = color, isFavorite = isFavorite)
+                ?: Category(name = name, icon = icon, color = color, isFavorite = isFavorite)
 
             if (category.id == 0) {
                 categoryDao.insert(category)
