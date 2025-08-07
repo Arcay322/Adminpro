@@ -6,6 +6,7 @@ import com.example.admin_ingresos.AppDatabaseProvider
 import com.example.admin_ingresos.data.NotificationService
 import com.example.admin_ingresos.data.PreferencesManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
@@ -15,31 +16,31 @@ class BudgetAlertService(
     private val notificationService: NotificationService,
     private val preferencesManager: PreferencesManager
 ) {
-    
+
     companion object {
         const val BUDGET_CHECK_WORK_NAME = "budget_check_work"
         const val WARNING_THRESHOLD = 0.8f // 80%
         const val CRITICAL_THRESHOLD = 0.95f // 95%
     }
-    
+
     suspend fun checkBudgetAlerts() {
         if (!preferencesManager.budgetAlertsEnabled) return
-        
+
         withContext(Dispatchers.IO) {
             val currentTime = System.currentTimeMillis()
             val budgetProgressList = database.budgetDao().getCurrentBudgetProgress(currentTime)
-            val categories = database.categoryDao().getAll()
-            
+            val categories = database.categoryDao().getAllCategories().first()
+
             budgetProgressList.forEach { budgetProgress ->
                 val category = categories.find { it.id == budgetProgress.categoryId }
                 val categoryName = category?.name ?: "Categoría desconocida"
-                
+
                 val percentage = if (budgetProgress.amount > 0) {
                     (budgetProgress.spent / budgetProgress.amount).toFloat()
                 } else {
                     0f
                 }
-                
+
                 when {
                     // Budget exceeded
                     percentage > 1.0f -> {
@@ -51,7 +52,7 @@ class BudgetAlertService(
                             overspent = overspent
                         )
                     }
-                    
+
                     // Critical threshold (95%)
                     percentage >= CRITICAL_THRESHOLD -> {
                         notificationService.showBudgetCriticalNotification(
@@ -61,7 +62,7 @@ class BudgetAlertService(
                             percentage = percentage * 100
                         )
                     }
-                    
+
                     // Warning threshold (80%)
                     percentage >= WARNING_THRESHOLD -> {
                         notificationService.showBudgetWarningNotification(
@@ -75,13 +76,13 @@ class BudgetAlertService(
             }
         }
     }
-    
+
     fun scheduleBudgetChecks() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
             .setRequiresBatteryNotLow(true)
             .build()
-        
+
         val budgetCheckRequest = PeriodicWorkRequestBuilder<BudgetCheckWorker>(
             repeatInterval = 6, // Check every 6 hours
             repeatIntervalTimeUnit = TimeUnit.HOURS,
@@ -91,7 +92,7 @@ class BudgetAlertService(
             .setConstraints(constraints)
             .addTag("budget_alerts")
             .build()
-        
+
         WorkManager.getInstance(context)
             .enqueueUniquePeriodicWork(
                 BUDGET_CHECK_WORK_NAME,
@@ -99,20 +100,20 @@ class BudgetAlertService(
                 budgetCheckRequest
             )
     }
-    
+
     fun cancelBudgetChecks() {
         WorkManager.getInstance(context)
             .cancelUniqueWork(BUDGET_CHECK_WORK_NAME)
     }
-    
+
     suspend fun checkSpecificBudget(categoryId: Int) {
         if (!preferencesManager.budgetAlertsEnabled) return
-        
+
         withContext(Dispatchers.IO) {
             val currentTime = System.currentTimeMillis()
             val budgetProgress = database.budgetDao().getBudgetProgressForCategory(categoryId, currentTime)
-                        val category = database.categoryDao().getById(categoryId)
-            
+            val category = database.categoryDao().getCategoryById(categoryId)
+
             budgetProgress?.let { progress ->
                 val categoryName = category?.name ?: "Categoría desconocida"
                 val percentage = if (progress.amount > 0) {
@@ -120,7 +121,7 @@ class BudgetAlertService(
                 } else {
                     0f
                 }
-                
+
                 when {
                     percentage > 1.0f -> {
                         val overspent = progress.spent - progress.amount
@@ -131,7 +132,7 @@ class BudgetAlertService(
                             overspent = overspent
                         )
                     }
-                    
+
                     percentage >= CRITICAL_THRESHOLD -> {
                         notificationService.showBudgetCriticalNotification(
                             categoryName = categoryName,
@@ -140,7 +141,7 @@ class BudgetAlertService(
                             percentage = percentage * 100
                         )
                     }
-                    
+
                     percentage >= WARNING_THRESHOLD -> {
                         notificationService.showBudgetWarningNotification(
                             categoryName = categoryName,
@@ -159,20 +160,20 @@ class BudgetCheckWorker(
     context: Context,
     params: WorkerParameters
 ) : CoroutineWorker(context, params) {
-    
+
     override suspend fun doWork(): Result {
         return try {
             val database = AppDatabaseProvider.getDatabase(applicationContext)
             val notificationService = NotificationService(applicationContext)
             val preferencesManager = PreferencesManager(applicationContext)
-            
+
             val budgetAlertService = BudgetAlertService(
                 context = applicationContext,
                 database = database,
                 notificationService = notificationService,
                 preferencesManager = preferencesManager
             )
-            
+
             budgetAlertService.checkBudgetAlerts()
             Result.success()
         } catch (e: Exception) {
