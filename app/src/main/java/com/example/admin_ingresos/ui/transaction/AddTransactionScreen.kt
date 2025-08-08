@@ -72,7 +72,7 @@ fun AddTransactionScreen(onSave: () -> Unit, onCancel: () -> Unit) {
     var savedAmount by remember { mutableStateOf("") }
     
     val categories by produceState(initialValue = emptyList<com.example.admin_ingresos.data.Category>(), db) {
-        value = db.categoryDao().getAll()
+        db.categoryDao().getAllCategories().collect { value = it }
     }
     val paymentMethods by produceState(initialValue = emptyList<com.example.admin_ingresos.data.PaymentMethod>(), db) {
         value = db.paymentMethodDao().getAll()

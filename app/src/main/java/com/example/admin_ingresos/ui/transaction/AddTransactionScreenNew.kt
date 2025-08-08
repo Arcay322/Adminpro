@@ -48,7 +48,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
     var showSuccessMessage by remember { mutableStateOf(false) }
     
     val categories by produceState(initialValue = emptyList<com.example.admin_ingresos.data.Category>(), db) {
-        value = db.categoryDao().getAll()
+        value = db.categoryDao().getAllCategories().first() // Collect the first emission from the Flow
     }
     val paymentMethods by produceState(initialValue = emptyList<com.example.admin_ingresos.data.PaymentMethod>(), db) {
         value = db.paymentMethodDao().getAll()

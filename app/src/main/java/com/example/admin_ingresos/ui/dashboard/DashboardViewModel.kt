@@ -58,7 +58,7 @@ class DashboardViewModel(
         )
     
     // Also listen to category changes for instant updates
-    private val categories = database.categoryDao().getAllCategories()
+ private val categories = database.categoryDao().getAllCategories()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

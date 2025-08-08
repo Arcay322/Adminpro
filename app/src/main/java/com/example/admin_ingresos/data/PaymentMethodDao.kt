@@ -2,10 +2,14 @@ package com.example.admin_ingresos.data
 
 import androidx.room.*
 
+import kotlinx.coroutines.flow.Flow
 @Dao
 interface PaymentMethodDao {
     @Query("SELECT * FROM payment_methods ORDER BY name ASC")
     suspend fun getAll(): List<PaymentMethod>
+
+ @Query("SELECT * FROM payment_methods ORDER BY name ASC")
+    fun getAllFlow(): Flow<List<PaymentMethod>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(paymentMethod: PaymentMethod): Long

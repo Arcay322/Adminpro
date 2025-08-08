@@ -60,7 +60,7 @@ fun ReportsScreenNew() {
     }
     
     val categories by produceState(initialValue = emptyList<Category>(), db) {
-        value = db.categoryDao().getAll()
+ value = db.categoryDao().getCategoriesList()
     }
     
     // Calculate data for reports

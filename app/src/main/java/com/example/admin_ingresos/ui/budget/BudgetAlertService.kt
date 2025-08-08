@@ -29,7 +29,7 @@ class BudgetAlertService(
         withContext(Dispatchers.IO) {
             val currentTime = System.currentTimeMillis()
             val budgetProgressList = database.budgetDao().getCurrentBudgetProgress(currentTime)
-            val categories = database.categoryDao().getCategoriesList()
+ val categories = database.categoryDao().getAllCategories().first()
 
             budgetProgressList.forEach { budgetProgress ->
                 val category = categories.find { it.id == budgetProgress.categoryId }
@@ -107,7 +107,7 @@ class BudgetAlertService(
         withContext(Dispatchers.IO) {
             val currentTime = System.currentTimeMillis()
             val budgetProgress = database.budgetDao().getBudgetProgressForCategory(categoryId, currentTime)
-            val category = database.categoryDao().getCategoryById(categoryId)
+ val category = database.categoryDao().getCategoryById(categoryId)
 
             budgetProgress?.let { progress ->
                 val categoryName = category?.name ?: "Categoría desconocida"

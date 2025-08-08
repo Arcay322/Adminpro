@@ -32,8 +32,8 @@ class AddTransactionViewModel(private val db: AppDatabase) : ViewModel() {
     
     fun addCategory(categoryName: String, onCategoryAdded: (Int) -> Unit) {
         viewModelScope.launch {
-            val newCategory = Category(name = categoryName, isActive = true)
-            val categoryId = db.categoryDao().insertCategory(newCategory)
+ val newCategory = Category(name = categoryName)
+ val categoryId = db.categoryDao().insert(newCategory)
             onCategoryAdded(categoryId.toInt())
         }
     }

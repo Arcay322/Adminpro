@@ -9,16 +9,16 @@ object SampleDataProvider {
 
     // Default categories with Lucide icons and colors
     val defaultCategories = listOf(
-        Category(name = "Alimentación", icon = "UtensilsCrossed", color = "#FF6B6B", isFavorite = true),
-        Category(name = "Transporte", icon = "Car", color = "#4ECDC4", isFavorite = true),
-        Category(name = "Entretenimiento", icon = "Gamepad2", color = "#45B7D1", isFavorite = false),
-        Category(name = "Salud", icon = "Heart", color = "#96CEB4", isFavorite = false),
-        Category(name = "Educación", icon = "BookOpen", color = "#FFEAA7", isFavorite = false),
-        Category(name = "Compras", icon = "ShoppingCart", color = "#DDA0DD", isFavorite = true),
-        Category(name = "Servicios", icon = "Settings", color = "#98D8C8", isFavorite = false),
-        Category(name = "Trabajo", icon = "Briefcase", color = "#F7DC6F", isFavorite = true),
-        Category(name = "Hogar", icon = "Home", color = "#BB8FCE", isFavorite = false),
-        Category(name = "Otros", icon = "Package", color = "#85C1E9", isFavorite = false)
+ Category(name = "Alimentación", icon = "UtensilsCrossed", color = "#FF6B6B", isFavorite = true),
+ Category(name = "Transporte", icon = "Car", color = "#4ECDC4", isFavorite = true),
+ Category(name = "Entretenimiento", icon = "Gamepad2", color = "#45B7D1", isFavorite = false),
+ Category(name = "Salud", icon = "Heart", color = "#96CEB4", isFavorite = false),
+ Category(name = "Educación", icon = "BookOpen", color = "#FFEAA7", isFavorite = false),
+ Category(name = "Compras", icon = "ShoppingCart", color = "#DDA0DD", isFavorite = true),
+ Category(name = "Servicios", icon = "Settings", color = "#98D8C8", isFavorite = false),
+ Category(name = "Trabajo", icon = "Briefcase", color = "#F7DC6F", isFavorite = true),
+ Category(name = "Hogar", icon = "Home", color = "#BB8FCE", isFavorite = false),
+ Category(name = "Otros", icon = "Package", color = "#85C1E9", isFavorite = false)
     )
 
     // Default payment methods
@@ -82,7 +82,7 @@ object SampleDataProvider {
         val existingTransactions = database.transactionDao().getAll()
 
         // Only initialize if database is empty
-        if (existingCategories.isEmpty() && existingPaymentMethods.isEmpty() && existingTransactions.isEmpty()) {
+        if (existingCategories.isEmpty() && existingPaymentMethods.isEmpty() && existingTransactions.isEmpty()) { // Changed to .isEmpty()
 
             // Insert default categories
             val categoryIds = mutableMapOf<String, Int>()
@@ -188,11 +188,11 @@ object SampleDataProvider {
         requiredCategories.forEach { requiredName ->
             val exists = existingCategories.any { it.name.equals(requiredName, ignoreCase = true) }
             if (!exists) {
-                val category = when (requiredName) {
-                    "Alimentación" -> Category(name = "Alimentación", icon = "UtensilsCrossed", color = "#FF6B6B", isFavorite = true)
-                    "Transporte" -> Category(name = "Transporte", icon = "Car", color = "#4ECDC4", isFavorite = true)
-                    "Entretenimiento" -> Category(name = "Entretenimiento", icon = "Gamepad2", color = "#45B7D1", isFavorite = false)
-                    "Compras" -> Category(name = "Compras", icon = "ShoppingCart", color = "#DDA0DD", isFavorite = true)
+ val category = when (requiredName) {
+ "Alimentación" -> Category(name = "Alimentación", icon = "UtensilsCrossed", color = "#FF6B6B", isFavorite = true)
+ "Transporte" -> Category(name = "Transporte", icon = "Car", color = "#4ECDC4", isFavorite = true)
+ "Entretenimiento" -> Category(name = "Entretenimiento", icon = "Gamepad2", color = "#45B7D1", isFavorite = false)
+ "Compras" -> Category(name = "Compras", icon = "ShoppingCart", color = "#DDA0DD", isFavorite = true)
                     else -> Category(name = requiredName, icon = "Package", color = "#85C1E9", isFavorite = false)
                 }
                 database.categoryDao().insert(category)

@@ -50,7 +50,7 @@ class ReportsViewModel(private val database: AppDatabase) : ViewModel() {
             try {
                 // Load basic data
                 val transactions = transactionDao.getAll()
-                val categories = categoryDao.getAll()
+ val categories = categoryDao.getCategoriesList()
                 
                 _transactions.value = transactions
                 _categories.value = categories
