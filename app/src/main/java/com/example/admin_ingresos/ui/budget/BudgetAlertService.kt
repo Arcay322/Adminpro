@@ -29,7 +29,7 @@ class BudgetAlertService(
         withContext(Dispatchers.IO) {
             val currentTime = System.currentTimeMillis()
             val budgetProgressList = database.budgetDao().getCurrentBudgetProgress(currentTime)
-            val categories = database.categoryDao().getAllCategories().first()
+            val categories = database.categoryDao().getCategoriesList()
 
             budgetProgressList.forEach { budgetProgress ->
                 val category = categories.find { it.id == budgetProgress.categoryId }
@@ -42,7 +42,6 @@ class BudgetAlertService(
                 }
 
                 when {
-                    // Budget exceeded
                     percentage > 1.0f -> {
                         val overspent = budgetProgress.spent - budgetProgress.amount
                         notificationService.showBudgetExceededNotification(
@@ -52,8 +51,6 @@ class BudgetAlertService(
                             overspent = overspent
                         )
                     }
-
-                    // Critical threshold (95%)
                     percentage >= CRITICAL_THRESHOLD -> {
                         notificationService.showBudgetCriticalNotification(
                             categoryName = categoryName,
@@ -62,8 +59,6 @@ class BudgetAlertService(
                             percentage = percentage * 100
                         )
                     }
-
-                    // Warning threshold (80%)
                     percentage >= WARNING_THRESHOLD -> {
                         notificationService.showBudgetWarningNotification(
                             categoryName = categoryName,
@@ -132,7 +127,6 @@ class BudgetAlertService(
                             overspent = overspent
                         )
                     }
-
                     percentage >= CRITICAL_THRESHOLD -> {
                         notificationService.showBudgetCriticalNotification(
                             categoryName = categoryName,
@@ -141,7 +135,6 @@ class BudgetAlertService(
                             percentage = percentage * 100
                         )
                     }
-
                     percentage >= WARNING_THRESHOLD -> {
                         notificationService.showBudgetWarningNotification(
                             categoryName = categoryName,

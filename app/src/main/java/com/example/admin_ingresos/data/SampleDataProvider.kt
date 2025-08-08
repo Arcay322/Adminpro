@@ -7,7 +7,6 @@ import kotlin.random.Random
 
 object SampleDataProvider {
 
-    // Default categories with Lucide icons and colors
     val defaultCategories = listOf(
         Category(name = "Alimentación", icon = "UtensilsCrossed", color = "#FF6B6B", isFavorite = true),
         Category(name = "Transporte", icon = "Car", color = "#4ECDC4", isFavorite = true),
@@ -21,7 +20,6 @@ object SampleDataProvider {
         Category(name = "Otros", icon = "Package", color = "#85C1E9", isFavorite = false)
     )
 
-    // Default payment methods
     val defaultPaymentMethods = listOf(
         PaymentMethod(name = "Efectivo", icon = "💵"),
         PaymentMethod(name = "Tarjeta de Débito", icon = "💳"),
@@ -31,74 +29,37 @@ object SampleDataProvider {
         PaymentMethod(name = "Otro", icon = "💰")
     )
 
-    // Sample transaction descriptions by category
     private val sampleDescriptions = mapOf(
-        "Alimentación" to listOf(
-            "Supermercado", "Restaurante", "Comida rápida", "Cafetería",
-            "Panadería", "Mercado", "Delivery", "Almuerzo trabajo"
-        ),
-        "Transporte" to listOf(
-            "Gasolina", "Uber", "Taxi", "Autobús", "Metro",
-            "Estacionamiento", "Peaje", "Mantenimiento auto"
-        ),
-        "Entretenimiento" to listOf(
-            "Cine", "Concierto", "Streaming", "Videojuegos",
-            "Libros", "Revista", "Salida nocturna", "Teatro"
-        ),
-        "Salud" to listOf(
-            "Farmacia", "Doctor", "Dentista", "Laboratorio",
-            "Seguro médico", "Vitaminas", "Gimnasio", "Terapia"
-        ),
-        "Educación" to listOf(
-            "Curso online", "Libros", "Universidad", "Certificación",
-            "Seminario", "Material escolar", "Clases particulares", "Software"
-        ),
-        "Compras" to listOf(
-            "Ropa", "Zapatos", "Electrónicos", "Hogar",
-            "Regalos", "Accesorios", "Perfume", "Decoración"
-        ),
-        "Servicios" to listOf(
-            "Internet", "Teléfono", "Electricidad", "Agua",
-            "Gas", "Limpieza", "Reparaciones", "Suscripciones"
-        ),
-        "Trabajo" to listOf(
-            "Salario", "Freelance", "Bonificación", "Comisión",
-            "Proyecto", "Consultoría", "Venta", "Inversión"
-        ),
-        "Hogar" to listOf(
-            "Alquiler", "Hipoteca", "Muebles", "Electrodomésticos",
-            "Jardinería", "Seguridad", "Mantenimiento", "Decoración"
-        ),
-        "Otros" to listOf(
-            "Varios", "Imprevisto", "Donación", "Regalo",
-            "Multa", "Impuestos", "Seguro", "Ahorro"
-        )
+        "Alimentación" to listOf("Supermercado", "Restaurante", "Comida rápida", "Cafetería"),
+        "Transporte" to listOf("Gasolina", "Uber", "Taxi", "Autobús"),
+        "Entretenimiento" to listOf("Cine", "Concierto", "Streaming", "Videojuegos"),
+        "Salud" to listOf("Farmacia", "Doctor", "Dentista", "Gimnasio"),
+        "Educación" to listOf("Curso online", "Libros", "Universidad", "Material escolar"),
+        "Compras" to listOf("Ropa", "Zapatos", "Electrónicos", "Regalos"),
+        "Servicios" to listOf("Internet", "Teléfono", "Electricidad", "Agua"),
+        "Trabajo" to listOf("Salario", "Freelance", "Bonificación", "Proyecto"),
+        "Hogar" to listOf("Alquiler", "Hipoteca", "Muebles", "Reparaciones"),
+        "Otros" to listOf("Varios", "Imprevisto", "Donación", "Ahorro")
     )
 
     suspend fun initializeSampleData(database: AppDatabase) = withContext(Dispatchers.IO) {
-        // Check if data already exists
-        val existingCategories = database.categoryDao().getCategoriesList()
-        val existingPaymentMethods = database.paymentMethodDao().getAll()
-        val existingTransactions = database.transactionDao().getAll()
+        val categoryDao = database.categoryDao()
+        val paymentMethodDao = database.paymentMethodDao()
+        val transactionDao = database.transactionDao()
 
-        // Only initialize if database is empty
-        if (existingCategories.isEmpty() && existingPaymentMethods.isEmpty() && existingTransactions.isEmpty()) {
+        if (categoryDao.getCategoriesList().isEmpty() &&
+            paymentMethodDao.getAll().isEmpty() &&
+            transactionDao.getAll().isEmpty()) {
 
-            // Insert default categories
-            val categoryIds = mutableMapOf<String, Int>()
-            defaultCategories.forEach { category ->
-                val id = database.categoryDao().insert(category).toInt()
-                categoryIds[category.name] = id
+            val categoryIds = defaultCategories.associate { category ->
+                val id = categoryDao.insert(category)
+                category.name to id.toInt()
             }
 
-            // Insert default payment methods
-            val paymentMethodIds = mutableListOf<Int>()
-            defaultPaymentMethods.forEach { paymentMethod ->
-                val id = database.paymentMethodDao().insert(paymentMethod).toInt()
-                paymentMethodIds.add(id)
+            val paymentMethodIds = defaultPaymentMethods.map { paymentMethod ->
+                paymentMethodDao.insert(paymentMethod).toInt()
             }
 
-            // Generate sample transactions for the last 3 months
             generateSampleTransactions(database, categoryIds, paymentMethodIds)
         }
     }
@@ -109,93 +70,51 @@ object SampleDataProvider {
         paymentMethodIds: List<Int>
     ) {
         val calendar = Calendar.getInstance()
-        val currentTime = calendar.timeInMillis
-
-        // Generate transactions for the last 90 days
         val transactions = mutableListOf<Transaction>()
 
         for (dayOffset in 0..89) {
-            calendar.timeInMillis = currentTime - (dayOffset * 24 * 60 * 60 * 1000L)
-
-            // Generate 1-4 transactions per day (more realistic)
+            calendar.timeInMillis = System.currentTimeMillis() - (dayOffset * 24 * 60 * 60 * 1000L)
             val transactionsPerDay = Random.nextInt(1, 5)
 
             repeat(transactionsPerDay) {
-                val isIncome = Random.nextDouble() < 0.2 // 20% chance of income
+                val isIncome = Random.nextDouble() < 0.2
+                val randomCategory = defaultCategories.random()
+                val descriptions = sampleDescriptions[randomCategory.name] ?: listOf("Gasto")
 
-                if (isIncome) {
-                    // Generate income transaction
-                    val workCategoryId = categoryIds["Trabajo"] ?: 1
-                    val amount = Random.nextDouble(500.0, 3000.0)
-                    val descriptions = sampleDescriptions["Trabajo"] ?: listOf("Ingreso")
-
-                    transactions.add(
-                        Transaction(
-                            amount = amount,
-                            type = "Ingreso",
-                            categoryId = workCategoryId,
-                            description = descriptions.random(),
-                            date = calendar.timeInMillis - Random.nextLong(0, 24 * 60 * 60 * 1000L),
-                            paymentMethodId = paymentMethodIds.randomOrNull()
-                        )
+                val transaction = if (isIncome) {
+                    Transaction(
+                        amount = Random.nextDouble(500.0, 3000.0),
+                        type = "Ingreso",
+                        categoryId = categoryIds["Trabajo"] ?: 1,
+                        description = sampleDescriptions["Trabajo"]?.random() ?: "Ingreso",
+                        date = calendar.timeInMillis,
+                        paymentMethodId = paymentMethodIds.randomOrNull()
                     )
                 } else {
-                    // Generate expense transaction
-                    val categoryName = defaultCategories.filter { it.name != "Trabajo" }.random().name
-                    val categoryId = categoryIds[categoryName] ?: 1
-                    val descriptions = sampleDescriptions[categoryName] ?: listOf("Gasto")
-
-                    // Different amount ranges based on category
-                    val amount = when (categoryName) {
-                        "Alimentación" -> Random.nextDouble(10.0, 150.0)
-                        "Transporte" -> Random.nextDouble(5.0, 100.0)
-                        "Entretenimiento" -> Random.nextDouble(15.0, 200.0)
-                        "Salud" -> Random.nextDouble(20.0, 300.0)
-                        "Educación" -> Random.nextDouble(50.0, 500.0)
-                        "Compras" -> Random.nextDouble(25.0, 400.0)
-                        "Servicios" -> Random.nextDouble(30.0, 250.0)
-                        "Hogar" -> Random.nextDouble(100.0, 800.0)
-                        else -> Random.nextDouble(10.0, 100.0)
-                    }
-
-                    transactions.add(
-                        Transaction(
-                            amount = amount,
-                            type = "Gasto",
-                            categoryId = categoryId,
-                            description = descriptions.random(),
-                            date = calendar.timeInMillis - Random.nextLong(0, 24 * 60 * 60 * 1000L),
-                            paymentMethodId = paymentMethodIds.randomOrNull()
-                        )
+                    Transaction(
+                        amount = Random.nextDouble(10.0, 500.0),
+                        type = "Gasto",
+                        categoryId = categoryIds[randomCategory.name] ?: 1,
+                        description = descriptions.random(),
+                        date = calendar.timeInMillis,
+                        paymentMethodId = paymentMethodIds.randomOrNull()
                     )
                 }
+                transactions.add(transaction)
             }
         }
-
-        // Insert all transactions
-        transactions.forEach { transaction ->
-            database.transactionDao().insert(transaction)
-        }
+        database.transactionDao().insertAll(transactions)
     }
 
-    /**
-     * Asegura que las categorías necesarias para las plantillas de presupuesto existan
-     */
     suspend fun ensureBudgetTemplateCategories(database: AppDatabase) = withContext(Dispatchers.IO) {
-        val existingCategories = database.categoryDao().getCategoriesList()
+        val categoryDao = database.categoryDao()
+        val existingCategories = categoryDao.getCategoriesList()
         val requiredCategories = listOf("Alimentación", "Transporte", "Entretenimiento", "Compras")
 
         requiredCategories.forEach { requiredName ->
-            val exists = existingCategories.any { it.name.equals(requiredName, ignoreCase = true) }
-            if (!exists) {
-                val category = when (requiredName) {
-                    "Alimentación" -> Category(name = "Alimentación", icon = "UtensilsCrossed", color = "#FF6B6B", isFavorite = true)
-                    "Transporte" -> Category(name = "Transporte", icon = "Car", color = "#4ECDC4", isFavorite = true)
-                    "Entretenimiento" -> Category(name = "Entretenimiento", icon = "Gamepad2", color = "#45B7D1", isFavorite = false)
-                    "Compras" -> Category(name = "Compras", icon = "ShoppingCart", color = "#DDA0DD", isFavorite = true)
-                    else -> Category(name = requiredName, icon = "Package", color = "#85C1E9", isFavorite = false)
-                }
-                database.categoryDao().insert(category)
+            if (existingCategories.none { it.name.equals(requiredName, ignoreCase = true) }) {
+                val category = defaultCategories.find { it.name.equals(requiredName, ignoreCase = true) }
+                category?.let { categoryDao.insert(it) }
             }
         }
     }
