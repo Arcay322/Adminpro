@@ -9,11 +9,14 @@ interface CategoryDao {
     @Query("SELECT * FROM categories ORDER BY name ASC")
     fun getAllCategories(): Flow<List<Category>>
 
+    @Query("SELECT * FROM categories ORDER BY name ASC")
+    suspend fun getCategoriesList(): List<Category>
+
     @Query("SELECT * FROM categories WHERE id = :id")
     suspend fun getCategoryById(id: Int): Category?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(category: Category)
+    suspend fun insert(category: Category): Long
 
     @Update
     suspend fun update(category: Category)
