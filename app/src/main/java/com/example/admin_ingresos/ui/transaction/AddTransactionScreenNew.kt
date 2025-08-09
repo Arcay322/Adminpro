@@ -10,11 +10,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import com.example.admin_ingresos.ui.theme.GlassmorphicCard
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.net.Uri
+import android.os.Environment
+import java.io.File
+import java.text.SimpleDateFormat
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -22,20 +29,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.admin_ingresos.ui.components.*
 import java.text.NumberFormat
 import java.util.*
+import kotlinx.coroutines.flow.first
+
+// Import Coil para cargar imágenes en Compose
+import coil.compose.rememberAsyncImagePainter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
     val context = LocalContext.current
     val db = remember { com.example.admin_ingresos.AppDatabaseProvider.getDatabase(context) }
-    val viewModel: AddTransactionViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-            @Suppress("UNCHECKED_CAST")
-            return AddTransactionViewModel(db) as T
-        }
-    })
-    
-    // Form state with improved validation
+    // Estado del formulario
     var amount by remember { mutableStateOf("") }
     var amountError by remember { mutableStateOf<String?>(null) }
     var description by remember { mutableStateOf("") }
@@ -46,15 +50,45 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
     var selectedPaymentMethodId by remember { mutableStateOf<Int?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var showSuccessMessage by remember { mutableStateOf(false) }
-    
-    val categories by produceState(initialValue = emptyList<com.example.admin_ingresos.data.Category>(), db) {
-        value = db.categoryDao().getAllCategories().first() // Collect the first emission from the Flow
+    var receiptPhotoUri by remember { mutableStateOf<String?>(null) }
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Launcher para galería
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) receiptPhotoUri = uri.toString()
+    }
+    // Launcher para cámara
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success: Boolean ->
+        if (success && cameraImageUri != null) receiptPhotoUri = cameraImageUri.toString()
+    }
+
+    // Función para crear archivo temporal en directorio privado
+    fun createImageFile(): Uri? {
+        return try {
+            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+            val storageDir = context.cacheDir
+            val file = File.createTempFile("recibo_${'$'}timeStamp", ".jpg", storageDir)
+            androidx.core.content.FileProvider.getUriForFile(
+                context,
+                context.packageName + ".provider",
+                file
+            )
+        } catch (e: Exception) { null }
+    }
+    var showCategoryDialog by remember { mutableStateOf(false) }
+    var newCategoryName by remember { mutableStateOf("") }
+    var newCategoryError by remember { mutableStateOf<String?>(null) }
+    var showPhotoMenu by remember { mutableStateOf(false) }
+
+    var categoryUpdateTrigger by remember { mutableStateOf(0) }
+    val categories by produceState(initialValue = emptyList<com.example.admin_ingresos.data.Category>(), db, categoryUpdateTrigger) {
+        value = db.categoryDao().getAllCategories().first()
     }
     val paymentMethods by produceState(initialValue = emptyList<com.example.admin_ingresos.data.PaymentMethod>(), db) {
         value = db.paymentMethodDao().getAll()
     }
-    
-    // Enhanced validation functions
+
+    // Validaciones
     fun validateAmount(value: String): String? {
         return when {
             value.isBlank() -> "El monto es requerido"
@@ -64,7 +98,6 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
             else -> null
         }
     }
-    
     fun validateDescription(value: String): String? {
         return when {
             value.isBlank() -> "La descripción es requerida"
@@ -73,54 +106,52 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
             else -> null
         }
     }
-    
     fun validateCategory(categoryId: Int?): String? {
         return if (categoryId == null) "Selecciona una categoría" else null
     }
-    
-    // Real-time validation
-    LaunchedEffect(amount) {
-        amountError = validateAmount(amount)
-    }
-    
-    LaunchedEffect(description) {
-        descriptionError = validateDescription(description)
-    }
-    
-    LaunchedEffect(selectedCategoryId) {
-        categoryError = validateCategory(selectedCategoryId)
-    }
-    
-    // Check if form is valid
-    val isFormValid = amountError == null && descriptionError == null && 
-                     categoryError == null && amount.isNotBlank() && 
-                     description.isNotBlank() && selectedCategoryId != null
 
-    // Handle save
+    LaunchedEffect(amount) { amountError = validateAmount(amount) }
+    LaunchedEffect(description) { descriptionError = validateDescription(description) }
+    LaunchedEffect(selectedCategoryId) { categoryError = validateCategory(selectedCategoryId) }
+
+    val isFormValid = amountError == null && descriptionError == null &&
+            categoryError == null && amount.isNotBlank() &&
+            description.isNotBlank() && selectedCategoryId != null
+
+
+    // Estados para disparar efectos secundarios
+    var shouldSave by remember { mutableStateOf(false) }
+    var pendingTransaction by remember { mutableStateOf<com.example.admin_ingresos.data.Transaction?>(null) }
+    var shouldCreateCategory by remember { mutableStateOf(false) }
+    var pendingCategoryName by remember { mutableStateOf("") }
+
+    // Guardar transacción: solo cambia el estado
     fun handleSave() {
         if (!isFormValid) return
-        
         isLoading = true
-        val amountValue = amount.toDoubleOrNull() ?: return
-        
-        try {
-            viewModel.saveTransaction(
-                amount = amountValue,
-                type = type,
-                categoryId = selectedCategoryId!!,
-                description = description.trim(),
-                date = System.currentTimeMillis(),
-                paymentMethodId = selectedPaymentMethodId
-            )
-            
+        pendingTransaction = com.example.admin_ingresos.data.Transaction(
+            amount = amount.toDouble(),
+            type = type,
+            categoryId = selectedCategoryId!!,
+            description = description.trim(),
+            date = System.currentTimeMillis(),
+            paymentMethodId = selectedPaymentMethodId,
+            receiptPhotoUri = receiptPhotoUri
+        )
+        shouldSave = true
+    }
+
+    // Efecto para guardar la transacción
+    LaunchedEffect(shouldSave, pendingTransaction) {
+        if (shouldSave && pendingTransaction != null) {
+            db.transactionDao().insert(pendingTransaction!!)
             showSuccessMessage = true
-        } catch (e: Exception) {
-            // Handle error
-        } finally {
             isLoading = false
+            shouldSave = false
+            pendingTransaction = null
         }
     }
-    
+
     // Auto close after showing success
     LaunchedEffect(showSuccessMessage) {
         if (showSuccessMessage) {
@@ -131,186 +162,374 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        // Enhanced Header
-        CashFlowHeader(
-            title = "Nueva Transacción",
-            subtitle = "Registra tus ingresos y gastos",
-            actions = {
-                IconButton(onClick = onCancel) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Cerrar",
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+        // Header minimalista (eliminado para evitar doble título)
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Tipo de transacción (chips visuales)
+        GlassmorphicCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp)
+        ) {
+            Column(Modifier.padding(horizontal = 18.dp, vertical = 14.dp)) {
+                Text(
+                    text = "Tipo de Transacción",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(bottom = 10.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Button(
+                        onClick = { type = "Ingreso" },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (type == "Ingreso") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        modifier = Modifier.weight(1f).height(38.dp),
+                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
+                    ) {
+                        Icon(Icons.Default.TrendingUp, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Ingreso", fontSize = MaterialTheme.typography.bodyMedium.fontSize)
+                    }
+                    Button(
+                        onClick = { type = "Gasto" },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (type == "Gasto") Color(0xFFE57373) else MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        modifier = Modifier.weight(1f).height(38.dp),
+                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
+                    ) {
+                        Icon(Icons.Default.TrendingDown, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Gasto", fontSize = MaterialTheme.typography.bodyMedium.fontSize)
+                    }
                 }
             }
-        )
-        
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Monto con icono
+        GlassmorphicCard(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            // Success message
-            AnimatedVisibility(
-                visible = showSuccessMessage,
-                enter = slideInVertically() + fadeIn(),
-                exit = slideOutVertically() + fadeOut()
+            Column(
+                Modifier
+                    .padding(horizontal = 14.dp, vertical = 14.dp)
+                    .fillMaxWidth()
             ) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFF4CAF50)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.AttachMoney, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Monto", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                OutlinedTextField(
+                    value = amount,
+                    onValueChange = { newValue ->
+                        if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
+                            amount = newValue
+                        }
+                    },
+                    label = { Text("0.00") },
+                    prefix = { Text("$") },
+                    isError = amountError != null,
+                    supportingText = amountError?.let { { Text(it) } },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = if (type == "Ingreso") Color(0xFF4CAF50) else Color(0xFFE57373),
+                        focusedLabelColor = if (type == "Ingreso") Color(0xFF4CAF50) else Color(0xFFE57373)
                     )
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Descripción
+        GlassmorphicCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                Modifier
+                    .padding(horizontal = 14.dp, vertical = 14.dp)
+                    .fillMaxWidth()
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Description, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Descripción", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Ej: Compra de supermercado") },
+                    isError = descriptionError != null,
+                    supportingText = descriptionError?.let { { Text(it) } },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 3
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Selector de categoría
+        GlassmorphicCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Box(Modifier.fillMaxWidth()) {
+                Column(
+                    Modifier
+                        .padding(horizontal = 14.dp, vertical = 14.dp)
+                        .fillMaxWidth()
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "¡Transacción guardada exitosamente!",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White
-                        )
+                        Icon(Icons.Default.Category, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Categoría", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
                     }
-                }
-            }
-            
-            // Type selector with improved design
-            TypeSelectorCard(
-                selectedType = type,
-                onTypeSelected = { type = it }
-            )
-            
-            // Amount input with currency formatting
-            AmountInputCard(
-                amount = amount,
-                onAmountChange = { amount = it },
-                error = amountError,
-                type = type
-            )
-            
-            // Description input
-            DescriptionInputCard(
-                description = description,
-                onDescriptionChange = { description = it },
-                error = descriptionError
-            )
-            
-            // Category selector
-            if (categories.isNotEmpty()) {
-                EnhancedCategorySelector(
-                    categories = categories,
-                    selectedCategoryId = selectedCategoryId,
-                    onCategorySelected = { selectedCategoryId = it },
-                    error = categoryError
-                )
-            }
-            
-            // Payment method selector (optional)
-            if (paymentMethods.isNotEmpty()) {
-                EnhancedPaymentMethodSelector(
-                    paymentMethods = paymentMethods,
-                    selectedPaymentMethodId = selectedPaymentMethodId,
-                    onPaymentMethodSelected = { selectedPaymentMethodId = it }
-                )
-            }
-            
-            // Action buttons
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onCancel,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    )
-                ) {
-                    Text("Cancelar")
-                }
-                
-                Button(
-                    onClick = { handleSave() },
-                    modifier = Modifier.weight(1f),
-                    enabled = isFormValid && !isLoading,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 2.dp
+                    Spacer(modifier = Modifier.height(10.dp))
+                    // Selector de categoría con ExposedDropdownMenuBox
+                    var expanded by remember { mutableStateOf(false) }
+                    val selectedCategory = categories.find { it.id == selectedCategoryId }
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded }
+                    ) {
+                        OutlinedTextField(
+                            value = selectedCategory?.name ?: "",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = {
+                                if (selectedCategory == null) Text("Selecciona una categoría")
+                            },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth(),
+                            isError = categoryError != null
                         )
-                    } else {
-                        Text("Guardar Transacción")
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            categories.forEach { category ->
+                                DropdownMenuItem(
+                                    text = { Text(category.name) },
+                                    onClick = {
+                                        selectedCategoryId = category.id
+                                        expanded = false
+                                    },
+                                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                                )
+                            }
+                        }
+                    }
+                    if (categoryError != null) Text(categoryError!!, color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                }
+                IconButton(
+                    onClick = { showCategoryDialog = true },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 8.dp, end = 8.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Nueva categoría", tint = MaterialTheme.colorScheme.primary)
+                }
+            }
+        }
+
+        // Dialog para crear nueva categoría
+        if (showCategoryDialog) {
+            AlertDialog(
+                onDismissRequest = { showCategoryDialog = false },
+                title = { Text("Nueva Categoría") },
+                text = {
+                    Column {
+                        OutlinedTextField(
+                            value = newCategoryName,
+                            onValueChange = { newCategoryName = it },
+                            label = { Text("Nombre de la categoría") },
+                            isError = newCategoryError != null
+                        )
+                        if (newCategoryError != null) Text(newCategoryError!!, color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        if (newCategoryName.isBlank()) {
+                            newCategoryError = "El nombre es requerido"
+                        } else {
+                            pendingCategoryName = newCategoryName.trim()
+                            shouldCreateCategory = true
+                        }
+                    }) { Text("Crear") }
+                },
+                dismissButton = {
+                    OutlinedButton(onClick = { showCategoryDialog = false }) { Text("Cancelar") }
+                }
+            )
+        }
+
+        // Efecto para crear categoría
+        LaunchedEffect(shouldCreateCategory, pendingCategoryName) {
+            if (shouldCreateCategory && pendingCategoryName.isNotBlank()) {
+                val newId = db.categoryDao().insert(com.example.admin_ingresos.data.Category(name = pendingCategoryName))
+                selectedCategoryId = newId.toInt()
+                categoryUpdateTrigger++ // Forzar recomposición y actualización visual
+                showCategoryDialog = false
+                newCategoryName = ""
+                newCategoryError = null
+                shouldCreateCategory = false
+                pendingCategoryName = ""
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Selector de método de pago
+        if (paymentMethods.isNotEmpty()) {
+            GlassmorphicCard(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(Modifier.padding(10.dp)) {
+                    Text("Método de pago", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    var expanded by remember { mutableStateOf(false) }
+                    val selectedMethod = paymentMethods.find { it.id == selectedPaymentMethodId }
+                    OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text(selectedMethod?.name ?: "Selecciona un método de pago")
+                    }
+                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                        paymentMethods.forEach { method ->
+                            DropdownMenuItem(
+                                text = { Text(method.name) },
+                                onClick = {
+                                    selectedPaymentMethodId = method.id
+                                    expanded = false
+                                }
+                            )
+                        }
                     }
                 }
             }
         }
-    }
-}
 
-@Composable
-private fun TypeSelectorCard(
-    selectedType: String,
-    onTypeSelected: (String) -> Unit
-) {
-    CashFlowCard {
-        Column {
-            Text(
-                text = "Tipo de Transacción",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                TypeChip(
-                    type = "Ingreso",
-                    isSelected = selectedType == "Ingreso",
-                    onClick = { onTypeSelected("Ingreso") },
-                    color = Color(0xFF4CAF50),
-                    icon = Icons.Default.TrendingUp,
-                    modifier = Modifier.weight(1f)
-                )
-                
-                TypeChip(
-                    type = "Gasto",
-                    isSelected = selectedType == "Gasto",
-                    onClick = { onTypeSelected("Gasto") },
-                    color = Color(0xFFE57373),
-                    icon = Icons.Default.TrendingDown,
-                    modifier = Modifier.weight(1f)
-                )
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Adjuntar foto de recibo
+        GlassmorphicCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(Modifier.padding(10.dp)) {
+                Text("Recibo", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Adjuntar foto o recibo", modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    TextButton(onClick = { showPhotoMenu = true }) {
+                        Icon(Icons.Default.AddAPhoto, contentDescription = "Adjuntar foto")
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Adjuntar")
+                    }
+                }
+                if (receiptPhotoUri != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    androidx.compose.foundation.Image(
+                        painter = rememberAsyncImagePainter(receiptPhotoUri),
+                        contentDescription = "Recibo adjunto",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .align(Alignment.CenterHorizontally)
+                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("Imagen subida", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.align(Alignment.CenterHorizontally))
+                }
+                DropdownMenu(expanded = showPhotoMenu, onDismissRequest = { showPhotoMenu = false }) {
+                    DropdownMenuItem(text = { Text("Desde galería") }, onClick = {
+                        galleryLauncher.launch("image/*")
+                        showPhotoMenu = false
+                    })
+                    DropdownMenuItem(text = { Text("Tomar foto") }, onClick = {
+                        val uri = createImageFile()
+                        if (uri != null) {
+                            cameraImageUri = uri
+                            cameraLauncher.launch(uri)
+                        }
+                        showPhotoMenu = false
+                    })
+                }
             }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Botones de acción
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            OutlinedButton(
+                onClick = onCancel,
+                modifier = Modifier.weight(1f).height(48.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                )
+            ) { Text("Cancelar") }
+            Button(
+                onClick = { handleSave() },
+                modifier = Modifier.weight(1f).height(48.dp),
+                enabled = isFormValid && !isLoading,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Guardar")
+                }
+            }
+        }
+        if (showSuccessMessage) {
+            AlertDialog(
+                onDismissRequest = { showSuccessMessage = false },
+                icon = {
+                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF4CAF50), modifier = Modifier.size(48.dp))
+                },
+                title = { Text("¡Transacción guardada!") },
+                text = { Text("La transacción se agregó correctamente.") },
+                confirmButton = {
+                    Button(onClick = { showSuccessMessage = false }) {
+                        Text("Aceptar")
+                    }
+                }
+            )
         }
     }
 }
 
+
 @Composable
-private fun TypeChip(
+fun TypeChip(
     type: String,
     isSelected: Boolean,
     onClick: () -> Unit,
@@ -352,7 +571,7 @@ private fun TypeChip(
 }
 
 @Composable
-private fun AmountInputCard(
+fun AmountInputCard(
     amount: String,
     onAmountChange: (String) -> Unit,
     error: String?,
@@ -368,7 +587,7 @@ private fun AmountInputCard(
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
-            
+
             OutlinedTextField(
                 value = amount,
                 onValueChange = { newValue ->
@@ -394,7 +613,7 @@ private fun AmountInputCard(
                     focusedLabelColor = if (type == "Ingreso") Color(0xFF4CAF50) else Color(0xFFE57373)
                 )
             )
-            
+
             // Quick amount buttons
             if (amount.isEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -405,7 +624,7 @@ private fun AmountInputCard(
                     listOf("10000", "50000", "100000", "500000").forEach { quickAmount ->
                         FilterChip(
                             onClick = { onAmountChange(quickAmount) },
-                            label = { 
+                            label = {
                                 Text(
                                     text = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
                                         .format(quickAmount.toDouble()),
@@ -423,13 +642,19 @@ private fun AmountInputCard(
 }
 
 @Composable
-private fun DescriptionInputCard(
+fun DescriptionInputCard(
     description: String,
     onDescriptionChange: (String) -> Unit,
     error: String?
 ) {
-    CashFlowCard {
-        Column {
+    GlassmorphicCard(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            Modifier
+                .padding(horizontal = 14.dp, vertical = 14.dp)
+                .fillMaxWidth()
+        ) {
             Text(
                 text = "Descripción",
                 style = MaterialTheme.typography.titleMedium.copy(
@@ -438,7 +663,6 @@ private fun DescriptionInputCard(
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
-            
             OutlinedTextField(
                 value = description,
                 onValueChange = onDescriptionChange,
@@ -450,4 +674,5 @@ private fun DescriptionInputCard(
             )
         }
     }
-}
+    }
+

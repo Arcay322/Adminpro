@@ -12,5 +12,6 @@ data class Transaction(
     val categoryId: Int,
     val description: String,
     val date: Long, // timestamp
-    val paymentMethodId: Int?
+    val paymentMethodId: Int?,
+    val receiptPhotoUri: String? = null // URI de la foto del recibo
 )

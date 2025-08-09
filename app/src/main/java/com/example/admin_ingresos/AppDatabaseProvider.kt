@@ -20,23 +20,23 @@ object AppDatabaseProvider {
                 "admin_ingresos_db"
             )
             .addMigrations(
-                AppDatabase.MIGRATION_1_2, 
-                AppDatabase.MIGRATION_2_3, 
-                AppDatabase.MIGRATION_3_4
+                AppDatabase.MIGRATION_1_2,
+                AppDatabase.MIGRATION_2_3,
+                AppDatabase.MIGRATION_3_4,
+                AppDatabase.MIGRATION_5_6,
+                AppDatabase.MIGRATION_6_7
             )
-            // Usar fallbackToDestructiveMigrationOnDowngrade() en lugar de fallbackToDestructiveMigration()
-            // para mantener los datos cuando es posible
-            .fallbackToDestructiveMigrationOnDowngrade()
+            .fallbackToDestructiveMigration()
             .build()
-            
+
             INSTANCE = instance
-            
+
             // TEMPORAL: Comentado para evitar datos de ejemplo
             // Initialize sample data in background
             // CoroutineScope(Dispatchers.IO).launch {
             //     SampleDataProvider.initializeSampleData(instance)
             // }
-            
+
             instance
         }
     }

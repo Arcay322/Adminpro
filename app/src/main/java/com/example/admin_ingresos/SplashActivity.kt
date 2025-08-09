@@ -23,60 +23,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.graphicsLayer
-import com.example.admin_ingresos.data.PreferencesManager
-import com.example.admin_ingresos.ui.onboarding.OnboardingScreen
-import com.example.admin_ingresos.ui.theme.CashFlowTheme
-import com.example.admin_ingresos.ui.theme.CashFlowPrimary
-import com.example.admin_ingresos.ui.theme.CashFlowPrimaryDark
+import com.example.admin_ingresos.ui.theme.Admin_ingresosTheme
 import kotlinx.coroutines.delay
 
 @SuppressLint("CustomSplashScreen")
 class SplashActivity : ComponentActivity() {
-    private lateinit var preferencesManager: PreferencesManager
-    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        preferencesManager = PreferencesManager(this)
-        
         setContent {
-            CashFlowTheme {
-                var showOnboarding by remember { mutableStateOf(false) }
-                var showSplash by remember { mutableStateOf(true) }
-                
-                when {
-                    showSplash -> {
-                        SplashScreen {
-                            showSplash = false
-                            if (!preferencesManager.isOnboardingCompleted) {
-                                showOnboarding = true
-                            } else {
-                                navigateToMain()
-                            }
-                        }
-                    }
-                    showOnboarding -> {
-                        OnboardingScreen(
-                            onOnboardingComplete = {
-                                preferencesManager.isOnboardingCompleted = true
-                                preferencesManager.isFirstLaunch = false
-                                navigateToMain()
-                            },
-                            onSkip = {
-                                preferencesManager.isOnboardingCompleted = true
-                                preferencesManager.isFirstLaunch = false
-                                navigateToMain()
-                            }
-                        )
-                    }
+            Admin_ingresosTheme {
+                SplashScreen {
+                    startActivity(Intent(this@SplashActivity, MainActivity::class.java))
+                    finish()
                 }
             }
         }
-    }
-    
-    private fun navigateToMain() {
-        startActivity(Intent(this, MainActivity::class.java))
-        finish()
     }
 }
 
@@ -114,8 +75,8 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             .background(
                 brush = androidx.compose.ui.graphics.Brush.verticalGradient(
                     colors = listOf(
-                        CashFlowPrimary,
-                        CashFlowPrimaryDark
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.colorScheme.primaryContainer
                     )
                 )
             ),

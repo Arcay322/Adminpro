@@ -9,7 +9,8 @@ data class Category(
     val name: String,
     val icon: String = "📦", // emoji icon or icon name
     val color: String = "#85C1E9", // hex color code
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+    val order: Int = 0 // Para reordenamiento persistente
 )
 
 // Simple class that Room can handle

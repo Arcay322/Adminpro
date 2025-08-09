@@ -27,18 +27,16 @@ import com.example.admin_ingresos.data.PaymentMethod
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.first
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionHistoryScreenNew() {
     val context = LocalContext.current
     val db = remember { com.example.admin_ingresos.AppDatabaseProvider.getDatabase(context) }
-    val viewModel: TransactionHistoryViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-            @Suppress("UNCHECKED_CAST")
-            return TransactionHistoryViewModel(db) as T
-        }
-    })
+    // ViewModel eliminado: lógica local
     
     // State management
     var selectedFilter by remember { mutableStateOf("Todos") }
@@ -48,27 +46,31 @@ fun TransactionHistoryScreenNew() {
     
     // Data loading
     val transactions by produceState(initialValue = emptyList<Transaction>(), db, selectedFilter, selectedPeriod) {
-        value = when (selectedFilter) {
-            "Ingresos" -> db.transactionDao().getAll().filter { it.type == "Ingreso" }
-            "Gastos" -> db.transactionDao().getAll().filter { it.type == "Gasto" }
-            else -> db.transactionDao().getAll()
-        }.let { list ->
-            when (selectedPeriod) {
-                "Hoy" -> filterByToday(list)
-                "Esta semana" -> filterByThisWeek(list)
-                "Este mes" -> filterByThisMonth(list)
-                "Este año" -> filterByThisYear(list)
-                else -> list
+        value = withContext(Dispatchers.IO) {
+            when (selectedFilter) {
+                "Ingresos" -> db.transactionDao().getAll().filter { it.type == "Ingreso" }
+                "Gastos" -> db.transactionDao().getAll().filter { it.type == "Gasto" }
+                else -> db.transactionDao().getAll()
+            }.let { list ->
+                when (selectedPeriod) {
+                    "Hoy" -> filterByToday(list)
+                    "Esta semana" -> filterByThisWeek(list)
+                    "Este mes" -> filterByThisMonth(list)
+                    "Este año" -> filterByThisYear(list)
+                    else -> list
+                }
             }
         }
     }
-    
     val categories by produceState(initialValue = emptyList<Category>(), db) {
-        value = db.categoryDao().getAll()
+        value = withContext(Dispatchers.IO) {
+            db.categoryDao().getAllCategories().first()
+        }
     }
-    
     val paymentMethods by produceState(initialValue = emptyList<PaymentMethod>(), db) {
-        value = db.paymentMethodDao().getAll()
+        value = withContext(Dispatchers.IO) {
+            db.paymentMethodDao().getAll()
+        }
     }
     
     // Filtered transactions based on search

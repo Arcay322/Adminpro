@@ -11,7 +11,7 @@ import com.example.admin_ingresos.data.dao.SavingsGoalDao
 
 @Database(
     entities = [Category::class, PaymentMethod::class, Transaction::class, Budget::class, SavingsGoal::class],
-    version = 4,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -27,12 +27,11 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(database: SupportSQLiteDatabase) {
                 // Add color column to categories table
                 database.execSQL("ALTER TABLE categories ADD COLUMN color TEXT NOT NULL DEFAULT '#85C1E9'")
-                
                 // Add icon column to payment_methods table
                 database.execSQL("ALTER TABLE payment_methods ADD COLUMN icon TEXT NOT NULL DEFAULT '💰'")
             }
         }
-        
+
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 // Create budgets table
@@ -50,12 +49,11 @@ abstract class AppDatabase : RoomDatabase() {
                         FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE CASCADE
                     )
                 """)
-                
                 // Create index for categoryId
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_budgets_categoryId ON budgets(categoryId)")
             }
         }
-        
+
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 // Create savings_goals table
@@ -75,5 +73,19 @@ abstract class AppDatabase : RoomDatabase() {
                 """)
             }
         }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE transactions ADD COLUMN receiptPhotoUri TEXT")
+            }
+        }
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE categories ADD COLUMN `order` INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_5_6, MIGRATION_6_7)
     }
 }

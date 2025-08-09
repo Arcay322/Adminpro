@@ -41,6 +41,8 @@ android {
 }
 
 dependencies {
+    // Compose Reorderable para drag & drop en grids
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -50,9 +52,9 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    
+
     // ViewModel Compose
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
     
     // Room Database
     implementation("androidx.room:room-runtime:2.6.1")
@@ -88,10 +90,10 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics:1.6.7")
     
     // Pull to refresh
-    implementation("androidx.compose.material3:material3:1.2.1")
+    implementation("androidx.compose.material3:material3:1.3.2")
     
     // Color Picker
-    implementation("com.github.skydoves:colorpicker-compose:1.0.0")
+    implementation("com.github.skydoves:colorpicker-compose:1.1.2")
     
     // Testing
     testImplementation(libs.junit)
