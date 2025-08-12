@@ -1,42 +1,69 @@
 package com.example.admin_ingresos.ui.category
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-
 import com.example.admin_ingresos.data.Category
 import com.example.admin_ingresos.ui.components.GlassCard
 import com.example.admin_ingresos.ui.components.GlassmorphismScreen
+import com.example.admin_ingresos.ui.icons.LucideIconMapper
+import com.example.admin_ingresos.ui.theme.*
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorderAfterLongPress
 import org.burnoutcrew.reorderable.rememberReorderableLazyGridState
 import org.burnoutcrew.reorderable.reorderable
-import com.example.admin_ingresos.ui.icons.LucideIconMapper
-import com.example.admin_ingresos.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,40 +82,36 @@ fun CategoryScreen(
 
     val isSearching = searchQuery.isNotEmpty()
 
-    val filteredCategories = if (isSearching) {
+    var reorderableCategories by remember { mutableStateOf(categories) }
+    LaunchedEffect(categories) {
+        if (!isSearching) {
+            reorderableCategories = categories
+        }
+    }
+
+    val displayedCategories = if (isSearching) {
         categories.filter {
             it.name.contains(searchQuery, ignoreCase = true)
         }
     } else {
-        categories
+        reorderableCategories
     }
 
-    // Usar un estado local para la lista reordenable y evitar el bug de bloqueo
-    var reorderableCategories by remember(categories) { mutableStateOf(categories) }
-    LaunchedEffect(categories) {
-        // Sincroniza la lista local si cambia desde fuera (por ejemplo, al agregar/eliminar)
-        reorderableCategories = categories
-    }
-    val state = rememberReorderableLazyGridState(onMove = { from, to ->
-        val fromCategory = reorderableCategories.find { it.id == from.key }
-        val toCategory = reorderableCategories.find { it.id == to.key }
-        if (fromCategory != null && toCategory != null) {
-            val fromIndex = reorderableCategories.indexOf(fromCategory)
-            val toIndex = reorderableCategories.indexOf(toCategory)
-            if (fromIndex != toIndex) {
-                val mutableList = reorderableCategories.toMutableList()
-                mutableList.add(toIndex, mutableList.removeAt(fromIndex))
-                reorderableCategories = mutableList
+    val state = rememberReorderableLazyGridState(
+        onMove = { from, to ->
+            reorderableCategories = reorderableCategories.toMutableList().apply {
+                add(to.index, removeAt(from.index))
             }
-        }
-    }, onDragEnd = { _, _ ->
-        // Al soltar, notifica el nuevo orden al ViewModel
-        onReorder(reorderableCategories)
-    })
+        },
+        onDragEnd = { _, _ ->
+            onReorder(reorderableCategories)
+        },
+        canDragOver = { _, _ -> !isSearching }
+    )
 
     GlassmorphismScreen {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            // Header
+            // Header (sin cambios)
             Row(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -118,7 +141,7 @@ fun CategoryScreen(
                 }
             }
 
-            // Search
+            // Search (sin cambios)
             TextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -143,171 +166,177 @@ fun CategoryScreen(
             Spacer(modifier = Modifier.height(4.dp))
 
             // Grid de categorías
-            LazyVerticalGrid(
-                state = state.gridState,
-                columns = GridCells.Fixed(2),
-                modifier = Modifier
-                    .weight(1f)
-                    .reorderable(state),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(filteredCategories, key = { it.id }) { category ->
-                    ReorderableItem(state, key = category.id) { isDragging ->
-                        val scale by animateFloatAsState(
-                            targetValue = if (isDragging) 1.07f else 1f,
-                            label = "drag_scale"
-                        )
-                        val elevation by animateDpAsState(
-                            targetValue = if (isDragging) 16.dp else 2.dp,
-                            label = "drag_elevation"
-                        )
-                        GlassCard(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(1.05f)
-                                .graphicsLayer {
-                                    this.scaleX = scale
-                                    this.scaleY = scale
-                                    this.shadowElevation = elevation.toPx()
-                                }
-                                .detectReorderAfterLongPress(state),
-                            cornerRadius = 20.dp,
-                            backgroundColor = Color(android.graphics.Color.parseColor(category.color)).copy(
-                                alpha = 0.10f
-                            ),
-                            borderColor = Color(android.graphics.Color.parseColor(category.color)).copy(
-                                alpha = 0.20f
-                            ),
-                        ) {
-                            Box(
+            Box(modifier = Modifier.weight(1f)) {
+                LazyVerticalGrid(
+                    state = state.gridState,
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(if (!isSearching) Modifier.reorderable(state) else Modifier),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(displayedCategories, key = { it.id }) { category ->
+                        ReorderableItem(state, key = category.id) { isDragging ->
+                            val scale by animateFloatAsState(
+                                targetValue = if (isDragging) 1.07f else 1f,
+                                label = "drag_scale"
+                            )
+                            val elevation by animateDpAsState(
+                                targetValue = if (isDragging) 16.dp else 2.dp,
+                                label = "drag_elevation"
+                            )
+                            GlassCard(
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 4.dp, vertical = 2.dp)
+                                    .fillMaxWidth()
+                                    .aspectRatio(1.05f)
+                                    .graphicsLayer {
+                                        this.scaleX = scale
+                                        this.scaleY = scale
+                                        this.shadowElevation = elevation.toPx()
+                                    }
+                                    .then(if (!isSearching) Modifier.detectReorderAfterLongPress(state) else Modifier),
+                                cornerRadius = 20.dp,
+                                backgroundColor = Color(android.graphics.Color.parseColor(category.color)).copy(
+                                    alpha = 0.10f
+                                ),
+                                borderColor = Color(android.graphics.Color.parseColor(category.color)).copy(
+                                    alpha = 0.20f
+                                ),
                             ) {
-                                // Menú de 3 puntos en la esquina superior derecha
-                                var menuExpanded by remember { mutableStateOf(false) }
-                                IconButton(
-                                    onClick = { menuExpanded = true },
-                                    modifier = Modifier.align(Alignment.TopEnd)
-                                ) {
-                                    Icon(
-                                        imageVector = LucideIconMapper.Navigation.more,
-                                        contentDescription = "Más opciones",
-                                        tint = TextSecondary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                DropdownMenu(
-                                    expanded = menuExpanded,
-                                    onDismissRequest = { menuExpanded = false },
-                                    modifier = Modifier.background(GlassWhiteStrong)
-                                ) {
-                                    DropdownMenuItem(
-                                        text = { Text("Editar", color = AccentVibrantStart) },
-                                        onClick = {
-                                            menuExpanded = false
-                                            showAddEditDialog = category
-                                        },
-                                        leadingIcon = {
-                                            Icon(
-                                                imageVector = LucideIconMapper.Navigation.edit,
-                                                contentDescription = null,
-                                                tint = AccentVibrantStart
-                                            )
-                                        }
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text("Eliminar", color = ExpenseRed) },
-                                        onClick = {
-                                            menuExpanded = false
-                                            showDeleteDialog = category
-                                        },
-                                        leadingIcon = {
-                                            Icon(
-                                                imageVector = LucideIconMapper.Navigation.delete,
-                                                contentDescription = null,
-                                                tint = ExpenseRed
-                                            )
-                                        }
-                                    )
-                                }
-
-                                // Contenido de la tarjeta
-                                Column(
+                                Box(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(top = 2.dp, bottom = 2.dp),
-                                    verticalArrangement = Arrangement.SpaceEvenly,
-                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    // Icono y nombre
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    // Menú de 3 puntos en la esquina superior derecha (sin cambios)
+                                    var menuExpanded by remember { mutableStateOf(false) }
+                                    IconButton(
+                                        onClick = { menuExpanded = true },
+                                        modifier = Modifier.align(Alignment.TopEnd)
                                     ) {
-                                        Box(
-                                            Modifier
-                                                .size(38.dp)
-                                                .clip(CircleShape)
-                                                .background(
-                                                    Color(
-                                                        android.graphics.Color.parseColor(
-                                                            category.color
-                                                        )
-                                                    ).copy(alpha = 0.85f)
-                                                ),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            val iconOption =
-                                                LucideIconMapper.getAvailableCategoryIcons()
-                                                    .find { it.name == category.icon }
-                                            val iconVector =
-                                                if (iconOption != null) LucideIconMapper.getIconFromEmoji(
-                                                    iconOption.icon
-                                                ) else LucideIconMapper.getCategoryIcon(category)
-                                            Icon(
-                                                imageVector = iconVector,
-                                                contentDescription = null,
-                                                tint = TextPrimary,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                        }
-                                        Spacer(Modifier.height(4.dp))
-                                        Text(
-                                            text = category.name,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TextPrimary,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                            textAlign = TextAlign.Center,
-                                            modifier = Modifier.padding(horizontal = 4.dp)
+                                        Icon(
+                                            imageVector = LucideIconMapper.Navigation.more,
+                                            contentDescription = "Más opciones",
+                                            tint = TextSecondary,
+                                            modifier = Modifier.size(20.dp)
                                         )
                                     }
-                                    // Info de transacciones y total
+                                    DropdownMenu(
+                                        expanded = menuExpanded,
+                                        onDismissRequest = { menuExpanded = false },
+                                        modifier = Modifier.background(GlassWhiteStrong)
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { Text("Editar", color = AccentVibrantStart) },
+                                            onClick = {
+                                                menuExpanded = false
+                                                showAddEditDialog = category
+                                            },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = LucideIconMapper.Navigation.edit,
+                                                    contentDescription = null,
+                                                    tint = AccentVibrantStart
+                                                )
+                                            }
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text("Eliminar", color = ExpenseRed) },
+                                            onClick = {
+                                                menuExpanded = false
+                                                showDeleteDialog = category
+                                            },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = LucideIconMapper.Navigation.delete,
+                                                    contentDescription = null,
+                                                    tint = ExpenseRed
+                                                )
+                                            }
+                                        )
+                                    }
+
+                                    // ##########################
+                                    // #     AJUSTE FINAL       #
+                                    // ##########################
                                     Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            // CAMBIO 1: Reducimos el padding para que el contenido ocupe más espacio.
+                                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                                        verticalArrangement = Arrangement.SpaceBetween,
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        Text(
-                                            text = "${getTransactionCount(category.id)} transacciones",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = TextSecondary,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                        Text(
-                                            text = "$${
-                                                String.format(
-                                                    "%.2f",
-                                                    getTotalAmount(category.id)
+                                        // --- SECCIÓN SUPERIOR: Ícono y Nombre ---
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            // CAMBIO 2: Reducimos el espacio entre el ícono y el nombre.
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Box(
+                                                Modifier
+                                                    .size(42.dp)
+                                                    .clip(CircleShape)
+                                                    .background(
+                                                        Color(
+                                                            android.graphics.Color.parseColor(
+                                                                category.color
+                                                            )
+                                                        ).copy(alpha = 0.85f)
+                                                    ),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                val iconOption =
+                                                    LucideIconMapper.getAvailableCategoryIcons()
+                                                        .find { it.name == category.icon }
+                                                val iconVector =
+                                                    if (iconOption != null) LucideIconMapper.getIconFromEmoji(
+                                                        iconOption.icon
+                                                    ) else LucideIconMapper.getCategoryIcon(category)
+                                                Icon(
+                                                    imageVector = iconVector,
+                                                    contentDescription = null,
+                                                    tint = TextPrimary,
+                                                    modifier = Modifier.size(22.dp)
                                                 )
-                                            }",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = AccentVibrantStart,
-                                            fontWeight = FontWeight.SemiBold,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
+                                            }
+                                            Text(
+                                                text = category.name,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TextPrimary,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier.padding(horizontal = 4.dp)
+                                            )
+                                        }
+
+                                        // --- SECCIÓN INFERIOR: Estadísticas ---
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                text = "${getTransactionCount(category.id)} transacciones",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = TextSecondary,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                text = "$${
+                                                    String.format(
+                                                        "%.2f",
+                                                        getTotalAmount(category.id)
+                                                    )
+                                                }",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = AccentVibrantStart,
+                                                fontWeight = FontWeight.SemiBold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -318,7 +347,6 @@ fun CategoryScreen(
         }
 
         // --- Diálogos (sin cambios) ---
-
         showAddEditDialog?.let { category ->
             var name by remember { mutableStateOf(category.name) }
             var color by remember { mutableStateOf(category.color) }
@@ -326,18 +354,11 @@ fun CategoryScreen(
             val isEdit = category.id != 0
 
             val colorOptions = listOf(
-                "#4CAF50",
-                "#2196F3",
-                "#FF9800",
-                "#E91E63",
-                "#9C27B0",
-                "#F44336",
-                "#00BCD4",
-                "#FFEB3B"
+                "#4CAF50", "#2196F3", "#FF9800", "#E91E63",
+                "#9C27B0", "#F44336", "#00BCD4", "#FFEB3B"
             )
 
             val iconOptions = LucideIconMapper.getAvailableCategoryIcons()
-
             var iconMenuExpanded by remember { mutableStateOf(false) }
 
             AlertDialog(
@@ -381,8 +402,7 @@ fun CategoryScreen(
                             ) {
                                 val selectedIconOption = iconOptions.find { it.name == icon }
                                 if (selectedIconOption != null) {
-                                    val iconVector =
-                                        LucideIconMapper.getIconFromEmoji(selectedIconOption.icon)
+                                    val iconVector = LucideIconMapper.getIconFromEmoji(selectedIconOption.icon)
                                     Icon(
                                         iconVector,
                                         contentDescription = null,
@@ -407,8 +427,7 @@ fun CategoryScreen(
                                             iconMenuExpanded = false
                                         },
                                         leadingIcon = {
-                                            val iconVector =
-                                                LucideIconMapper.getIconFromEmoji(option.icon)
+                                            val iconVector = LucideIconMapper.getIconFromEmoji(option.icon)
                                             Icon(
                                                 iconVector,
                                                 contentDescription = null,
