@@ -138,6 +138,7 @@ fun MainAppNavigation() {
                         onAddCategory = { category -> categoryViewModel.addCategory(category) },
                         onEditCategory = { category -> categoryViewModel.updateCategory(category) },
                         onDeleteCategory = { category -> categoryViewModel.deleteCategory(category) },
+                        onReorder = categoryViewModel::reorderCategories,
                         getTransactionCount = { categoryId -> transactionCounts[categoryId] ?: 0 },
                         getTotalAmount = { categoryId -> totalAmounts[categoryId] ?: 0.0 }
                     )

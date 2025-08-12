@@ -41,7 +41,9 @@ android {
 }
 
 dependencies {
+
     // Compose Reorderable para drag & drop en grids
+    implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
 
 
     implementation(libs.androidx.core.ktx)
