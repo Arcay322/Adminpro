@@ -489,7 +489,7 @@ private fun QuickActionsSection(
                 )
                 
                 QuickActionButton(
-                    icon = LucideIconMapper.getIconFromCategoryName("presupuesto"),
+                    icon = LucideIconMapper.getNavigationIcon("DollarSign"),
                     title = "Presupuesto",
                     subtitle = "Metas",
                     onClick = onViewBudget,

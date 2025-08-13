@@ -146,6 +146,16 @@ private fun CategoryDetailHeader(
     val categoryColor by remember(category.color) { mutableStateOf(Color(android.graphics.Color.parseColor(category.color))) }
     val amountColor = if (category.type == CategoryType.GASTO) ExpenseRed else AccentVibrantStart
 
+    // --- Lógica unificada para obtener el icono ---
+    val iconVector = remember(category.icon) {
+        val iconOption = LucideIconMapper.getAvailableCategoryIcons().find { it.name == category.icon }
+        if (iconOption != null) {
+            LucideIconMapper.getIconFromEmoji(iconOption.icon)
+        } else {
+            LucideIconMapper.getCategoryIcon(category)
+        }
+    }
+
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
         backgroundColor = categoryColor.copy(alpha = 0.1f),
@@ -163,7 +173,6 @@ private fun CategoryDetailHeader(
                         .background(categoryColor.copy(alpha = 0.85f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    val iconVector = LucideIconMapper.getCategoryIcon(category)
                     Icon(
                         imageVector = iconVector,
                         contentDescription = category.name,

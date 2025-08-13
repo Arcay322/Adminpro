@@ -171,13 +171,23 @@ class DashboardViewModel(
                 .take(10)
                 .map { transaction ->
                     val category = currentCategories.find { it.id == transaction.categoryId }
+                    val iconVector = if (category != null) {
+                        val iconOption = com.example.admin_ingresos.ui.icons.LucideIconMapper.getAvailableCategoryIcons().find { it.name == category.icon }
+                        if (iconOption != null) {
+                            com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromEmoji(iconOption.icon)
+                        } else {
+                            com.example.admin_ingresos.ui.icons.LucideIconMapper.getCategoryIcon(category)
+                        }
+                    } else {
+                        getCategoryIcon(category?.name)
+                    }
                     DashboardTransaction(
                         id = transaction.id,
                         description = transaction.description,
                         amount = transaction.amount,
                         category = category?.name ?: "Sin categoría",
                         categoryColor = category?.let { parseColorFromCategory(it) } ?: getCategoryColor(category?.name),
-                        icon = category?.let { getCategoryIconFromData(it) } ?: getCategoryIcon(category?.name),
+                        icon = iconVector,
                         date = formatDate(transaction.date),
                         isIncome = transaction.type == "Ingreso"
                     )
