@@ -49,7 +49,6 @@ interface TransactionDao {
         endDate: Long
     ): List<Transaction>
     
-    // Search functionality
     @Query("""
         SELECT * FROM transactions 
         WHERE (description LIKE '%' || :query || '%' 
@@ -72,7 +71,6 @@ interface TransactionDao {
     """)
     suspend fun searchByAmountRange(minAmount: Double, maxAmount: Double): List<Transaction>
     
-    // Advanced filtering with multiple criteria
     @Query("""
         SELECT t.* FROM transactions t
         LEFT JOIN categories c ON t.categoryId = c.id
@@ -109,7 +107,6 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
     suspend fun getTransactionsByDateRange(startDate: Long, endDate: Long): List<Transaction>
     
-    // Get search suggestions
     @Query("""
         SELECT DISTINCT description FROM transactions 
         WHERE description LIKE '%' || :query || '%' 
@@ -118,4 +115,16 @@ interface TransactionDao {
         LIMIT 10
     """)
     suspend fun getSearchSuggestions(query: String): List<String>
+
+    // --- FUNCIÓN CORREGIDA ---
+    @MapInfo(keyColumn = "categoryId")
+    @Query("""
+        SELECT 
+            categoryId, 
+            COUNT(*) as transactionCount, 
+            SUM(amount) as totalAmount 
+        FROM `transactions` 
+        GROUP BY categoryId
+    """)
+    fun getAllCategoryStats(): Flow<Map<Int, CategoryTransactionStats>>
 }

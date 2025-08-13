@@ -1,67 +1,100 @@
+// REEMPLAZA TU ARCHIVO ui/category/CategoryViewModel.kt COMPLETO
+
 package com.example.admin_ingresos.ui.category
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.admin_ingresos.data.AppDatabase
 import com.example.admin_ingresos.data.Category
+import com.example.admin_ingresos.data.CategoryTransactionStats // <-- Importa la clase renombrada
+import com.example.admin_ingresos.data.CategoryType
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class CategoryViewModel(private val db: AppDatabase) : ViewModel() {
-    private val _transactionCounts = MutableStateFlow<Map<Int, Int>>(emptyMap())
-    val transactionCounts: StateFlow<Map<Int, Int>> = _transactionCounts.asStateFlow()
 
-    private val _totalAmounts = MutableStateFlow<Map<Int, Double>>(emptyMap())
-    val totalAmounts: StateFlow<Map<Int, Double>> = _totalAmounts.asStateFlow()
+    // El UiState ahora contiene el mapa con el tipo correcto.
+    data class UiState(
+        val selectedTab: CategoryType = CategoryType.GASTO,
+        val categories: List<Category> = emptyList(),
+        val archivedCategories: List<Category> = emptyList(),
+        val searchQuery: String = "",
+        val showAddEditDialog: Category? = null,
+        val showArchiveDialog: Category? = null,
+        val statsMap: Map<Int, CategoryTransactionStats> = emptyMap() // <-- TIPO CORREGIDO
+    )
+
+    private val categoryDao = db.categoryDao()
     private val transactionDao = db.transactionDao()
-    suspend fun getTransactionCount(categoryId: Int): Int {
-        return transactionDao.getByCategory(categoryId).size
-    }
 
-    suspend fun getTotalAmount(categoryId: Int): Double {
-        return transactionDao.getByCategory(categoryId).sumOf { it.amount }
-    }
-    val categories: StateFlow<List<Category>> = db.categoryDao().getAllCategories()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    private val _selectedTab = MutableStateFlow(CategoryType.GASTO)
+    private val _searchQuery = MutableStateFlow("")
+    private val _dialogState = MutableStateFlow(Pair<Category?, Category?>(null, null))
 
-    init {
-        viewModelScope.launch {
-            db.transactionDao().getAllTransactions().collect { transactions ->
-                val counts = mutableMapOf<Int, Int>()
-                val totals = mutableMapOf<Int, Double>()
-                transactions.groupBy { it.categoryId }.forEach { (catId, txs) ->
-                    counts[catId] = txs.size
-                    totals[catId] = txs.sumOf { it.amount }
-                }
-                _transactionCounts.value = counts
-                _totalAmounts.value = totals
-            }
+    private val _snackbarEvents = Channel<String>(Channel.BUFFERED)
+    val snackbarEvents = _snackbarEvents.receiveAsFlow()
+    
+    val uiState: StateFlow<UiState> = combine(
+        categoryDao.getAllCategories(),
+        transactionDao.getAllCategoryStats(), // Ahora devuelve el tipo correcto
+        _selectedTab,
+        _searchQuery,
+        _dialogState
+    ) { allCategories, statsMap, selectedTab, query, dialogs ->
+        
+        val filteredActive = allCategories.filter {
+            !it.isArchived &&
+            it.type == selectedTab &&
+            (query.isBlank() || it.name.contains(query, ignoreCase = true))
         }
+
+        UiState(
+            selectedTab = selectedTab,
+            categories = filteredActive,
+            archivedCategories = allCategories.filter { it.isArchived },
+            searchQuery = query,
+            statsMap = statsMap,
+            showAddEditDialog = dialogs.first,
+            showArchiveDialog = dialogs.second
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = UiState()
+    )
+    
+    fun onTabSelected(tab: CategoryType) { _selectedTab.value = tab }
+    fun onSearchQueryChanged(query: String) { _searchQuery.value = query }
+    fun showAddEditDialog(category: Category?) { _dialogState.value = _dialogState.value.copy(first = category) }
+    fun hideAddEditDialog() { _dialogState.value = _dialogState.value.copy(first = null) }
+    fun showArchiveDialog(category: Category?) { _dialogState.value = _dialogState.value.copy(second = category) }
+    fun hideArchiveDialog() { _dialogState.value = _dialogState.value.copy(second = null) }
+
+    fun addCategory(category: Category) = viewModelScope.launch {
+        val maxOrder = categoryDao.getMaxOrder() ?: -1
+        categoryDao.insert(category.copy(order = maxOrder + 1, type = _selectedTab.value))
+        _snackbarEvents.send("Categoría guardada")
     }
 
-    fun addCategory(category: Category) {
-        viewModelScope.launch {
-            // Asignar orden al final
-            val current = db.categoryDao().getCategoriesList()
-            db.categoryDao().insert(category.copy(order = current.size))
-        }
+    fun updateCategory(category: Category) = viewModelScope.launch {
+        categoryDao.update(category)
+        _snackbarEvents.send("Categoría actualizada")
     }
 
-    fun updateCategory(category: Category) {
-        viewModelScope.launch {
-            db.categoryDao().update(category)
-        }
+    fun archiveCategory(category: Category) = viewModelScope.launch {
+        categoryDao.archiveCategory(category.id)
+        _snackbarEvents.send("Categoría archivada")
+        hideArchiveDialog()
     }
 
-    fun deleteCategory(category: Category) {
-        viewModelScope.launch {
-            db.categoryDao().delete(category)
-        }
+    fun unarchiveCategory(category: Category) = viewModelScope.launch {
+        categoryDao.unarchiveCategory(category.id)
+        _snackbarEvents.send("Categoría restaurada")
     }
 
-    fun reorderCategories(newOrder: List<Category>) {
-        viewModelScope.launch {
-            db.categoryDao().reorderCategories(newOrder.map { it.id })
-        }
+    fun reorderCategories(newOrder: List<Category>) = viewModelScope.launch {
+        val updates = newOrder.mapIndexed { index, category -> category.copy(order = index) }
+        categoryDao.updateAll(updates)
     }
 }

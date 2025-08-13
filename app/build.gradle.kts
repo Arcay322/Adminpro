@@ -1,18 +1,17 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    id("kotlin-kapt")
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.example.admin_ingresos"
-    compileSdk = 36
+    compileSdk = 34 // CAMBIO: Se ajusta a la versión soportada por AGP 8.4.2
 
     defaultConfig {
         applicationId = "com.example.admin_ingresos"
         minSdk = 27
-        targetSdk = 36
+        targetSdk = 34 // CAMBIO: Se ajusta para coincidir con compileSdk
         versionCode = 1
         versionName = "1.0"
 
@@ -38,6 +37,9 @@ android {
     buildFeatures {
         compose = true
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.14"
+    }
 }
 
 dependencies {
@@ -55,12 +57,9 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    // ViewModel Compose
-
-    
     // Room Database
     implementation("androidx.room:room-runtime:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     
     // Navigation Compose
@@ -90,9 +89,6 @@ dependencies {
     
     // Graphics layer
     implementation("androidx.compose.ui:ui-graphics:1.6.7")
-    
-    // Pull to refresh
-    implementation("androidx.compose.material3:material3:1.3.2")
     
     // Color Picker
     implementation("com.github.skydoves:colorpicker-compose:1.1.2")

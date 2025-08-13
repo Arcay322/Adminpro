@@ -34,6 +34,8 @@ import com.example.admin_ingresos.ui.budget.BudgetScreen
 import com.example.admin_ingresos.ui.history.TransactionHistoryScreen
 import com.example.admin_ingresos.ui.components.AddTransactionModal
 
+import com.example.admin_ingresos.ui.category.CategoryScreen
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,9 +63,8 @@ fun MainAppNavigation() {
             }
         }
     )
-    val categories by categoryViewModel.categories.collectAsState()
-    val transactionCounts by categoryViewModel.transactionCounts.collectAsState()
-    val totalAmounts by categoryViewModel.totalAmounts.collectAsState()
+    val uiState by categoryViewModel.uiState.collectAsState()
+    val categories = uiState.categories
 
     Box(
         modifier = Modifier
@@ -132,16 +133,7 @@ fun MainAppNavigation() {
                     popEnterTransition = { getPopEnterTransition(getTransitionForRoute("categories")) },
                     popExitTransition = { getPopExitTransition(getTransitionForRoute("categories")) }
                 ) {
-                    val coroutineScope = rememberCoroutineScope()
-                    com.example.admin_ingresos.ui.category.CategoryScreen(
-                        categories = categories,
-                        onAddCategory = { category -> categoryViewModel.addCategory(category) },
-                        onEditCategory = { category -> categoryViewModel.updateCategory(category) },
-                        onDeleteCategory = { category -> categoryViewModel.deleteCategory(category) },
-                        onReorder = categoryViewModel::reorderCategories,
-                        getTransactionCount = { categoryId -> transactionCounts[categoryId] ?: 0 },
-                        getTotalAmount = { categoryId -> totalAmounts[categoryId] ?: 0.0 }
-                    )
+                    CategoryScreen(viewModel = categoryViewModel)
                 }
                 composable(
                     "history",

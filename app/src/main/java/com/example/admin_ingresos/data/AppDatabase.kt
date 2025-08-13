@@ -11,7 +11,7 @@ import com.example.admin_ingresos.data.dao.SavingsGoalDao
 
 @Database(
     entities = [Category::class, PaymentMethod::class, Transaction::class, Budget::class, SavingsGoal::class],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -86,6 +86,14 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_5_6, MIGRATION_6_7)
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add type column (default GASTO) and isArchived column (default 0)
+                database.execSQL("ALTER TABLE categories ADD COLUMN type TEXT NOT NULL DEFAULT 'GASTO'")
+                database.execSQL("ALTER TABLE categories ADD COLUMN isArchived INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
     }
 }
