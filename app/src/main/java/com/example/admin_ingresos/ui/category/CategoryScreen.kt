@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -56,182 +57,211 @@ fun CategoryScreen(
             containerColor = Color.Transparent,
             modifier = Modifier.fillMaxSize()
         ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(16.dp)
-            ) {
-                // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Categorías",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = TextPrimary,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Mantén presionado para reordenar",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary
-                        )
-                    }
-                    IconButton(onClick = { viewModel.showAddEditDialog(Category(name = "", type = uiState.selectedTab)) }) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = "Agregar categoría",
-                            tint = AccentVibrantStart
-                        )
-                    }
-                }
-
-                // Buscador
-                TextField(
-                    value = uiState.searchQuery,
-                    onValueChange = { viewModel.onSearchQueryChanged(it) },
-                    label = { Text("Buscar categoría", color = TextSecondary) },
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = LucideIconMapper.Navigation.search,
-                            contentDescription = null,
-                            tint = TextSecondary
-                        )
-                    },
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = GlassWhiteSubtle,
-                        unfocusedContainerColor = GlassWhiteSubtle,
-                        cursorColor = AccentVibrantStart,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
-                    )
-                )
-                Spacer(Modifier.height(8.dp))
-
-                // Pestañas
-                TabRow(
-                    selectedTabIndex = if (uiState.selectedTab == CategoryType.GASTO) 0 else 1,
-                    containerColor = Color.Transparent,
-                    contentColor = AccentVibrantStart,
-                    divider = {}
-                ) {
-                    val tabs = listOf("Gastos", "Ingresos")
-                    tabs.forEachIndexed { index, title ->
-                        Tab(
-                            selected = (if (uiState.selectedTab == CategoryType.GASTO) 0 else 1) == index,
-                            onClick = {
-                                val newTab = if (index == 0) CategoryType.GASTO else CategoryType.INGRESO
-                                viewModel.onTabSelected(newTab)
-                            },
-                            text = { Text(title) },
-                            selectedContentColor = AccentVibrantStart,
-                            unselectedContentColor = TextSecondary
-                        )
-                    }
-                }
-                Spacer(Modifier.height(8.dp))
-
-                // Contenido principal
-                Column(modifier = Modifier.weight(1f)) {
-                    if (uiState.categories.isEmpty() && uiState.searchQuery.isBlank()) {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    imageVector = LucideIconMapper.getNavigationIcon("Archive"),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(48.dp),
-                                    tint = TextSecondary
-                                )
-                                Spacer(Modifier.height(16.dp))
-                                Text("No hay categorías aquí.", color = TextSecondary)
-                                Text("¡Crea una nueva para empezar!", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
-                            }
+                    // Header
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Categorías",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = TextPrimary,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Mantén presionado para reordenar",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = TextSecondary
+                            )
                         }
-                    } else {
-                        val state = rememberReorderableLazyGridState(
-                            onMove = { from, to ->
-                                val reordered = uiState.categories.toMutableList().apply {
-                                    add(to.index, removeAt(from.index))
-                                }
-                                viewModel.reorderCategories(reordered)
-                            }
+                        IconButton(onClick = { viewModel.showAddEditDialog(Category(name = "", type = uiState.selectedTab)) }) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Agregar categoría",
+                                tint = AccentVibrantStart
+                            )
+                        }
+                    }
+
+                    // Buscador
+                    TextField(
+                        value = uiState.searchQuery,
+                        onValueChange = { viewModel.onSearchQueryChanged(it) },
+                        label = { Text("Buscar categoría", color = TextSecondary) },
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = LucideIconMapper.Navigation.search,
+                                contentDescription = null,
+                                tint = TextSecondary
+                            )
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = GlassWhiteSubtle,
+                            unfocusedContainerColor = GlassWhiteSubtle,
+                            cursorColor = AccentVibrantStart,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
                         )
-                        LazyVerticalGrid(
-                            state = state.gridState,
-                            columns = GridCells.Fixed(2),
-                            modifier = Modifier.fillMaxSize().reorderable(state),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(uiState.categories, key = { it.id }) { category ->
-                                ReorderableItem(state, key = category.id) { isDragging ->
-                                    val scale by animateFloatAsState(if (isDragging) 1.07f else 1f, label = "")
-                                    val elevation by animateDpAsState(if (isDragging) 16.dp else 2.dp, label = "")
-                                    GlassCard(
-                                        modifier = Modifier.fillMaxWidth().aspectRatio(1.05f)
-                                            .graphicsLayer {
-                                                scaleX = scale
-                                                scaleY = scale
-                                                shadowElevation = elevation.toPx()
-                                            }
-                                            .detectReorderAfterLongPress(state),
-                                        cornerRadius = 20.dp,
-                                        backgroundColor = Color(android.graphics.Color.parseColor(category.color)).copy(alpha = 0.10f),
-                                        borderColor = Color(android.graphics.Color.parseColor(category.color)).copy(alpha = 0.20f),
+                    )
+                    Spacer(Modifier.height(8.dp))
+
+                    // --- PESTAÑAS MEJORADAS ESTILO PÍLDORA CON COLORES ---
+                    val tabs = listOf(CategoryType.GASTO, CategoryType.INGRESO)
+                    val selectedTabIndex = tabs.indexOf(uiState.selectedTab)
+                    TabRow(
+                        selectedTabIndex = selectedTabIndex,
+                        containerColor = Color.Transparent,
+                        indicator = {}, // Sin indicador
+                        divider = {} // Sin divisor
+                    ) {
+                        tabs.forEachIndexed { index, tabType ->
+                            val selected = selectedTabIndex == index
+                            val pillColor = if (tabType == CategoryType.GASTO) ExpenseRed else AccentVibrantStart
+
+                            Tab(
+                                selected = selected,
+                                onClick = { viewModel.onTabSelected(tabType) },
+                                text = {
+                                    val title = if (tabType == CategoryType.GASTO) "Gastos" else "Ingresos"
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(50))
+                                            .background(
+                                                if (selected) pillColor else Color.Transparent
+                                            )
+                                            .padding(horizontal = 16.dp, vertical = 8.dp)
                                     ) {
-                                        Box(modifier = Modifier.fillMaxSize()) {
-                                            var menuExpanded by remember { mutableStateOf(false) }
-                                            IconButton(
-                                                onClick = { menuExpanded = true },
-                                                modifier = Modifier.align(Alignment.TopEnd)
-                                            ) {
-                                                Icon(LucideIconMapper.Navigation.more, "Más opciones", tint = TextSecondary, modifier = Modifier.size(20.dp))
+                                        Text(
+                                            text = title,
+                                            color = if (selected) TextPrimary else TextSecondary
+                                        )
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+
+                    // Contenido principal
+                    Column(modifier = Modifier.weight(1f)) {
+                        if (uiState.categories.isEmpty() && uiState.searchQuery.isBlank()) {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        imageVector = LucideIconMapper.getNavigationIcon("Archive"),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(48.dp),
+                                        tint = TextSecondary
+                                    )
+                                    Spacer(Modifier.height(16.dp))
+                                    Text("No hay categorías aquí.", color = TextSecondary)
+                                    Text("¡Crea una nueva para empezar!", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                        } else {
+                            val state = rememberReorderableLazyGridState(
+                                onMove = { from, to ->
+                                    val reordered = uiState.categories.toMutableList().apply {
+                                        add(to.index, removeAt(from.index))
+                                    }
+                                    viewModel.reorderCategories(reordered)
+                                }
+                            )
+                            LazyVerticalGrid(
+                                state = state.gridState,
+                                columns = GridCells.Fixed(2),
+                                modifier = Modifier.fillMaxSize().reorderable(state),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                contentPadding = PaddingValues(bottom = 16.dp)
+                            ) {
+                                items(uiState.categories, key = { it.id }) { category ->
+                                    ReorderableItem(state, key = category.id) { isDragging ->
+                                        val scale by animateFloatAsState(if (isDragging) 1.07f else 1f, label = "")
+                                        val elevation by animateDpAsState(if (isDragging) 16.dp else 2.dp, label = "")
+
+                                        val cardColor by remember(category.color) {
+                                            mutableStateOf(Color(android.graphics.Color.parseColor(category.color)))
+                                        }
+                                        val iconVector by remember(category.icon) {
+                                            val iconOption = LucideIconMapper.getAvailableCategoryIcons().find { it.name == category.icon }
+                                            val vector = if (iconOption != null) {
+                                                LucideIconMapper.getIconFromEmoji(iconOption.icon)
+                                            } else {
+                                                LucideIconMapper.getCategoryIcon(category)
                                             }
-                                            DropdownMenu(
-                                                expanded = menuExpanded,
-                                                onDismissRequest = { menuExpanded = false },
-                                                modifier = Modifier.background(GlassWhiteStrong)
-                                            ) {
-                                                DropdownMenuItem(
-                                                    text = { Text("Editar", color = AccentVibrantStart) },
-                                                    onClick = {
-                                                        menuExpanded = false
-                                                        viewModel.showAddEditDialog(category)
-                                                    },
-                                                    leadingIcon = { Icon(LucideIconMapper.Navigation.edit, null, tint = AccentVibrantStart) }
-                                                )
-                                                DropdownMenuItem(
-                                                    text = { Text("Archivar", color = ExpenseRed) },
-                                                    onClick = {
-                                                        menuExpanded = false
-                                                        viewModel.showArchiveDialog(category)
-                                                    },
-                                                    leadingIcon = { Icon(LucideIconMapper.getNavigationIcon("Archive"), null, tint = ExpenseRed) }
-                                                )
-                                            }
-                                            Column(
-                                                modifier = Modifier.fillMaxSize().padding(vertical = 8.dp, horizontal = 4.dp),
-                                                verticalArrangement = Arrangement.SpaceBetween,
-                                                horizontalAlignment = Alignment.CenterHorizontally
-                                            ) {
+                                            mutableStateOf(vector)
+                                        }
+
+                                        GlassCard(
+                                            modifier = Modifier.fillMaxWidth().aspectRatio(1.05f)
+                                                .graphicsLayer {
+                                                    scaleX = scale
+                                                    scaleY = scale
+                                                    shadowElevation = elevation.toPx()
+                                                }
+                                                .detectReorderAfterLongPress(state),
+                                            cornerRadius = 20.dp,
+                                            backgroundColor = cardColor.copy(alpha = 0.10f),
+                                            borderColor = cardColor.copy(alpha = 0.20f),
+                                        ) {
+                                            Box(modifier = Modifier.fillMaxSize()) {
+
+                                                Box(modifier = Modifier.align(Alignment.TopEnd)) {
+                                                    var menuExpanded by remember { mutableStateOf(false) }
+
+                                                    IconButton(onClick = { menuExpanded = true }) {
+                                                        Icon(LucideIconMapper.Navigation.more, "Más opciones", tint = TextSecondary, modifier = Modifier.size(20.dp))
+                                                    }
+
+                                                    DropdownMenu(
+                                                        expanded = menuExpanded,
+                                                        onDismissRequest = { menuExpanded = false },
+                                                        modifier = Modifier
+                                                            .background(Color(0xFF2A2D32))
+                                                            .clip(RoundedCornerShape(12.dp))
+                                                    ) {
+                                                        DropdownMenuItem(
+                                                            text = { Text("Editar", color = AccentVibrantStart) },
+                                                            onClick = {
+                                                                menuExpanded = false
+                                                                viewModel.showAddEditDialog(category)
+                                                            },
+                                                            leadingIcon = { Icon(LucideIconMapper.Navigation.edit, null, tint = AccentVibrantStart) }
+                                                        )
+                                                        DropdownMenuItem(
+                                                            text = { Text("Archivar", color = ExpenseRed) },
+                                                            onClick = {
+                                                                menuExpanded = false
+                                                                viewModel.showArchiveDialog(category)
+                                                            },
+                                                            leadingIcon = { Icon(LucideIconMapper.getNavigationIcon("Archive"), null, tint = ExpenseRed) }
+                                                        )
+                                                    }
+                                                }
+
                                                 Column(
-                                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                                    modifier = Modifier.fillMaxSize().padding(12.dp),
+                                                    horizontalAlignment = Alignment.CenterHorizontally
                                                 ) {
                                                     Box(
-                                                        Modifier.size(42.dp).clip(CircleShape).background(Color(android.graphics.Color.parseColor(category.color)).copy(alpha = 0.85f)),
+                                                        Modifier.size(42.dp).clip(CircleShape).background(cardColor.copy(alpha = 0.85f)),
                                                         contentAlignment = Alignment.Center
                                                     ) {
-                                                        val iconOption = LucideIconMapper.getAvailableCategoryIcons().find { it.name == category.icon }
-                                                        val iconVector = if (iconOption != null) LucideIconMapper.getIconFromEmoji(iconOption.icon) else LucideIconMapper.getCategoryIcon(category)
                                                         Icon(iconVector, null, tint = TextPrimary, modifier = Modifier.size(22.dp))
                                                     }
+                                                    Spacer(Modifier.height(8.dp))
                                                     Text(
                                                         text = category.name,
                                                         fontWeight = FontWeight.Bold, color = TextPrimary,
@@ -239,18 +269,25 @@ fun CategoryScreen(
                                                         overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
                                                         modifier = Modifier.padding(horizontal = 4.dp)
                                                     )
-                                                }
-                                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                                                    Spacer(Modifier.weight(1f))
+
                                                     val stats = uiState.statsMap[category.id]
                                                     Text(
                                                         text = "${stats?.transactionCount ?: 0} transacciones",
                                                         style = MaterialTheme.typography.bodySmall, color = TextSecondary,
                                                         maxLines = 1, overflow = TextOverflow.Ellipsis
                                                     )
+
+                                                    // --- COLOR DEL MONTO DINÁMICO ---
+                                                    val amountColor = if (category.type == CategoryType.GASTO) ExpenseRed else AccentVibrantStart
                                                     Text(
                                                         text = "$${String.format("%.2f", stats?.totalAmount ?: 0.0)}",
-                                                        style = MaterialTheme.typography.bodySmall, color = AccentVibrantStart,
-                                                        fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = amountColor, // Color aplicado
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
                                                     )
                                                 }
                                             }
@@ -261,22 +298,66 @@ fun CategoryScreen(
                         }
                     }
                 }
-            }
 
-            // Diálogos
-            uiState.showAddEditDialog?.let { category ->
-                CategoryAddEditDialog(category = category, viewModel = viewModel)
-            }
-            uiState.showArchiveDialog?.let { category ->
-                AlertDialog(
-                    onDismissRequest = { viewModel.hideArchiveDialog() },
-                    title = { Text("Archivar categoría") },
-                    text = { Text("¿Seguro que deseas archivar la categoría '${category.name}'?") },
-                    confirmButton = { Button(onClick = { viewModel.archiveCategory(category) }) { Text("Archivar") } },
-                    dismissButton = { OutlinedButton(onClick = { viewModel.hideArchiveDialog() }) { Text("Cancelar") } }
-                )
+                // Diálogos con Scrim y Estilo Mejorado
+                if (uiState.showAddEditDialog != null) {
+                    DialogScrim(onDismiss = { viewModel.hideAddEditDialog() }) {
+                        CategoryAddEditDialog(
+                            category = uiState.showAddEditDialog!!,
+                            viewModel = viewModel
+                        )
+                    }
+                }
+
+                if (uiState.showArchiveDialog != null) {
+                    val categoryToArchive = uiState.showArchiveDialog!!
+                    DialogScrim(onDismiss = { viewModel.hideArchiveDialog() }) {
+                        AlertDialog(
+                            onDismissRequest = { viewModel.hideArchiveDialog() },
+                            title = { Text("Archivar categoría") },
+                            text = { Text("¿Seguro que deseas archivar la categoría '${categoryToArchive.name}'?") },
+                            confirmButton = {
+                                Button(
+                                    onClick = { viewModel.archiveCategory(categoryToArchive) },
+                                    colors = ButtonDefaults.buttonColors(containerColor = ExpenseRed)
+                                ) { Text("Archivar") }
+                            },
+                            dismissButton = { OutlinedButton(onClick = { viewModel.hideArchiveDialog() }) { Text("Cancelar") } },
+                            shape = RoundedCornerShape(28.dp),
+                            containerColor = Color(0xFF2A2D32),
+                            modifier = Modifier.border(
+                                width = 1.dp,
+                                color = Color.White.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(28.dp)
+                            )
+                        )
+                    }
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun DialogScrim(
+    onDismiss: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.6f))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onDismiss
+                )
+        )
+        content()
     }
 }
 
@@ -314,7 +395,7 @@ private fun CategoryAddEditDialog(category: Category, viewModel: CategoryViewMod
                 var iconMenuExpanded by remember { mutableStateOf(false) }
                 Box {
                     OutlinedButton(
-                        onClick = { iconMenuExpanded = true }, // CORRECCIÓN 3: Corregir el typo aquí
+                        onClick = { iconMenuExpanded = true },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         val iconOptions = LucideIconMapper.getAvailableCategoryIcons()
@@ -360,6 +441,13 @@ private fun CategoryAddEditDialog(category: Category, viewModel: CategoryViewMod
                 enabled = name.isNotBlank() && color.isNotBlank() && icon.isNotBlank()
             ) { Text(if (isEdit) "Guardar" else "Agregar") }
         },
-        dismissButton = { OutlinedButton(onClick = { viewModel.hideAddEditDialog() }) { Text("Cancelar") } }
+        dismissButton = { OutlinedButton(onClick = { viewModel.hideAddEditDialog() }) { Text("Cancelar") } },
+        shape = RoundedCornerShape(28.dp),
+        containerColor = Color(0xFF2A2D32),
+        modifier = Modifier.border(
+            width = 1.dp,
+            color = Color.White.copy(alpha = 0.2f),
+            shape = RoundedCornerShape(28.dp)
+        )
     )
 }
