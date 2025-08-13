@@ -40,7 +40,9 @@ import org.burnoutcrew.reorderable.reorderable
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryScreen(
-    viewModel: CategoryViewModel
+    viewModel: CategoryViewModel,
+    // Parámetro para manejar la navegación al tocar una categoría
+    onNavigateToCategoryDetail: (Int) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -116,7 +118,7 @@ fun CategoryScreen(
                     )
                     Spacer(Modifier.height(8.dp))
 
-                    // --- PESTAÑAS MEJORADAS ESTILO PÍLDORA CON COLORES ---
+                    // Pestañas Estilo Píldora con Colores
                     val tabs = listOf(CategoryType.GASTO, CategoryType.INGRESO)
                     val selectedTabIndex = tabs.indexOf(uiState.selectedTab)
                     TabRow(
@@ -205,13 +207,16 @@ fun CategoryScreen(
                                         }
 
                                         GlassCard(
-                                            modifier = Modifier.fillMaxWidth().aspectRatio(1.05f)
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .aspectRatio(1.05f)
                                                 .graphicsLayer {
                                                     scaleX = scale
                                                     scaleY = scale
                                                     shadowElevation = elevation.toPx()
                                                 }
-                                                .detectReorderAfterLongPress(state),
+                                                .detectReorderAfterLongPress(state)
+                                                .clickable { onNavigateToCategoryDetail(category.id) },
                                             cornerRadius = 20.dp,
                                             backgroundColor = cardColor.copy(alpha = 0.10f),
                                             borderColor = cardColor.copy(alpha = 0.20f),
@@ -279,7 +284,6 @@ fun CategoryScreen(
                                                         maxLines = 1, overflow = TextOverflow.Ellipsis
                                                     )
 
-                                                    // --- COLOR DEL MONTO DINÁMICO ---
                                                     val amountColor = if (category.type == CategoryType.GASTO) ExpenseRed else AccentVibrantStart
                                                     Text(
                                                         text = "$${String.format("%.2f", stats?.totalAmount ?: 0.0)}",

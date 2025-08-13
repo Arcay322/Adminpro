@@ -116,7 +116,6 @@ interface TransactionDao {
     """)
     suspend fun getSearchSuggestions(query: String): List<String>
 
-    // --- FUNCIÓN CORREGIDA ---
     @MapInfo(keyColumn = "categoryId")
     @Query("""
         SELECT 
@@ -127,4 +126,11 @@ interface TransactionDao {
         GROUP BY categoryId
     """)
     fun getAllCategoryStats(): Flow<Map<Int, CategoryTransactionStats>>
+
+    @Query("SELECT * FROM transactions WHERE categoryId = :categoryId ORDER BY date DESC")
+    fun getTransactionsByCategoryIdFlow(categoryId: Int): Flow<List<Transaction>>
+
+    // --- NUEVA FUNCIÓN AÑADIDA PARA FILTROS DE TIEMPO ---
+    @Query("SELECT * FROM transactions WHERE categoryId = :categoryId AND date BETWEEN :startDate AND :endDate ORDER BY date DESC")
+    fun getTransactionsByCategoryIdAndDateRangeFlow(categoryId: Int, startDate: Long, endDate: Long): Flow<List<Transaction>>
 }

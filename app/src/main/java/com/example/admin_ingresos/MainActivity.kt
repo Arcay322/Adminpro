@@ -17,11 +17,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.admin_ingresos.ui.animations.getEnterTransition
 import com.example.admin_ingresos.ui.animations.getExitTransition
 import com.example.admin_ingresos.ui.animations.getPopEnterTransition
@@ -33,8 +36,11 @@ import com.example.admin_ingresos.ui.dashboard.DashboardScreen
 import com.example.admin_ingresos.ui.budget.BudgetScreen
 import com.example.admin_ingresos.ui.history.TransactionHistoryScreen
 import com.example.admin_ingresos.ui.components.AddTransactionModal
-
+import com.example.admin_ingresos.ui.category.CategoryDetailScreen
+import com.example.admin_ingresos.ui.category.CategoryDetailViewModel
 import com.example.admin_ingresos.ui.category.CategoryScreen
+import com.example.admin_ingresos.ui.category.CategoryViewModel
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,14 +58,13 @@ class MainActivity : ComponentActivity() {
 fun MainAppNavigation() {
     val navController = rememberNavController()
     var showAddTransactionModal by remember { mutableStateOf(false) }
-    // Glassmorphism Background
     val context = LocalContext.current
     val database = remember { AppDatabaseProvider.getDatabase(context) }
-    val categoryViewModel: com.example.admin_ingresos.ui.category.CategoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+    val categoryViewModel: CategoryViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 @Suppress("UNCHECKED_CAST")
-                return com.example.admin_ingresos.ui.category.CategoryViewModel(database) as T
+                return CategoryViewModel(database) as T
             }
         }
     )
@@ -103,46 +108,52 @@ fun MainAppNavigation() {
                 startDestination = "dashboard",
                 modifier = Modifier.padding(paddingValues)
             ) {
-                composable(
-                    "dashboard",
-                    enterTransition = { getEnterTransition(getTransitionForRoute("dashboard")) },
-                    exitTransition = { getExitTransition(getTransitionForRoute("dashboard")) },
-                    popEnterTransition = { getPopEnterTransition(getTransitionForRoute("dashboard")) },
-                    popExitTransition = { getPopExitTransition(getTransitionForRoute("dashboard")) }
-                ) {
+                composable("dashboard") {
                     DashboardScreen(
                         onNavigateToTransactions = { navController.navigate("history") },
                         onNavigateToAddTransaction = { showAddTransactionModal = true },
-                        onNavigateToReports = { /* No-op or implement if needed */ },
-                        onNavigateToSettings = { /* No-op or implement if needed */ }
+                        onNavigateToReports = { /* No-op */ },
+                        onNavigateToSettings = { /* No-op */ }
                     )
                 }
-                composable(
-                    "budget",
-                    enterTransition = { getEnterTransition(getTransitionForRoute("budget")) },
-                    exitTransition = { getExitTransition(getTransitionForRoute("budget")) },
-                    popEnterTransition = { getPopEnterTransition(getTransitionForRoute("budget")) },
-                    popExitTransition = { getPopExitTransition(getTransitionForRoute("budget")) }
-                ) {
+                composable("budget") {
                     BudgetScreen()
                 }
-                composable(
-                    "categories",
-                    enterTransition = { getEnterTransition(getTransitionForRoute("categories")) },
-                    exitTransition = { getExitTransition(getTransitionForRoute("categories")) },
-                    popEnterTransition = { getPopEnterTransition(getTransitionForRoute("categories")) },
-                    popExitTransition = { getPopExitTransition(getTransitionForRoute("categories")) }
-                ) {
-                    CategoryScreen(viewModel = categoryViewModel)
+                composable("categories") {
+                    CategoryScreen(
+                        viewModel = categoryViewModel,
+                        // --- CAMBIO AQUÍ: Acción de navegación ---
+                        onNavigateToCategoryDetail = { categoryId ->
+                            navController.navigate("category_detail/$categoryId")
+                        }
+                    )
                 }
-                composable(
-                    "history",
-                    enterTransition = { getEnterTransition(getTransitionForRoute("history")) },
-                    exitTransition = { getExitTransition(getTransitionForRoute("history")) },
-                    popEnterTransition = { getPopEnterTransition(getTransitionForRoute("history")) },
-                    popExitTransition = { getPopExitTransition(getTransitionForRoute("history")) }
-                ) {
+                composable("history") {
                     TransactionHistoryScreen()
+                }
+
+                // --- NUEVA RUTA AÑADIDA ---
+                composable(
+                    route = "category_detail/{categoryId}",
+                    arguments = listOf(navArgument("categoryId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val categoryId = backStackEntry.arguments?.getInt("categoryId")
+                    val categoryDetailViewModel: CategoryDetailViewModel = viewModel(
+                        factory = object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                @Suppress("UNCHECKED_CAST")
+                                return CategoryDetailViewModel(
+                                    transactionDao = database.transactionDao(),
+                                    categoryDao = database.categoryDao(),
+                                    categoryId = categoryId
+                                ) as T
+                            }
+                        }
+                    )
+                    CategoryDetailScreen(
+                        viewModel = categoryDetailViewModel,
+                        onNavigateBack = { navController.popBackStack() }
+                    )
                 }
             }
             AddTransactionModal(
@@ -151,22 +162,5 @@ fun MainAppNavigation() {
                 onTransactionAdded = { /* TODO: Recargar datos si es necesario */ }
             )
         }
-    }
-}
-
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    Admin_ingresosTheme {
-        Greeting("Android")
     }
 }
