@@ -71,8 +71,8 @@ dependencies {
     // Material Icons Extended
     implementation("androidx.compose.material:material-icons-extended:1.6.7")
     
-    // Lucide Icons for Compose
-    implementation("com.composables:icons-lucide:1.1.0")
+    // Lucide Icons 
+    implementation("com.composables:icons-lucide-android:1.1.0")
     
     // Coil for image loading
     implementation("io.coil-kt:coil-compose:2.5.0")

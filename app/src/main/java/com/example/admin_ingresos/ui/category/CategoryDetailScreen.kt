@@ -4,8 +4,10 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -18,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.admin_ingresos.data.Budget
 import com.example.admin_ingresos.data.Category
 import com.example.admin_ingresos.data.CategoryType
 import com.example.admin_ingresos.data.Transaction
@@ -37,10 +40,8 @@ fun CategoryDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val category = uiState.category
-    val transactions = uiState.transactions
 
-    // Agrupar transacciones por fecha (igual que en la pantalla de historial)
-    val groupedTransactions = transactions.groupBy { transaction ->
+    val groupedTransactions = uiState.transactions.groupBy { transaction ->
         val date = Date(transaction.date)
         SimpleDateFormat("dd MMMM yyyy", Locale("es", "ES")).format(date)
     }
@@ -92,25 +93,37 @@ fun CategoryDetailScreen(
                         .fillMaxSize()
                         .padding(paddingValues)
                         .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
-                    // Header con el resumen de la categoría
+                    // Header con el resumen de la categoría y presupuesto
                     item {
-                        CategoryDetailHeader(category = category, transactions = transactions)
+                        CategoryDetailHeader(
+                            category = category,
+                            totalAmount = uiState.totalAmountForPeriod,
+                            transactionCount = uiState.transactions.size,
+                            activeBudget = uiState.activeBudget
+                        )
+                    }
+
+                    // Filtros de tiempo
+                    item {
+                        TimeFilterChips(
+                            selectedFilter = uiState.selectedFilter,
+                            onFilterSelected = { viewModel.setTimeFilter(it) }
+                        )
                     }
 
                     // Lista de transacciones
-                    if (transactions.isEmpty()) {
+                    if (uiState.transactions.isEmpty()) {
                         item {
                             EmptyState()
                         }
                     } else {
                         groupedTransactions.forEach { (date, dayTransactions) ->
-                            // Encabezado de fecha
                             stickyHeader {
                                 DateHeader(date = date)
                             }
-                            // Items de transacción
                             items(dayTransactions, key = { it.id }) { transaction ->
                                 TransactionListItem(transaction = transaction)
                             }
@@ -123,8 +136,12 @@ fun CategoryDetailScreen(
 }
 
 @Composable
-private fun CategoryDetailHeader(category: Category, transactions: List<Transaction>) {
-    val totalAmount = transactions.sumOf { it.amount }
+private fun CategoryDetailHeader(
+    category: Category,
+    totalAmount: Double,
+    transactionCount: Int,
+    activeBudget: Budget?
+) {
     val formatter = remember { NumberFormat.getCurrencyInstance(Locale("es", "ES")) }
     val categoryColor by remember(category.color) { mutableStateOf(Color(android.graphics.Color.parseColor(category.color))) }
     val amountColor = if (category.type == CategoryType.GASTO) ExpenseRed else AccentVibrantStart
@@ -134,49 +151,148 @@ private fun CategoryDetailHeader(category: Category, transactions: List<Transact
         backgroundColor = categoryColor.copy(alpha = 0.1f),
         borderColor = categoryColor.copy(alpha = 0.2f)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Icono de la categoría
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(categoryColor.copy(alpha = 0.85f)),
-                contentAlignment = Alignment.Center
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                val iconVector = LucideIconMapper.getCategoryIcon(category)
-                Icon(
-                    imageVector = iconVector,
-                    contentDescription = category.name,
-                    tint = TextPrimary,
-                    modifier = Modifier.size(28.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(categoryColor.copy(alpha = 0.85f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val iconVector = LucideIconMapper.getCategoryIcon(category)
+                    Icon(
+                        imageVector = iconVector,
+                        contentDescription = category.name,
+                        tint = TextPrimary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                Column {
+                    Text(
+                        text = "Total ${category.type.name.lowercase()}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextSecondary
+                    )
+                    Text(
+                        text = formatter.format(totalAmount),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = amountColor
+                    )
+                    Text(
+                        text = "$transactionCount ${if (transactionCount == 1) "transacción" else "transacciones"}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary
+                    )
+                }
             }
-            // Stats
-            Column {
-                Text(
-                    text = "Total ${category.type.name.lowercase()}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
-                )
-                Text(
-                    text = formatter.format(totalAmount),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = amountColor
-                )
-                Text(
-                    text = "${transactions.size} ${if (transactions.size == 1) "transacción" else "transacciones"}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+
+            if (activeBudget != null && category.type == CategoryType.GASTO) {
+                Spacer(modifier = Modifier.height(16.dp))
+                BudgetProgressInfo(
+                    budget = activeBudget,
+                    spentAmount = totalAmount,
+                    formatter = formatter
                 )
             }
         }
     }
 }
+
+@Composable
+private fun BudgetProgressInfo(
+    budget: Budget,
+    spentAmount: Double,
+    formatter: NumberFormat
+) {
+    val progress = (spentAmount / budget.amount).toFloat().coerceIn(0f, 1f)
+    val progressColor = when {
+        progress > 0.9f -> ExpenseRed
+        progress > 0.7f -> Color(0xFFFBBF24) // Amarillo/Naranja
+        else -> IncomeGreen
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Presupuesto: ${formatter.format(budget.amount)}",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary
+            )
+            Text(
+                text = "${(progress * 100).toInt()}% Usado",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
+                color = progressColor
+            )
+        }
+        LinearProgressIndicator(
+            progress = progress,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(CircleShape),
+            color = progressColor,
+            trackColor = GlassWhiteSubtle
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TimeFilterChips(
+    selectedFilter: TimeFilter,
+    onFilterSelected: (TimeFilter) -> Unit
+) {
+    LazyRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(TimeFilter.values()) { filter ->
+            val selected = selectedFilter == filter
+            FilterChip(
+                selected = selected,
+                onClick = { onFilterSelected(filter) },
+                label = {
+                    // --- CORRECCIÓN AQUÍ: Icono dentro de la etiqueta ---
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        val icon = when (filter) {
+                            TimeFilter.THIS_MONTH -> LucideIconMapper.getNavigationIcon("Calendar")
+                            TimeFilter.LAST_MONTH -> LucideIconMapper.getNavigationIcon("Rewind")
+                            TimeFilter.THIS_YEAR -> LucideIconMapper.getNavigationIcon("CalendarDays")
+                            TimeFilter.ALL_TIME -> LucideIconMapper.getNavigationIcon("Infinity")
+                        }
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                        )
+                        Text(filter.displayName)
+                    }
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = GlassWhiteSubtle,
+                    labelColor = TextSecondary,
+                    iconColor = TextSecondary,
+                    selectedContainerColor = AccentVibrantStart,
+                    selectedLabelColor = TextPrimary,
+                    selectedLeadingIconColor = TextPrimary
+                )
+            )
+        }
+    }
+}
+
 
 @Composable
 private fun DateHeader(date: String) {
@@ -187,7 +303,7 @@ private fun DateHeader(date: String) {
         color = TextSecondary,
         modifier = Modifier
             .fillMaxWidth()
-            .background(BackgroundEnd.copy(alpha = 0.8f)) // Fondo para que se lea sobre el contenido
+            .background(BackgroundEnd.copy(alpha = 0.8f))
             .padding(vertical = 8.dp)
     )
 }
@@ -249,7 +365,7 @@ private fun EmptyState() {
                 color = TextSecondary
             )
             Text(
-                text = "No hay transacciones registradas para esta categoría.",
+                text = "No hay transacciones registradas para este período.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextSecondary.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center

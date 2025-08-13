@@ -122,7 +122,6 @@ fun MainAppNavigation() {
                 composable("categories") {
                     CategoryScreen(
                         viewModel = categoryViewModel,
-                        // --- CAMBIO AQUÍ: Acción de navegación ---
                         onNavigateToCategoryDetail = { categoryId ->
                             navController.navigate("category_detail/$categoryId")
                         }
@@ -132,7 +131,6 @@ fun MainAppNavigation() {
                     TransactionHistoryScreen()
                 }
 
-                // --- NUEVA RUTA AÑADIDA ---
                 composable(
                     route = "category_detail/{categoryId}",
                     arguments = listOf(navArgument("categoryId") { type = NavType.IntType })
@@ -145,6 +143,7 @@ fun MainAppNavigation() {
                                 return CategoryDetailViewModel(
                                     transactionDao = database.transactionDao(),
                                     categoryDao = database.categoryDao(),
+                                    budgetDao = database.budgetDao(),
                                     categoryId = categoryId
                                 ) as T
                             }

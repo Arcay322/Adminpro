@@ -3,85 +3,147 @@ package com.example.admin_ingresos.ui.category
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.admin_ingresos.data.Category
-import com.example.admin_ingresos.data.CategoryDao
-import com.example.admin_ingresos.data.Transaction
-import com.example.admin_ingresos.data.TransactionDao
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.update
+import com.example.admin_ingresos.data.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.*
 
-/**
- * Define el estado de la UI para la pantalla de detalles de categoría.
- */
+// Enum para manejar los filtros de tiempo
+enum class TimeFilter(val displayName: String) {
+    THIS_MONTH("Este Mes"),
+    LAST_MONTH("Mes Pasado"),
+    THIS_YEAR("Este Año"),
+    ALL_TIME("Todo")
+}
+
+// Estado de la UI actualizado para incluir el presupuesto y el filtro
 data class CategoryDetailUiState(
     val category: Category? = null,
     val transactions: List<Transaction> = emptyList(),
+    val activeBudget: Budget? = null,
+    val totalAmountForPeriod: Double = 0.0,
+    val selectedFilter: TimeFilter = TimeFilter.THIS_MONTH,
     val isLoading: Boolean = true,
     val error: String? = null
 )
 
-/**
- * ViewModel para la pantalla de detalles de una categoría. Se encarga de obtener
- * los datos de la categoría y su lista de transacciones desde la base de datos.
- */
+@OptIn(ExperimentalCoroutinesApi::class)
 class CategoryDetailViewModel(
     private val transactionDao: TransactionDao,
     private val categoryDao: CategoryDao,
+    private val budgetDao: BudgetDao,
     categoryId: Int?
 ) : ViewModel() {
 
-    // El StateFlow privado para manejar el estado internamente.
     private val _uiState = MutableStateFlow(CategoryDetailUiState())
-    // El StateFlow público que la UI observará para actualizarse.
     val uiState: StateFlow<CategoryDetailUiState> = _uiState
+
+    // Flow para manejar el cambio de filtro de tiempo
+    private val selectedFilter = MutableStateFlow(TimeFilter.THIS_MONTH)
 
     init {
         if (categoryId != null) {
-            loadData(categoryId)
-        } else {
-            _uiState.update {
-                it.copy(isLoading = false, error = "No se pudo encontrar el ID de la categoría.")
+            loadStaticData(categoryId)
+
+            viewModelScope.launch {
+                selectedFilter.flatMapLatest { filter ->
+                    val (startDate, endDate) = calculateDateRange(filter)
+                    if (filter == TimeFilter.ALL_TIME) {
+                        transactionDao.getTransactionsByCategoryIdFlow(categoryId)
+                    } else {
+                        transactionDao.getTransactionsByCategoryIdAndDateRangeFlow(categoryId, startDate, endDate)
+                    }
+                }.catch { e ->
+                    _uiState.update { it.copy(error = e.message, isLoading = false) }
+                }.collect { transactions ->
+                    _uiState.update {
+                        it.copy(
+                            transactions = transactions,
+                            totalAmountForPeriod = transactions.sumOf { t -> t.amount },
+                            isLoading = false
+                        )
+                    }
+                }
             }
+        } else {
+            _uiState.update { it.copy(isLoading = false, error = "ID de categoría no encontrado.") }
         }
     }
 
-    private fun loadData(categoryId: Int) {
+    /**
+     * Función pública para que la UI pueda cambiar el filtro de tiempo.
+     */
+    fun setTimeFilter(filter: TimeFilter) {
+        _uiState.update { it.copy(selectedFilter = filter, isLoading = true) }
+        selectedFilter.value = filter
+    }
+
+    private fun loadStaticData(categoryId: Int) {
         viewModelScope.launch {
-            // Primero, buscamos los detalles de la categoría.
             try {
                 val category = categoryDao.getCategoryById(categoryId)
-                if (category != null) {
-                    // Si la encontramos, actualizamos el estado con la categoría
-                    // y LUEGO buscamos sus transacciones.
-                    _uiState.update { it.copy(category = category) }
-                    
-                    // Nos suscribimos al Flow de transacciones.
-                    transactionDao.getTransactionsByCategoryIdFlow(categoryId)
-                        .catch { e ->
-                            _uiState.update { it.copy(error = e.message, isLoading = false) }
-                        }
-                        .collect { transactions ->
-                            // Cada vez que la lista de transacciones cambie,
-                            // actualizamos el estado y finalizamos la carga.
-                            _uiState.update {
-                                it.copy(transactions = transactions, isLoading = false)
-                            }
-                        }
-                } else {
-                    // Si no encontramos la categoría, mostramos un error.
-                    _uiState.update {
-                        it.copy(isLoading = false, error = "Categoría no encontrada.")
-                    }
-                }
+                val budget = budgetDao.getActiveBudgetByCategory(categoryId)
+                _uiState.update { it.copy(category = category, activeBudget = budget) }
             } catch (e: Exception) {
-                // Si hay cualquier otro error, lo mostramos.
-                _uiState.update {
-                    it.copy(isLoading = false, error = "Error al cargar los datos.")
-                }
+                _uiState.update { it.copy(error = "Error al cargar datos iniciales.") }
             }
         }
+    }
+    
+    // Funciones auxiliares para calcular los rangos de fecha
+    private fun calculateDateRange(filter: TimeFilter): Pair<Long, Long> {
+        val calendar = Calendar.getInstance()
+        return when (filter) {
+            TimeFilter.THIS_MONTH -> {
+                calendar.set(Calendar.DAY_OF_MONTH, 1)
+                setMidnight(calendar)
+                val start = calendar.timeInMillis
+                
+                calendar.add(Calendar.MONTH, 1)
+                calendar.add(Calendar.DAY_OF_MONTH, -1)
+                setEndOfDay(calendar)
+                val end = calendar.timeInMillis
+                start to end
+            }
+            TimeFilter.LAST_MONTH -> {
+                calendar.add(Calendar.MONTH, -1)
+                calendar.set(Calendar.DAY_OF_MONTH, 1)
+                setMidnight(calendar)
+                val start = calendar.timeInMillis
+
+                calendar.add(Calendar.MONTH, 1)
+                calendar.add(Calendar.DAY_OF_MONTH, -1)
+                setEndOfDay(calendar)
+                val end = calendar.timeInMillis
+                start to end
+            }
+            TimeFilter.THIS_YEAR -> {
+                calendar.set(Calendar.DAY_OF_YEAR, 1)
+                setMidnight(calendar)
+                val start = calendar.timeInMillis
+
+                calendar.add(Calendar.YEAR, 1)
+                calendar.add(Calendar.DAY_OF_YEAR, -1)
+                setEndOfDay(calendar)
+                val end = calendar.timeInMillis
+                start to end
+            }
+            TimeFilter.ALL_TIME -> 0L to Long.MAX_VALUE
+        }
+    }
+
+    private fun setMidnight(calendar: Calendar) {
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+    }
+
+    private fun setEndOfDay(calendar: Calendar) {
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
     }
 }
