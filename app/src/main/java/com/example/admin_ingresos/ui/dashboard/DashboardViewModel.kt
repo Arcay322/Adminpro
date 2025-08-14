@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
@@ -84,10 +85,9 @@ class DashboardViewModel(
         )
     */
 
-    // TODO: Weekly cash flow data based on real transactions (commented out until complete)
-    /*
+    // Weekly cash flow data based on real transactions
     val weeklyData = transactions
-        .map { transactionList ->
+        .map { transactionList: List<Transaction> ->
             getWeeklyFlowData(transactionList)
         }
         .stateIn(
@@ -95,7 +95,6 @@ class DashboardViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
-    */
 
     init {
         // Load data when ViewModel is created
@@ -307,7 +306,6 @@ class DashboardViewModel(
         }
     }
 
-    /*
     private fun getWeeklyFlowData(transactions: List<com.example.admin_ingresos.data.Transaction>): List<DayData> {
         val calendar = Calendar.getInstance()
         val currentWeekData = mutableMapOf<Int, Pair<Double, Double>>() // dayOfWeek to (income, expense)
@@ -335,13 +333,13 @@ class DashboardViewModel(
 
         // Filter transactions for current week
         val weekTransactions = transactions.filter { transaction ->
-            transaction.date.time >= weekStart.time && transaction.date.time <= weekEnd.time
+            transaction.date >= weekStart.time && transaction.date <= weekEnd.time
         }
 
         // Group by day of week
         weekTransactions.forEach { transaction ->
             val transactionCalendar = Calendar.getInstance()
-            transactionCalendar.time = transaction.date
+            transactionCalendar.timeInMillis = transaction.date
             transactionCalendar.firstDayOfWeek = Calendar.MONDAY
 
             val dayOfWeek = transactionCalendar.get(Calendar.DAY_OF_WEEK)
@@ -363,7 +361,7 @@ class DashboardViewModel(
         }
 
         // Convert to DayData list
-        val dayLabels = listOf("L", "M", "X", "J", "V", "S", "D")
+        val dayLabels = listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
         return (1..7).map { dayIndex ->
             val data = currentWeekData[dayIndex] ?: Pair(0.0, 0.0)
             DayData(
@@ -373,7 +371,6 @@ class DashboardViewModel(
             )
         }
     }
-    */
 
     private fun getCategoryIconFromData(category: com.example.admin_ingresos.data.Category): androidx.compose.ui.graphics.vector.ImageVector {
         // Usar el sistema de iconos Lucide para obtener iconos profesionales y consistentes

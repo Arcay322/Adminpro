@@ -1346,22 +1346,21 @@ private fun DeleteConfirmationDialog(
     )
 }
 
+
 @Composable
 private fun WeeklyCashFlowSection() {
-    // Datos de ejemplo para el gráfico. Puedes reemplazarlos con datos reales de tu ViewModel.
-    val weeklyData = remember {
-        listOf(
-            DayData("Lun", 150.50, 80.0),
-            DayData("Mar", 200.0, 120.75),
-            DayData("Mié", 50.25, 180.0),
-            DayData("Jue", 300.0, 95.50),
-            DayData("Vie", 120.0, 250.0),
-            DayData("Sáb", 450.0, 150.0),
-            DayData("Dom", 25.0, 60.0)
-        )
-    }
+    // Obtener el ViewModel y los datos semanales reales
+    val context = LocalContext.current
+    val db = remember { com.example.admin_ingresos.AppDatabaseProvider.getDatabase(context) }
+    val repository = remember { com.example.admin_ingresos.data.TransactionRepository(db) }
+    val dashboardViewModel: DashboardViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+            @Suppress("UNCHECKED_CAST")
+            return DashboardViewModel(repository, db) as T
+        }
+    })
 
-    // Calcula el valor máximo para escalar las barras correctamente.
+    val weeklyData by dashboardViewModel.weeklyData.collectAsState()
     val maxValue = remember(weeklyData) {
         weeklyData.maxOfOrNull { maxOf(it.income, it.expense) } ?: 1.0
     }
