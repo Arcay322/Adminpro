@@ -29,6 +29,8 @@ data class DashboardUiState(
     val currentBalance: Double = 0.0,
     val monthlyIncome: Double = 0.0,
     val monthlyExpenses: Double = 0.0,
+    val incomeChangePercent: Double = 0.0,
+    val expenseChangePercent: Double = 0.0,
     val recentTransactions: List<DashboardTransaction> = emptyList(),
     val categoryExpenses: List<CategoryExpense> = emptyList()
 )
@@ -218,11 +220,39 @@ class DashboardViewModel(
                 .sortedByDescending { it.amount }
                 .take(5)
 
+            // Calculate simple month-over-month change comparing to previous month
+            val prevMonthCalendar = Calendar.getInstance().apply {
+                add(Calendar.MONTH, -1)
+                set(Calendar.DAY_OF_MONTH, 1)
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            val prevMonthStart = prevMonthCalendar.timeInMillis
+            val prevMonthEnd = Calendar.getInstance().apply {
+                set(Calendar.DAY_OF_MONTH, 1)
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+                add(Calendar.MILLISECOND, -1)
+            }.timeInMillis
+
+            val prevMonthTransactions = transactions.filter { it.date >= prevMonthStart && it.date <= prevMonthEnd }
+            val prevMonthIncome = prevMonthTransactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
+            val prevMonthExpenses = prevMonthTransactions.filter { it.type == "Gasto" }.sumOf { it.amount }
+
+            val incomeChangePercent = if (prevMonthIncome > 0) ((monthlyIncome - prevMonthIncome) / prevMonthIncome) * 100 else 0.0
+            val expenseChangePercent = if (prevMonthExpenses > 0) ((monthlyExpenses - prevMonthExpenses) / prevMonthExpenses) * 100 else 0.0
+
             _uiState.value = _uiState.value.copy(
                 transactions = transactions,
                 currentBalance = currentBalance,
                 monthlyIncome = monthlyIncome,
                 monthlyExpenses = monthlyExpenses,
+                incomeChangePercent = incomeChangePercent,
+                expenseChangePercent = expenseChangePercent,
                 recentTransactions = recentTransactions,
                 categoryExpenses = expensesByCategory
             )

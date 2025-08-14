@@ -55,6 +55,15 @@ fun DashboardScreen(
     })
 
     val uiState by dashboardViewModel.uiState.collectAsState()
+    val weeklyData by dashboardViewModel.weeklyData.collectAsState()
+    // Create SavingsGoalViewModel once at screen level to avoid creating it inside nested composables
+    val savingsGoalViewModel: com.example.admin_ingresos.viewmodel.SavingsGoalViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+            @Suppress("UNCHECKED_CAST")
+            return com.example.admin_ingresos.viewmodel.SavingsGoalViewModel(db) as T
+        }
+    })
+
     var userName by remember { mutableStateOf("Usuario") }
 
     var isVisible by remember { mutableStateOf(false) }
@@ -181,9 +190,11 @@ fun DashboardScreen(
                     enter = slideInVertically(initialOffsetY = { it / 5 }) + fadeIn()
                 ) {
                     TrendsAndInsights(
-                        monthlyIncome = uiState.monthlyIncome,
-                        monthlyExpenses = uiState.monthlyExpenses
-                    )
+                            monthlyIncome = uiState.monthlyIncome,
+                            monthlyExpenses = uiState.monthlyExpenses,
+                            incomeChangePercent = uiState.incomeChangePercent,
+                            expenseChangePercent = uiState.expenseChangePercent
+                        )
                 }
             }
 
@@ -252,7 +263,7 @@ fun DashboardScreen(
                     visible = !uiState.isLoading,
                     enter = slideInVertically(initialOffsetY = { it / 7 }) + fadeIn()
                 ) {
-                    SavingsGoalsSection()
+                    SavingsGoalsSection(savingsGoalViewModel)
                 }
             }
 
@@ -262,7 +273,64 @@ fun DashboardScreen(
                     visible = !uiState.isLoading,
                     enter = slideInVertically(initialOffsetY = { it / 8 }) + fadeIn()
                 ) {
-                    WeeklyCashFlowSection()
+                    GlassCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = GlassWhite,
+                        cornerRadius = 20.dp
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Flujo de efectivo semanal",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
+                                )
+
+                                TextButton(onClick = { /* TODO: ver detalles semanal */ }) {
+                                    Text(
+                                        text = "Ver",
+                                        color = AccentVibrantStart,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            if (weeklyData.isEmpty()) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "Sin datos para esta semana",
+                                        color = TextSecondary
+                                    )
+                                }
+                            } else {
+                                val maxValue = (weeklyData.maxOfOrNull { maxOf(it.income, it.expense) } ?: 1.0)
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.Bottom
+                                ) {
+                                    weeklyData.forEach { day ->
+                                        WeeklyBarChart(day = day, maxValue = maxValue)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -701,7 +769,9 @@ private fun CategoryLegendItem(category: CategoryData, amount: Double = 0.0) {
 @Composable
 private fun TrendsAndInsights(
     monthlyIncome: Double,
-    monthlyExpenses: Double
+    monthlyExpenses: Double,
+    incomeChangePercent: Double = 0.0,
+    expenseChangePercent: Double = 0.0
 ) {
     val savingsRate = if (monthlyIncome > 0) ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 else 0.0
     val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
@@ -724,23 +794,45 @@ private fun TrendsAndInsights(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                InsightCard(
-                    title = "Tasa de Ahorro",
-                    value = "${savingsRate.toInt()}%",
-                    subtitle = "Este mes",
-                    icon = Icons.Default.Savings,
-                    color = if (savingsRate >= 20) IncomeGreen else Color(0xFFFBBF24),
-                    modifier = Modifier.weight(1f)
-                )
+                Box(modifier = Modifier.weight(1f)) {
+                    InsightCard(
+                        title = "Ingresos",
+                        value = formatter.format(monthlyIncome),
+                        subtitle = "Este mes",
+                        icon = Icons.Default.TrendingUp,
+                        color = IncomeGreen,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    // percent badge
+                    Text(
+                        text = "${incomeChangePercent.toInt()}%",
+                        fontSize = 12.sp,
+                        color = if (incomeChangePercent >= 0) IncomeGreen else ExpenseRed,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(end = 8.dp, top = 8.dp)
+                    )
+                }
 
-                InsightCard(
-                    title = "Promedio Diario",
-                    value = formatter.format(monthlyExpenses / 30),
-                    subtitle = "Gastos",
-                    icon = Icons.Default.TrendingDown,
-                    color = ExpenseRed,
-                    modifier = Modifier.weight(1f)
-                )
+                Box(modifier = Modifier.weight(1f)) {
+                    InsightCard(
+                        title = "Gastos",
+                        value = formatter.format(monthlyExpenses),
+                        subtitle = "Este mes",
+                        icon = Icons.Default.TrendingDown,
+                        color = ExpenseRed,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    // percent badge
+                    Text(
+                        text = "${expenseChangePercent.toInt()}%",
+                        fontSize = 12.sp,
+                        color = if (expenseChangePercent >= 0) ExpenseRed else IncomeGreen,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(end = 8.dp, top = 8.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -750,17 +842,26 @@ private fun TrendsAndInsights(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = "Meta de ahorro: 25%",
-                        fontSize = 12.sp,
-                        color = TextSecondary
-                    )
-                    Text(
-                        text = "${savingsRate.toInt()}%",
-                        fontSize = 12.sp,
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Medium
-                    )
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Meta de ahorro: 25%",
+                                fontSize = 12.sp,
+                                color = TextSecondary
+                            )
+                        }
+                    }
+
+                    Column(horizontalAlignment = Alignment.End) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "${savingsRate.toInt()}%",
+                                fontSize = 12.sp,
+                                color = TextPrimary,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -987,15 +1088,7 @@ private fun TransactionItemCard(transaction: TransactionItem) {
 }
 
 @Composable
-private fun SavingsGoalsSection() {
-    val context = LocalContext.current
-    val db = remember { com.example.admin_ingresos.AppDatabaseProvider.getDatabase(context) }
-    val savingsGoalViewModel: com.example.admin_ingresos.viewmodel.SavingsGoalViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-            @Suppress("UNCHECKED_CAST")
-            return com.example.admin_ingresos.viewmodel.SavingsGoalViewModel(db) as T
-        }
-    })
+private fun SavingsGoalsSection(savingsGoalViewModel: com.example.admin_ingresos.viewmodel.SavingsGoalViewModel) {
     val savingsGoals by savingsGoalViewModel.savingsGoals.collectAsState()
 
     GlassCard(
@@ -1347,66 +1440,6 @@ private fun DeleteConfirmationDialog(
 }
 
 
-@Composable
-private fun WeeklyCashFlowSection() {
-    // Obtener el ViewModel y los datos semanales reales
-    val context = LocalContext.current
-    val db = remember { com.example.admin_ingresos.AppDatabaseProvider.getDatabase(context) }
-    val repository = remember { com.example.admin_ingresos.data.TransactionRepository(db) }
-    val dashboardViewModel: DashboardViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-            @Suppress("UNCHECKED_CAST")
-            return DashboardViewModel(repository, db) as T
-        }
-    })
-
-    val weeklyData by dashboardViewModel.weeklyData.collectAsState()
-    val maxValue = remember(weeklyData) {
-        weeklyData.maxOfOrNull { maxOf(it.income, it.expense) } ?: 1.0
-    }
-
-    GlassCard(
-        modifier = Modifier.fillMaxWidth(),
-        backgroundColor = GlassWhite,
-        cornerRadius = 20.dp
-    ) {
-        Column {
-            Text(
-                text = "Flujo Semanal",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            // Contenedor para las barras del gráfico
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp), // Altura fija para el área del gráfico
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                weeklyData.forEach { dayData ->
-                    WeeklyBarChart(day = dayData, maxValue = maxValue)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Leyenda para los colores del gráfico
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                LegendItem(color = IncomeGreen, label = "Ingresos")
-                Spacer(modifier = Modifier.width(24.dp))
-                LegendItem(color = ExpenseRed, label = "Gastos")
-            }
-        }
-    }
-}
 
 @Composable
 private fun WeeklyBarChart(
@@ -1496,8 +1529,4 @@ data class CategoryData(
     val color: Color
 )
 
-data class DayData(
-    val day: String,
-    val income: Double,
-    val expense: Double
-)
+// DayData moved to shared Models.kt
