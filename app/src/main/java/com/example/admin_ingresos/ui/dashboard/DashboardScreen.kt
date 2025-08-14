@@ -365,7 +365,7 @@ private fun MainBalanceCards(
     monthlyExpenses: Double,
     onViewDetails: () -> Unit
 ) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
+    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
     val balanceChange = monthlyIncome - monthlyExpenses
     val balanceChangePercent = if (monthlyExpenses > 0) (balanceChange / monthlyExpenses) * 100 else 0.0
 
@@ -597,7 +597,7 @@ private fun DonutChart(
     modifier: Modifier = Modifier,
     totalAmount: Double = 0.0
 ) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
+    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
 
     Box(
         modifier = modifier,
@@ -667,7 +667,7 @@ private fun DonutChart(
 
 @Composable
 private fun CategoryLegendItem(category: CategoryData, amount: Double = 0.0) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
+    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -706,7 +706,7 @@ private fun TrendsAndInsights(
     monthlyExpenses: Double
 ) {
     val savingsRate = if (monthlyIncome > 0) ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 else 0.0
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
+    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
 
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
@@ -878,7 +878,7 @@ private fun RecentTransactionsSection(
 
 @Composable
 private fun DashboardTransactionItemCard(transaction: DashboardTransaction) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
+    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -934,7 +934,7 @@ private fun DashboardTransactionItemCard(transaction: DashboardTransaction) {
 
 @Composable
 private fun TransactionItemCard(transaction: TransactionItem) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
+    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1082,33 +1082,74 @@ private fun SavingsGoalsSection() {
                     )
                 }
             } else {
+                var editGoal by remember { mutableStateOf<com.example.admin_ingresos.data.model.SavingsGoal?>(null) }
+                var showEditDialog by remember { mutableStateOf(false) }
                 savingsGoals.forEach { goal ->
-                    SavingsGoalCard(goal = goal)
+                    SavingsGoalCard(
+                        goal = goal,
+                        onEdit = {
+                            editGoal = goal
+                            showEditDialog = true
+                        },
+                        onDelete = {
+                            savingsGoalViewModel.deleteSavingsGoal(goal)
+                        }
+                    )
                     if (goal != savingsGoals.last()) {
                         Spacer(modifier = Modifier.height(12.dp))
                     }
+                }
+                if (showEditDialog && editGoal != null) {
+                    com.example.admin_ingresos.ui.savings.AddEditSavingsGoalDialog(
+                        initialName = editGoal!!.name,
+                        initialAmount = editGoal!!.targetAmount.toString(),
+                        initialColor = editGoal!!.color,
+                        initialIcon = editGoal!!.emoji,
+                        onConfirm = { name, amount, icon, color ->
+                            savingsGoalViewModel.updateSavingsGoal(
+                                editGoal!!.copy(
+                                    name = name,
+                                    targetAmount = amount,
+                                    emoji = icon,
+                                    color = color
+                                )
+                            )
+                            showEditDialog = false
+                        },
+                        onDismiss = { showEditDialog = false }
+                    )
                 }
             }
         }
     }
 }
 
+// CÓDIGO CORREGIDO Y REESTRUCTURADO
 @Composable
-private fun SavingsGoalCard(goal: com.example.admin_ingresos.data.model.SavingsGoal) {
+private fun SavingsGoalCard(
+    goal: com.example.admin_ingresos.data.model.SavingsGoal,
+    onEdit: (() -> Unit)? = null,
+    onDelete: (() -> Unit)? = null
+) {
     val progress = goal.progressPercentage
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
+    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE")) // Usando el locale de Perú
+    val goalColor = Color(android.graphics.Color.parseColor(goal.color))
 
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
         backgroundColor = GlassWhiteSubtle,
         cornerRadius = 16.dp
     ) {
-        Column {
+        // Contenedor principal que organiza todo verticalmente
+        Column(modifier = Modifier.padding(16.dp)) {
+
+            // Fila superior: Icono, Nombre de la meta y el menú de opciones
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                // Sección izquierda: Icono y nombre
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -1116,92 +1157,104 @@ private fun SavingsGoalCard(goal: com.example.admin_ingresos.data.model.SavingsG
                     Box(
                         modifier = Modifier
                             .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(android.graphics.Color.parseColor(goal.color)).copy(alpha = 0.2f))
-                            .border(1.dp, Color(android.graphics.Color.parseColor(goal.color)).copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(goalColor.copy(alpha = 0.2f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = LucideIconMapper.getSavingsGoalIcon(goal.emoji),
-                            contentDescription = null,
-                            tint = Color(android.graphics.Color.parseColor(goal.color)),
+                            contentDescription = goal.name,
+                            tint = goalColor,
                             modifier = Modifier.size(20.dp)
                         )
                     }
-
-                    Column {
-                        Text(
-                            text = goal.name,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = TextPrimary
-                        )
-                        if (goal.description != null) {
-                            Text(
-                                text = goal.description,
-                                fontSize = 12.sp,
-                                color = TextSecondary,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
+                    Text(
+                        text = goal.name,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
                 }
 
-                Column(
-                    horizontalAlignment = Alignment.End
-                ) {
-                    Text(
-                        text = "${(progress * 100).toInt()}%",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (goal.isCompleted) IncomeGreen else AccentVibrantStart
-                    )
-
-                    if (goal.isCompleted) {
+                // Sección derecha: Menú de opciones
+                var menuExpanded by remember { mutableStateOf(false) }
+                Box {
+                    IconButton(onClick = { menuExpanded = true }) {
                         Icon(
-                            imageVector = LucideIconMapper.Navigation.success,
-                            contentDescription = "Completado",
-                            tint = IncomeGreen,
-                            modifier = Modifier.size(16.dp)
+                            LucideIconMapper.Navigation.more,
+                            contentDescription = "Más opciones",
+                            tint = TextSecondary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Editar") },
+                            leadingIcon = { Icon(LucideIconMapper.Navigation.edit, null, tint = AccentVibrantStart) },
+                            onClick = {
+                                menuExpanded = false
+                                onEdit?.invoke()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Eliminar") },
+                            leadingIcon = { Icon(LucideIconMapper.Navigation.delete, null, tint = ExpenseRed) },
+                            onClick = {
+                                menuExpanded = false
+                                onDelete?.invoke()
+                            }
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
+            // Barra de progreso con esquinas redondeadas
             LinearProgressIndicator(
                 progress = progress,
-                modifier = Modifier.fillMaxWidth(),
-                color = if (goal.isCompleted) IncomeGreen else AccentVibrantStart,
-                trackColor = GlassWhiteSubtle
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(CircleShape),
+                color = if (goal.isCompleted) IncomeGreen else goalColor,
+                trackColor = GlassWhiteStrong
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Fila inferior: Monto actual, porcentaje y monto objetivo
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = formatter.format(goal.currentAmount),
                     fontSize = 12.sp,
                     color = TextSecondary,
-                    maxLines = 1,
-                    softWrap = false
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = "${(progress * 100).toInt()}%",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (goal.isCompleted) IncomeGreen else goalColor
                 )
                 Text(
                     text = formatter.format(goal.targetAmount),
                     fontSize = 12.sp,
                     color = TextSecondary,
-                    maxLines = 1,
-                    softWrap = false
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
     }
 }
+
 
 @Composable
 private fun WeeklyBarChart(
