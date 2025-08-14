@@ -1117,14 +1117,14 @@ private fun SavingsGoalCard(goal: com.example.admin_ingresos.data.model.SavingsG
                         modifier = Modifier
                             .size(40.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(AccentVibrantStart.copy(alpha = 0.2f))
-                            .border(1.dp, AccentVibrantStart.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
+                            .background(Color(android.graphics.Color.parseColor(goal.color)).copy(alpha = 0.2f))
+                            .border(1.dp, Color(android.graphics.Color.parseColor(goal.color)).copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = LucideIconMapper.getNavigationIcon(goal.emoji),
+                            imageVector = LucideIconMapper.getSavingsGoalIcon(goal.emoji),
                             contentDescription = null,
-                            tint = AccentVibrantStart,
+                            tint = Color(android.graphics.Color.parseColor(goal.color)),
                             modifier = Modifier.size(20.dp)
                         )
                     }
