@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -19,22 +20,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.admin_ingresos.data.model.SavingsGoal
 import com.example.admin_ingresos.ui.components.*
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.*
-import com.example.admin_ingresos.data.model.SavingsGoal
-import kotlinx.coroutines.delay
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.random.Random
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -264,7 +262,7 @@ fun DashboardScreen(
                     visible = !uiState.isLoading,
                     enter = slideInVertically(initialOffsetY = { it / 8 }) + fadeIn()
                 ) {
-                    // TODO: Agregar gráfico de flujo de efectivo semanal aquí si se implementa
+                    WeeklyCashFlowSection()
                 }
             }
         }
@@ -653,7 +651,7 @@ private fun DonutChart(
                 fontWeight = FontWeight.Medium
             )
             Text(
-                text = if (totalAmount > 0) formatter.format(totalAmount) else "$0",
+                text = if (totalAmount > 0) formatter.format(totalAmount) else "S/0.00",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary,
@@ -1030,17 +1028,14 @@ private fun SavingsGoalsSection() {
                     )
                 }
                 if (showAddGoal) {
-                    // ÚNICA CORRECCIÓN APLICADA AQUÍ:
                     com.example.admin_ingresos.ui.savings.AddEditSavingsGoalDialog(
-                        // 1. Los parámetros recibidos ahora son los correctos
                         onConfirm = { name, amount, icon, color ->
-                            // 2. Se usan esos parámetros para llamar al ViewModel
                             savingsGoalViewModel.addSavingsGoal(
                                 name = name,
-                                targetAmount = amount, // Se usa el `amount` del diálogo
+                                targetAmount = amount,
                                 emoji = icon,
                                 color = color,
-                                description = "" // La descripción ya no se pide, se envía vacía
+                                description = ""
                             )
                             showAddGoal = false
                         },
@@ -1093,6 +1088,9 @@ private fun SavingsGoalsSection() {
                         },
                         onDelete = {
                             savingsGoalViewModel.deleteSavingsGoal(goal)
+                        },
+                        onAddMoney = { amount ->
+                            savingsGoalViewModel.addProgress(goal.id, amount)
                         }
                     )
                     if (goal != savingsGoals.last()) {
@@ -1124,32 +1122,30 @@ private fun SavingsGoalsSection() {
     }
 }
 
-// CÓDIGO CORREGIDO Y REESTRUCTURADO
 @Composable
 private fun SavingsGoalCard(
     goal: com.example.admin_ingresos.data.model.SavingsGoal,
     onEdit: (() -> Unit)? = null,
-    onDelete: (() -> Unit)? = null
+    onDelete: (() -> Unit)? = null,
+    onAddMoney: ((Double) -> Unit)? = null
 ) {
     val progress = goal.progressPercentage
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE")) // Usando el locale de Perú
+    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
     val goalColor = Color(android.graphics.Color.parseColor(goal.color))
+    var showAddMoneyDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
 
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
         backgroundColor = GlassWhiteSubtle,
         cornerRadius = 16.dp
     ) {
-        // Contenedor principal que organiza todo verticalmente
         Column(modifier = Modifier.padding(16.dp)) {
-
-            // Fila superior: Icono, Nombre de la meta y el menú de opciones
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Sección izquierda: Icono y nombre
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -1176,44 +1172,52 @@ private fun SavingsGoalCard(
                     )
                 }
 
-                // Sección derecha: Menú de opciones
                 var menuExpanded by remember { mutableStateOf(false) }
-                Box {
-                    IconButton(onClick = { menuExpanded = true }) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { showAddMoneyDialog = true }) {
                         Icon(
-                            LucideIconMapper.Navigation.more,
-                            contentDescription = "Más opciones",
-                            tint = TextSecondary,
-                            modifier = Modifier.size(20.dp)
+                            imageVector = LucideIconMapper.getNavigationIcon("DollarSign"),
+                            contentDescription = "Agregar dinero",
+                            tint = AccentVibrantStart,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
-                    DropdownMenu(
-                        expanded = menuExpanded,
-                        onDismissRequest = { menuExpanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Editar") },
-                            leadingIcon = { Icon(LucideIconMapper.Navigation.edit, null, tint = AccentVibrantStart) },
-                            onClick = {
-                                menuExpanded = false
-                                onEdit?.invoke()
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Eliminar") },
-                            leadingIcon = { Icon(LucideIconMapper.Navigation.delete, null, tint = ExpenseRed) },
-                            onClick = {
-                                menuExpanded = false
-                                onDelete?.invoke()
-                            }
-                        )
+                    Box {
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(
+                                LucideIconMapper.Navigation.more,
+                                contentDescription = "Más opciones",
+                                tint = TextSecondary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Editar") },
+                                leadingIcon = { Icon(LucideIconMapper.Navigation.edit, null, tint = AccentVibrantStart) },
+                                onClick = {
+                                    menuExpanded = false
+                                    onEdit?.invoke()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Eliminar") },
+                                leadingIcon = { Icon(LucideIconMapper.Navigation.delete, null, tint = ExpenseRed) },
+                                onClick = {
+                                    menuExpanded = false
+                                    showDeleteConfirmDialog = true
+                                }
+                            )
+                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Barra de progreso con esquinas redondeadas
             LinearProgressIndicator(
                 progress = progress,
                 modifier = Modifier
@@ -1226,7 +1230,6 @@ private fun SavingsGoalCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Fila inferior: Monto actual, porcentaje y monto objetivo
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1253,8 +1256,158 @@ private fun SavingsGoalCard(
             }
         }
     }
+
+    if (showAddMoneyDialog) {
+        AddMoneyDialog(
+            onConfirm = { amount ->
+                onAddMoney?.invoke(amount)
+                showAddMoneyDialog = false
+            },
+            onDismiss = { showAddMoneyDialog = false }
+        )
+    }
+
+    if (showDeleteConfirmDialog) {
+        DeleteConfirmationDialog(
+            goalName = goal.name,
+            onConfirm = {
+                onDelete?.invoke()
+                showDeleteConfirmDialog = false
+            },
+            onDismiss = {
+                showDeleteConfirmDialog = false
+            }
+        )
+    }
 }
 
+@Composable
+private fun AddMoneyDialog(
+    onConfirm: (Double) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var amountText by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(
+                onClick = {
+                    val amount = amountText.toDoubleOrNull()
+                    if (amount != null && amount > 0) {
+                        onConfirm(amount)
+                    }
+                }
+            ) { Text("Agregar") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        },
+        title = { Text("Agregar dinero a la meta") },
+        text = {
+            OutlinedTextField(
+                value = amountText,
+                onValueChange = { amountText = it },
+                label = { Text("Monto") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true
+            )
+        }
+    )
+}
+
+@Composable
+private fun DeleteConfirmationDialog(
+    goalName: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Confirmar Eliminación") },
+        text = {
+            Text("¿Estás seguro de que quieres eliminar la meta \"$goalName\"? Esta acción no se puede deshacer.")
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ExpenseRed,
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Eliminar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
+}
+
+@Composable
+private fun WeeklyCashFlowSection() {
+    // Datos de ejemplo para el gráfico. Puedes reemplazarlos con datos reales de tu ViewModel.
+    val weeklyData = remember {
+        listOf(
+            DayData("Lun", 150.50, 80.0),
+            DayData("Mar", 200.0, 120.75),
+            DayData("Mié", 50.25, 180.0),
+            DayData("Jue", 300.0, 95.50),
+            DayData("Vie", 120.0, 250.0),
+            DayData("Sáb", 450.0, 150.0),
+            DayData("Dom", 25.0, 60.0)
+        )
+    }
+
+    // Calcula el valor máximo para escalar las barras correctamente.
+    val maxValue = remember(weeklyData) {
+        weeklyData.maxOfOrNull { maxOf(it.income, it.expense) } ?: 1.0
+    }
+
+    GlassCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = GlassWhite,
+        cornerRadius = 20.dp
+    ) {
+        Column {
+            Text(
+                text = "Flujo Semanal",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            // Contenedor para las barras del gráfico
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp), // Altura fija para el área del gráfico
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                weeklyData.forEach { dayData ->
+                    WeeklyBarChart(day = dayData, maxValue = maxValue)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Leyenda para los colores del gráfico
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                LegendItem(color = IncomeGreen, label = "Ingresos")
+                Spacer(modifier = Modifier.width(24.dp))
+                LegendItem(color = ExpenseRed, label = "Gastos")
+            }
+        }
+    }
+}
 
 @Composable
 private fun WeeklyBarChart(
