@@ -25,10 +25,11 @@ class SavingsGoalViewModel(private val database: AppDatabase) : ViewModel() {
     fun addSavingsGoal(
         name: String,
         targetAmount: Double,
-        emoji: String,
-        description: String? = null,
-        targetDate: Date? = null,
-        priority: Int = 0
+    emoji: String,
+    color: String = "#4CAF50",
+    description: String? = null,
+    targetDate: Date? = null,
+    priority: Int = 0
     ) {
         viewModelScope.launch {
             try {
@@ -36,6 +37,7 @@ class SavingsGoalViewModel(private val database: AppDatabase) : ViewModel() {
                     name = name,
                     targetAmount = targetAmount,
                     emoji = emoji,
+                    color = color,
                     description = description,
                     targetDate = targetDate,
                     priority = priority

@@ -14,11 +14,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -29,7 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.admin_ingresos.ui.components.*
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.*
-// import com.example.admin_ingresos.data.model.SavingsGoal // Temporalmente comentado
+import com.example.admin_ingresos.data.model.SavingsGoal
 import kotlinx.coroutines.delay
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -38,26 +36,6 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
 
-// Clase temporal para metas de ahorro hasta configurar la base de datos
-data class SavingsGoal(
-    val id: Long = 0,
-    val name: String,
-    val targetAmount: Double,
-    val currentAmount: Double = 0.0,
-    val emoji: String,
-    val description: String? = null,
-    val isActive: Boolean = true,
-    val priority: Int = 0
-) {
-    val progressPercentage: Float
-        get() = if (targetAmount > 0) (currentAmount / targetAmount).toFloat().coerceAtMost(1f) else 0f
-    
-    val remainingAmount: Double
-        get() = (targetAmount - currentAmount).coerceAtLeast(0.0)
-    
-    val isCompleted: Boolean
-        get() = currentAmount >= targetAmount
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,242 +48,230 @@ fun DashboardScreen(
     val context = LocalContext.current
     val db = remember { com.example.admin_ingresos.AppDatabaseProvider.getDatabase(context) }
     val repository = remember { com.example.admin_ingresos.data.TransactionRepository(db) }
-    
-    // ViewModel con factory
+
     val dashboardViewModel: DashboardViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")
             return DashboardViewModel(repository, db) as T
         }
     })
-    
-    // Estados del dashboard desde el ViewModel
+
     val uiState by dashboardViewModel.uiState.collectAsState()
     var userName by remember { mutableStateOf("Usuario") }
-    
-    // Efectos de animación
+
     var isVisible by remember { mutableStateOf(false) }
     val animatedBalance by animateFloatAsState(
         targetValue = if (isVisible) uiState.currentBalance.toFloat() else 0f,
         animationSpec = tween(durationMillis = 1500, easing = FastOutSlowInEasing),
         label = "balance_animation"
     )
-    
-    // Activar animaciones cuando se carguen los datos
+
     LaunchedEffect(uiState.isLoading) {
         if (!uiState.isLoading) {
             isVisible = true
         }
     }
-    
-    GlassmorphismScreen {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Header con saludo y notificaciones
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
+            .background(color = Background),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(top = 16.dp)
+    ) {
+        // Encabezado del Dashboard
+        item {
+            DashboardHeader(
+                userName = userName,
+                onNotificationClick = { /*TODO*/ },
+                onProfileClick = onNavigateToSettings
+            )
+        }
+
+        // Manejo de estados de carga y error
+        if (uiState.isLoading) {
             item {
-                DashboardHeader(
-                    userName = userName,
-                    onNotificationClick = { /* TODO: Implementar notificaciones */ },
-                    onProfileClick = { onNavigateToSettings() }
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentSize(Alignment.Center)
                 )
             }
-            
-            // Mostrar loading o error
-            if (uiState.isLoading) {
-                item {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
+        } else if (uiState.error != null) {
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Error,
+                        contentDescription = "Error",
+                        tint = ExpenseRed,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Text(
+                        text = "Error al cargar datos",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextPrimary
+                    )
+                    Text(
+                        text = uiState.error ?: "Error desconocido",
+                        fontSize = 14.sp,
+                        color = TextSecondary,
+                        textAlign = TextAlign.Center
+                    )
+                    Button(
+                        onClick = { dashboardViewModel.refreshData() },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AccentVibrantStart
+                        )
                     ) {
-                        CircularProgressIndicator(
-                            color = AccentVibrantStart,
-                            modifier = Modifier.padding(32.dp)
+                        Text("Reintentar")
+                    }
+                }
+            }
+        } else {
+            // Tarjetas de balance principal
+            item {
+                AnimatedVisibility(
+                    visible = !uiState.isLoading,
+                    enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
+                ) {
+                    MainBalanceCards(
+                        currentBalance = animatedBalance.toDouble(),
+                        monthlyIncome = uiState.monthlyIncome,
+                        monthlyExpenses = uiState.monthlyExpenses,
+                        onViewDetails = { onNavigateToReports() }
+                    )
+                }
+            }
+
+            // Acciones rápidas
+            item {
+                AnimatedVisibility(
+                    visible = !uiState.isLoading,
+                    enter = slideInVertically(initialOffsetY = { it / 3 }) + fadeIn()
+                ) {
+                    QuickActionsSection(
+                        onAddTransaction = onNavigateToAddTransaction,
+                        onViewTransactions = onNavigateToTransactions,
+                        onViewReports = onNavigateToReports,
+                        onViewBudget = { /* TODO: Implementar presupuesto */ }
+                    )
+                }
+            }
+
+            // Gráfico de gastos por categoría (solo si hay datos)
+            if (uiState.categoryExpenses.isNotEmpty()) {
+                item {
+                    AnimatedVisibility(
+                        visible = !uiState.isLoading,
+                        enter = slideInVertically(initialOffsetY = { it / 4 }) + fadeIn()
+                    ) {
+                        ExpensesByCategoryChart(categories = uiState.categoryExpenses)
+                    }
+                }
+            }
+
+            // Tendencias y comparaciones
+            item {
+                AnimatedVisibility(
+                    visible = !uiState.isLoading,
+                    enter = slideInVertically(initialOffsetY = { it / 5 }) + fadeIn()
+                ) {
+                    TrendsAndInsights(
+                        monthlyIncome = uiState.monthlyIncome,
+                        monthlyExpenses = uiState.monthlyExpenses
+                    )
+                }
+            }
+
+            // Transacciones recientes (solo si hay datos)
+            if (uiState.recentTransactions.isNotEmpty()) {
+                item {
+                    AnimatedVisibility(
+                        visible = !uiState.isLoading,
+                        enter = slideInVertically(initialOffsetY = { it / 6 }) + fadeIn()
+                    ) {
+                        RecentTransactionsSection(
+                            transactions = uiState.recentTransactions,
+                            onViewAll = onNavigateToTransactions
                         )
                     }
                 }
-            } else if (uiState.error != null) {
+            } else {
+                // Mostrar mensaje cuando no hay transacciones
                 item {
                     GlassCard(
                         modifier = Modifier.fillMaxWidth(),
-                        backgroundColor = Color(0x20FF6B6B),
-                        borderColor = Color(0x60FF6B6B)
+                        backgroundColor = GlassWhiteSubtle
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.padding(16.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Error,
-                                contentDescription = "Error",
-                                tint = Color(0xFFFF6B6B),
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Sin transacciones",
+                                tint = TextSecondary,
                                 modifier = Modifier.size(48.dp)
                             )
                             Text(
-                                text = "Error al cargar datos",
-                                fontSize = 16.sp,
+                                text = "¡Comienza a registrar transacciones!",
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = TextPrimary
+                                color = TextPrimary,
+                                textAlign = TextAlign.Center
                             )
                             Text(
-                                text = uiState.error ?: "Error desconocido",
+                                text = "Agrega tu primera transacción para ver estadísticas y gráficos",
                                 fontSize = 14.sp,
                                 color = TextSecondary,
                                 textAlign = TextAlign.Center
                             )
                             Button(
-                                onClick = { dashboardViewModel.refreshData() },
+                                onClick = onNavigateToAddTransaction,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = AccentVibrantStart
                                 )
                             ) {
-                                Text("Reintentar")
+                                Icon(imageVector = Icons.Default.Add, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Agregar Transacción")
                             }
                         }
-                    }
-                }
-            } else {
-                // Tarjetas de balance principal
-                item {
-                    AnimatedVisibility(
-                        visible = !uiState.isLoading,
-                        enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
-                    ) {
-                        MainBalanceCards(
-                            currentBalance = animatedBalance.toDouble(),
-                            monthlyIncome = uiState.monthlyIncome,
-                            monthlyExpenses = uiState.monthlyExpenses,
-                            onViewDetails = { onNavigateToReports() }
-                        )
-                    }
-                }
-                
-                // Acciones rápidas
-                item {
-                    AnimatedVisibility(
-                        visible = !uiState.isLoading,
-                        enter = slideInVertically(initialOffsetY = { it / 3 }) + fadeIn()
-                    ) {
-                        QuickActionsSection(
-                            onAddTransaction = onNavigateToAddTransaction,
-                            onViewTransactions = onNavigateToTransactions,
-                            onViewReports = onNavigateToReports,
-                            onViewBudget = { /* TODO: Implementar presupuesto */ }
-                        )
-                    }
-                }
-                
-                // Gráfico de gastos por categoría (solo si hay datos)
-                if (uiState.categoryExpenses.isNotEmpty()) {
-                    item {
-                        AnimatedVisibility(
-                            visible = !uiState.isLoading,
-                            enter = slideInVertically(initialOffsetY = { it / 4 }) + fadeIn()
-                        ) {
-                            ExpensesByCategoryChart(categories = uiState.categoryExpenses)
-                        }
-                    }
-                }
-                
-                // Tendencias y comparaciones
-                item {
-                    AnimatedVisibility(
-                        visible = !uiState.isLoading,
-                        enter = slideInVertically(initialOffsetY = { it / 5 }) + fadeIn()
-                    ) {
-                        TrendsAndInsights(
-                            monthlyIncome = uiState.monthlyIncome,
-                            monthlyExpenses = uiState.monthlyExpenses
-                        )
-                    }
-                }
-                
-                // Transacciones recientes (solo si hay datos)
-                if (uiState.recentTransactions.isNotEmpty()) {
-                    item {
-                        AnimatedVisibility(
-                            visible = !uiState.isLoading,
-                            enter = slideInVertically(initialOffsetY = { it / 6 }) + fadeIn()
-                        ) {
-                            RecentTransactionsSection(
-                                transactions = uiState.recentTransactions,
-                                onViewAll = onNavigateToTransactions
-                            )
-                        }
-                    }
-                } else if (!uiState.isLoading) {
-                    // Mostrar mensaje cuando no hay transacciones
-                    item {
-                        GlassCard(
-                            modifier = Modifier.fillMaxWidth(),
-                            backgroundColor = GlassWhiteSubtle
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "Sin transacciones",
-                                    tint = TextSecondary,
-                                    modifier = Modifier.size(48.dp)
-                                )
-                                Text(
-                                    text = "¡Comienza a registrar transacciones!",
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = TextPrimary,
-                                    textAlign = TextAlign.Center
-                                )
-                                Text(
-                                    text = "Agrega tu primera transacción para ver estadísticas y gráficos",
-                                    fontSize = 14.sp,
-                                    color = TextSecondary,
-                                    textAlign = TextAlign.Center
-                                )
-                                Button(
-                                    onClick = onNavigateToAddTransaction,
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = AccentVibrantStart
-                                    )
-                                ) {
-                                    Icon(imageVector = Icons.Default.Add, contentDescription = null)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Agregar Transacción")
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // Metas de ahorro (conectadas a la base de datos)
-                item {
-                    AnimatedVisibility(
-                        visible = !uiState.isLoading,
-                        enter = slideInVertically(initialOffsetY = { it / 7 }) + fadeIn()
-                    ) {
-                        SavingsGoalsSection()
-                    }
-                }
-                
-                // Flujo de efectivo semanal (con datos reales)
-                item {
-                    AnimatedVisibility(
-                        visible = !uiState.isLoading,
-                        enter = slideInVertically(initialOffsetY = { it / 8 }) + fadeIn()
-                    ) {
-                        WeeklyCashFlowChart()
                     }
                 }
             }
-            
-            // Spacer inferior
+
+            // Metas de ahorro
             item {
-                Spacer(modifier = Modifier.height(32.dp))
+                AnimatedVisibility(
+                    visible = !uiState.isLoading,
+                    enter = slideInVertically(initialOffsetY = { it / 7 }) + fadeIn()
+                ) {
+                    SavingsGoalsSection()
+                }
             }
+
+            // Flujo de efectivo semanal
+            item {
+                AnimatedVisibility(
+                    visible = !uiState.isLoading,
+                    enter = slideInVertically(initialOffsetY = { it / 8 }) + fadeIn()
+                ) {
+                    // TODO: Agregar gráfico de flujo de efectivo semanal aquí si se implementa
+                }
+            }
+        }
+
+        // Spacer inferior
+        item {
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -322,7 +288,7 @@ private fun DashboardHeader(
         in 12..17 -> "Buenas tardes"
         else -> "Buenas noches"
     }
-    
+
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
         backgroundColor = GlassWhiteStrong,
@@ -352,7 +318,7 @@ private fun DashboardHeader(
                     color = TextSecondary
                 )
             }
-            
+
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 IconButton(
                     onClick = onNotificationClick,
@@ -369,7 +335,7 @@ private fun DashboardHeader(
                         tint = TextPrimary
                     )
                 }
-                
+
                 IconButton(
                     onClick = onProfileClick,
                     modifier = Modifier
@@ -402,9 +368,8 @@ private fun MainBalanceCards(
     val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
     val balanceChange = monthlyIncome - monthlyExpenses
     val balanceChangePercent = if (monthlyExpenses > 0) (balanceChange / monthlyExpenses) * 100 else 0.0
-    
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // Balance principal
         AdvancedBalanceCard(
             title = "Balance Total",
             amount = formatter.format(currentBalance),
@@ -412,8 +377,7 @@ private fun MainBalanceCards(
             onClick = onViewDetails,
             modifier = Modifier.fillMaxWidth()
         )
-        
-        // Tarjetas de ingresos y gastos - diseño mejorado y simétrico
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -426,7 +390,7 @@ private fun MainBalanceCards(
                 color = IncomeGreen,
                 modifier = Modifier.weight(1f)
             )
-            
+
             AdvancedMetricCard(
                 title = "Gastos",
                 value = formatter.format(monthlyExpenses),
@@ -459,7 +423,7 @@ private fun QuickActionsSection(
                 color = TextPrimary,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -471,7 +435,7 @@ private fun QuickActionsSection(
                     onClick = onAddTransaction,
                     gradient = listOf(AccentVibrantStart, AccentVibrantEnd)
                 )
-                
+
                 QuickActionButton(
                     icon = LucideIconMapper.Navigation.transactions,
                     title = "Ver",
@@ -479,7 +443,7 @@ private fun QuickActionsSection(
                     onClick = onViewTransactions,
                     gradient = listOf(Color(0xFF667EEA), Color(0xFF764BA2))
                 )
-                
+
                 QuickActionButton(
                     icon = LucideIconMapper.Navigation.reports,
                     title = "Reportes",
@@ -487,7 +451,7 @@ private fun QuickActionsSection(
                     onClick = onViewReports,
                     gradient = listOf(Color(0xFFFF6B6B), Color(0xFFFFE66D))
                 )
-                
+
                 QuickActionButton(
                     icon = LucideIconMapper.getNavigationIcon("DollarSign"),
                     title = "Presupuesto",
@@ -528,9 +492,9 @@ private fun QuickActionButton(
                 modifier = Modifier.size(24.dp)
             )
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Text(
             text = title,
             fontSize = 12.sp,
@@ -538,7 +502,7 @@ private fun QuickActionButton(
             color = TextPrimary,
             textAlign = TextAlign.Center
         )
-        
+
         Text(
             text = subtitle,
             fontSize = 10.sp,
@@ -567,7 +531,7 @@ private fun ExpensesByCategoryChart(categories: List<CategoryExpense>) {
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
-                
+
                 TextButton(onClick = { /* TODO: Ver detalles */ }) {
                     Text(
                         text = "Ver todo",
@@ -576,11 +540,10 @@ private fun ExpensesByCategoryChart(categories: List<CategoryExpense>) {
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             if (categories.isNotEmpty()) {
-                // Gráfico circular con datos reales
                 DonutChart(
                     categories = categories.map { CategoryData(it.name, it.percentage, it.color) },
                     modifier = Modifier
@@ -589,10 +552,9 @@ private fun ExpensesByCategoryChart(categories: List<CategoryExpense>) {
                         .padding(vertical = 10.dp),
                     totalAmount = categories.sumOf { it.amount }
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
-                // Leyenda con datos reales
+
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
@@ -604,7 +566,6 @@ private fun ExpensesByCategoryChart(categories: List<CategoryExpense>) {
                     }
                 }
             } else {
-                // Mensaje cuando no hay datos
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -637,37 +598,36 @@ private fun DonutChart(
     totalAmount: Double = 0.0
 ) {
     val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
-    
+
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        // Asegurar que el Canvas sea cuadrado para mantener la forma circular
         val size = 200.dp
         Canvas(
             modifier = Modifier
                 .size(size)
-                .aspectRatio(1f) // Forzar proporción 1:1 para un círculo perfecto
+                .aspectRatio(1f)
         ) {
             val total = categories.sumOf { it.percentage.toDouble() }
             var currentAngle = -90f
             val canvasSize = this.size.minDimension
-            val strokeWidth = (canvasSize * 0.2f) // 20% del diámetro para el grosor del anillo
+            val strokeWidth = (canvasSize * 0.2f)
             val radius = (canvasSize - strokeWidth) / 2f
             val center = androidx.compose.ui.geometry.Offset(
                 x = this.size.width / 2f,
                 y = this.size.height / 2f
             )
-            
+
             categories.forEach { category ->
                 val sweepAngle = (category.percentage / total * 360).toFloat()
-                
+
                 drawArc(
                     color = category.color,
                     startAngle = currentAngle,
                     sweepAngle = sweepAngle,
                     useCenter = false,
-                    style = Stroke(strokeWidth),
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(strokeWidth),
                     topLeft = androidx.compose.ui.geometry.Offset(
                         x = center.x - radius - strokeWidth / 2f,
                         y = center.y - radius - strokeWidth / 2f
@@ -677,12 +637,11 @@ private fun DonutChart(
                         height = (radius + strokeWidth / 2f) * 2f
                     )
                 )
-                
+
                 currentAngle += sweepAngle
             }
         }
-        
-        // Contenido central del donut - mejorado para evitar saltos de línea
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 8.dp)
@@ -709,7 +668,7 @@ private fun DonutChart(
 @Composable
 private fun CategoryLegendItem(category: CategoryData, amount: Double = 0.0) {
     val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
-    
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -720,7 +679,7 @@ private fun CategoryLegendItem(category: CategoryData, amount: Double = 0.0) {
                 .size(12.dp)
                 .background(category.color, CircleShape)
         )
-        
+
         Column {
             Text(
                 text = category.name,
@@ -748,7 +707,7 @@ private fun TrendsAndInsights(
 ) {
     val savingsRate = if (monthlyIncome > 0) ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 else 0.0
     val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
-    
+
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
         backgroundColor = GlassWhite,
@@ -762,7 +721,7 @@ private fun TrendsAndInsights(
                 color = TextPrimary,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -775,7 +734,7 @@ private fun TrendsAndInsights(
                     color = if (savingsRate >= 20) IncomeGreen else Color(0xFFFBBF24),
                     modifier = Modifier.weight(1f)
                 )
-                
+
                 InsightCard(
                     title = "Promedio Diario",
                     value = formatter.format(monthlyExpenses / 30),
@@ -785,10 +744,9 @@ private fun TrendsAndInsights(
                     modifier = Modifier.weight(1f)
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
-            // Barra de progreso de ahorro
+
             Column {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -806,9 +764,9 @@ private fun TrendsAndInsights(
                         fontWeight = FontWeight.Medium
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 LinearProgressIndicator(
                     progress = (savingsRate / 25.0).toFloat().coerceAtMost(1f),
                     modifier = Modifier.fillMaxWidth(),
@@ -851,7 +809,7 @@ private fun InsightCard(
                     modifier = Modifier.size(20.dp)
                 )
             }
-            
+
             Column {
                 Text(
                     text = value,
@@ -896,7 +854,7 @@ private fun RecentTransactionsSection(
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
-                
+
                 TextButton(onClick = onViewAll) {
                     Text(
                         text = "Ver todas",
@@ -905,9 +863,9 @@ private fun RecentTransactionsSection(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             transactions.take(5).forEach { transaction ->
                 DashboardTransactionItemCard(transaction = transaction)
                 if (transaction != transactions.last()) {
@@ -921,7 +879,7 @@ private fun RecentTransactionsSection(
 @Composable
 private fun DashboardTransactionItemCard(transaction: DashboardTransaction) {
     val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
-    
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -947,7 +905,7 @@ private fun DashboardTransactionItemCard(transaction: DashboardTransaction) {
                     modifier = Modifier.size(20.dp)
                 )
             }
-            
+
             Column {
                 Text(
                     text = transaction.description,
@@ -964,7 +922,7 @@ private fun DashboardTransactionItemCard(transaction: DashboardTransaction) {
                 )
             }
         }
-        
+
         Text(
             text = "${if (transaction.isIncome) "+" else "-"}${formatter.format(transaction.amount)}",
             fontSize = 14.sp,
@@ -977,7 +935,7 @@ private fun DashboardTransactionItemCard(transaction: DashboardTransaction) {
 @Composable
 private fun TransactionItemCard(transaction: TransactionItem) {
     val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
-    
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1003,7 +961,7 @@ private fun TransactionItemCard(transaction: TransactionItem) {
                     modifier = Modifier.size(20.dp)
                 )
             }
-            
+
             Column {
                 Text(
                     text = transaction.description,
@@ -1020,7 +978,7 @@ private fun TransactionItemCard(transaction: TransactionItem) {
                 )
             }
         }
-        
+
         Text(
             text = "${if (transaction.isIncome) "+" else "-"}${formatter.format(transaction.amount)}",
             fontSize = 14.sp,
@@ -1032,36 +990,16 @@ private fun TransactionItemCard(transaction: TransactionItem) {
 
 @Composable
 private fun SavingsGoalsSection() {
-    // Datos temporales hasta configurar la base de datos
-    val mockSavingsGoals = remember {
-        listOf(
-            SavingsGoal(
-                id = 1,
-                name = "Vacaciones",
-                targetAmount = 2500000.0,
-                currentAmount = 1800000.0,
-                emoji = "🏖️",
-                description = "Viaje a la playa"
-            ),
-            SavingsGoal(
-                id = 2,
-                name = "Emergencia",
-                targetAmount = 5000000.0,
-                currentAmount = 3200000.0,
-                emoji = "🚨",
-                description = "Fondo de emergencias"
-            ),
-            SavingsGoal(
-                id = 3,
-                name = "Nuevo Auto",
-                targetAmount = 15000000.0,
-                currentAmount = 4500000.0,
-                emoji = "🚗",
-                description = "Auto nuevo"
-            )
-        )
-    }
-    
+    val context = LocalContext.current
+    val db = remember { com.example.admin_ingresos.AppDatabaseProvider.getDatabase(context) }
+    val savingsGoalViewModel: com.example.admin_ingresos.viewmodel.SavingsGoalViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+            @Suppress("UNCHECKED_CAST")
+            return com.example.admin_ingresos.viewmodel.SavingsGoalViewModel(db) as T
+        }
+    })
+    val savingsGoals by savingsGoalViewModel.savingsGoals.collectAsState()
+
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
         backgroundColor = GlassWhite,
@@ -1079,9 +1017,10 @@ private fun SavingsGoalsSection() {
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
-                
+
+                var showAddGoal by remember { mutableStateOf(false) }
                 IconButton(
-                    onClick = { /* TODO: Abrir pantalla agregar meta */ }
+                    onClick = { showAddGoal = true }
                 ) {
                     Icon(
                         imageVector = LucideIconMapper.Navigation.add,
@@ -1090,12 +1029,29 @@ private fun SavingsGoalsSection() {
                         modifier = Modifier.size(20.dp)
                     )
                 }
+                if (showAddGoal) {
+                    // ÚNICA CORRECCIÓN APLICADA AQUÍ:
+                    com.example.admin_ingresos.ui.savings.AddEditSavingsGoalDialog(
+                        // 1. Los parámetros recibidos ahora son los correctos
+                        onConfirm = { name, amount, icon, color ->
+                            // 2. Se usan esos parámetros para llamar al ViewModel
+                            savingsGoalViewModel.addSavingsGoal(
+                                name = name,
+                                targetAmount = amount, // Se usa el `amount` del diálogo
+                                emoji = icon,
+                                color = color,
+                                description = "" // La descripción ya no se pide, se envía vacía
+                            )
+                            showAddGoal = false
+                        },
+                        onDismiss = { showAddGoal = false }
+                    )
+                }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
-            if (mockSavingsGoals.isEmpty()) {
-                // Estado vacío
+
+            if (savingsGoals.isEmpty()) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1108,16 +1064,16 @@ private fun SavingsGoalsSection() {
                         tint = TextSecondary,
                         modifier = Modifier.size(48.dp)
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     Text(
                         text = "No tienes metas de ahorro",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium,
                         color = TextSecondary
                     )
-                    
+
                     Text(
                         text = "Crea tu primera meta para empezar a ahorrar",
                         fontSize = 14.sp,
@@ -1126,9 +1082,9 @@ private fun SavingsGoalsSection() {
                     )
                 }
             } else {
-                mockSavingsGoals.forEach { goal ->
+                savingsGoals.forEach { goal ->
                     SavingsGoalCard(goal = goal)
-                    if (goal != mockSavingsGoals.last()) {
+                    if (goal != savingsGoals.last()) {
                         Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
@@ -1138,10 +1094,10 @@ private fun SavingsGoalsSection() {
 }
 
 @Composable
-private fun SavingsGoalCard(goal: SavingsGoal) {
+private fun SavingsGoalCard(goal: com.example.admin_ingresos.data.model.SavingsGoal) {
     val progress = goal.progressPercentage
     val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
-    
+
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
         backgroundColor = GlassWhiteSubtle,
@@ -1157,7 +1113,6 @@ private fun SavingsGoalCard(goal: SavingsGoal) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Icono con fondo glassmorphism
                     Box(
                         modifier = Modifier
                             .size(40.dp)
@@ -1167,13 +1122,13 @@ private fun SavingsGoalCard(goal: SavingsGoal) {
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = LucideIconMapper.getIconFromEmoji(goal.emoji),
+                            imageVector = LucideIconMapper.getNavigationIcon(goal.emoji),
                             contentDescription = null,
                             tint = AccentVibrantStart,
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    
+
                     Column {
                         Text(
                             text = goal.name,
@@ -1192,7 +1147,7 @@ private fun SavingsGoalCard(goal: SavingsGoal) {
                         }
                     }
                 }
-                
+
                 Column(
                     horizontalAlignment = Alignment.End
                 ) {
@@ -1202,7 +1157,7 @@ private fun SavingsGoalCard(goal: SavingsGoal) {
                         fontWeight = FontWeight.SemiBold,
                         color = if (goal.isCompleted) IncomeGreen else AccentVibrantStart
                     )
-                    
+
                     if (goal.isCompleted) {
                         Icon(
                             imageVector = LucideIconMapper.Navigation.success,
@@ -1213,18 +1168,18 @@ private fun SavingsGoalCard(goal: SavingsGoal) {
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             LinearProgressIndicator(
                 progress = progress,
                 modifier = Modifier.fillMaxWidth(),
                 color = if (goal.isCompleted) IncomeGreen else AccentVibrantStart,
                 trackColor = GlassWhiteSubtle
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -1249,130 +1204,13 @@ private fun SavingsGoalCard(goal: SavingsGoal) {
 }
 
 @Composable
-private fun WeeklyCashFlowChart() {
-    val weeklyData = remember {
-        listOf(
-            DayData("L", 150000.0, 80000.0),
-            DayData("M", 200000.0, 120000.0),
-            DayData("X", 100000.0, 95000.0),
-            DayData("J", 180000.0, 140000.0),
-            DayData("V", 220000.0, 180000.0),
-            DayData("S", 300000.0, 250000.0),
-            DayData("D", 120000.0, 90000.0)
-        )
-    }
-    
-    GlassCard(
-        modifier = Modifier.fillMaxWidth(),
-        backgroundColor = GlassWhite,
-        cornerRadius = 20.dp
-    ) {
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Flujo de Efectivo Semanal",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-                
-                IconButton(
-                    onClick = { /* TODO: Ver detalles semanales */ }
-                ) {
-                    Icon(
-                        imageVector = LucideIconMapper.Navigation.more,
-                        contentDescription = "Más opciones",
-                        tint = TextSecondary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            if (weeklyData.isEmpty() || weeklyData.all { it.income == 0.0 && it.expense == 0.0 }) {
-                // Estado vacío
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = LucideIconMapper.Navigation.reports,
-                        contentDescription = null,
-                        tint = TextSecondary,
-                        modifier = Modifier.size(48.dp)
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    Text(
-                        text = "Sin transacciones esta semana",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextSecondary
-                    )
-                    
-                    Text(
-                        text = "Los datos aparecerán cuando agregues transacciones",
-                        fontSize = 14.sp,
-                        color = TextSecondary.copy(alpha = 0.7f),
-                        textAlign = TextAlign.Center
-                    )
-                }
-            } else {
-                // Gráfico de barras con datos reales
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    weeklyData.forEach { day ->
-                        WeeklyBarChart(
-                            day = day,
-                            maxValue = weeklyData.maxOfOrNull { maxOf(it.income, it.expense) } ?: 1.0
-                        )
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Leyenda
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    LegendItem(
-                        color = IncomeGreen,
-                        label = "Ingresos",
-                        modifier = Modifier.weight(1f)
-                    )
-                    LegendItem(
-                        color = ExpenseRed,
-                        label = "Gastos",
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun WeeklyBarChart(
     day: DayData,
     maxValue: Double
 ) {
     val incomeHeight = ((day.income / maxValue) * 80).dp
     val expenseHeight = ((day.expense / maxValue) * 80).dp
-    
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Bottom
@@ -1400,9 +1238,9 @@ private fun WeeklyBarChart(
                     )
             )
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Text(
             text = day.day,
             fontSize = 12.sp,
@@ -1436,7 +1274,6 @@ private fun LegendItem(
     }
 }
 
-// Data classes
 data class TransactionItem(
     val id: String,
     val description: String,

@@ -12,6 +12,7 @@ data class SavingsGoal(
     val targetAmount: Double,
     val currentAmount: Double = 0.0,
     val emoji: String,
+    val color: String = "#4CAF50",
     val description: String? = null,
     val targetDate: Date? = null,
     val createdAt: Date = Date(),

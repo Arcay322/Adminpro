@@ -9,14 +9,14 @@ import com.example.admin_ingresos.data.Category
  * Proporciona iconos consistentes y profesionales para toda la aplicación
  */
 object LucideIconMapper {
-    
+
     fun getIconFromEmoji(emoji: String): ImageVector {
         return when (emoji) {
             // Alimentación y restaurantes
             "🍕", "🍔", "🥘", "🍽️", "🥗", "🍎", "🥙", "🌮", "🥪" -> Lucide.UtensilsCrossed
             "☕", "🥤", "🍺", "🍷", "🧃" -> Lucide.Coffee
             "🛒", "🏪", "🛍️" -> Lucide.ShoppingCart
-            
+
             // Transporte
             "🚗", "🚙", "🚘" -> Lucide.Car
             "⛽", "🛣️" -> Lucide.Fuel
@@ -26,7 +26,7 @@ object LucideIconMapper {
             "✈️", "🛫", "🛬" -> Lucide.Plane
             "🚢", "⛵" -> Lucide.Ship
             "🚂", "🚆", "🚄" -> Lucide.TrainFront
-            
+
             // Entretenimiento
             "🎬", "🎭", "🎪" -> Lucide.Film
             "🎮", "🕹️" -> Lucide.Gamepad2
@@ -35,7 +35,7 @@ object LucideIconMapper {
             "🎨", "🖼️" -> Lucide.Palette
             "📚", "📖", "📑" -> Lucide.Book
             "🏃", "⚽", "🏀", "🎾" -> Lucide.Dumbbell
-            
+
             // Servicios y utilidades
             "💡", "🔌" -> Lucide.Zap
             "💧", "🚿" -> Lucide.Droplets
@@ -43,11 +43,11 @@ object LucideIconMapper {
             "🌐", "💻", "🖥️" -> Lucide.Wifi
             "🔥", "❄️" -> Lucide.Thermometer
             "🗑️", "♻️" -> Lucide.Trash2
-            
+
             // Compras y ropa
             "👕", "👔", "👗", "👠", "🧥", "👖", "👒" -> Lucide.Shirt
             "💍", "⌚", "👜" -> Lucide.Gem
-            
+
             // Salud y cuidado personal
             "🏥", "🏩" -> Lucide.Hospital
             "💊", "🩺" -> Lucide.Pill
@@ -55,38 +55,38 @@ object LucideIconMapper {
             "💉", "🩹" -> Lucide.Syringe
             "🦷", "🪥" -> Lucide.Smile
             "💄", "🧴", "🧼" -> Lucide.Sparkles
-            
+
             // Educación y trabajo
             "📝" -> Lucide.BookOpen
             "🎓", "🏫", "📐" -> Lucide.GraduationCap
             "✏️", "🖊️", "📏" -> Lucide.PenTool
             "💼", "🏢" -> Lucide.Briefcase
             "⌨️" -> Lucide.Laptop
-            
+
             // Hogar y mantenimiento
             "🏠", "🏡", "🏘️" -> Lucide.House
             "🔧", "🛠️", "🔨" -> Lucide.Wrench
             "🪑", "🛏️", "🚪" -> Lucide.Armchair
             "🧹", "🧽" -> Lucide.Sparkles
             "🌱", "🌿", "🪴" -> Lucide.Leaf
-            
+
             // Finanzas y dinero
             "💰", "💵", "💴", "💶", "💷" -> Lucide.DollarSign
             "💳", "💎" -> Lucide.CreditCard
             "🏦", "🏧" -> Lucide.Landmark
             "📊", "📈", "📉" -> Lucide.TrendingUp
             "💸", "🪙" -> Lucide.Coins
-            
+
             // Regalos y eventos
             "🎁", "🎉", "🎈" -> Lucide.Gift
             "🎂", "🍰", "🧁" -> Lucide.Cake
             "💝", "💌" -> Lucide.Heart
             "🎊", "🏆", "🥇" -> Lucide.Award
-            
+
             // Tecnología
             "📷", "📹" -> Lucide.Camera
             "🎧", "🔊" -> Lucide.Headphones
-            
+
             // Viajes y turismo
             "🧳", "🎒" -> Lucide.Luggage
             "🗺️", "🧭" -> Lucide.Map
@@ -94,23 +94,23 @@ object LucideIconMapper {
             "🏖️", "🏝️" -> Lucide.Trees
             "⛰️", "🏔️" -> Lucide.Mountain
             "🎡", "🎢" -> Lucide.PartyPopper
-            
+
             // Mascotas y animales
             "🐕", "🐶" -> Lucide.Dog
             "🐱", "🐈" -> Lucide.Cat
             "🐟", "🐠" -> Lucide.Fish
             "🐦", "🦜" -> Lucide.Bird
-            
+
             // Seguros y emergencias
             "🚨", "🚑" -> Lucide.Siren
             "🔒", "🛡️" -> Lucide.Shield
             "⚠️", "🚧" -> Lucide.TriangleAlert
-            
+
             // Default fallback
             else -> Lucide.Tag
         }
     }
-    
+
     fun getIconFromCategoryName(categoryName: String): ImageVector {
         return when (categoryName.lowercase()) {
             "alimentación", "comida", "restaurante", "supermercado", "mercado" -> Lucide.UtensilsCrossed
@@ -161,7 +161,7 @@ object LucideIconMapper {
             else -> Lucide.Tag
         }
     }
-    
+
     fun getCategoryIcon(category: Category): ImageVector {
         if (category.icon.isNotEmpty()) {
             val iconFromEmoji = getIconFromEmoji(category.icon)
@@ -171,7 +171,7 @@ object LucideIconMapper {
         }
         return getIconFromCategoryName(category.name)
     }
-    
+
     fun getTransactionTypeIcon(type: String): ImageVector {
         return when (type.lowercase()) {
             "ingreso", "income" -> Lucide.TrendingUp
@@ -179,7 +179,7 @@ object LucideIconMapper {
             else -> Lucide.DollarSign
         }
     }
-    
+
     fun getPaymentMethodIcon(paymentMethod: String): ImageVector {
         return when (paymentMethod.lowercase()) {
             "efectivo", "cash" -> Lucide.Banknote
@@ -192,7 +192,7 @@ object LucideIconMapper {
             else -> Lucide.Wallet
         }
     }
-    
+
     fun getNavigationIcon(iconName: String): ImageVector {
         return when (iconName.lowercase()) {
             "home", "casa" -> Lucide.House
@@ -236,6 +236,27 @@ object LucideIconMapper {
             "rewind" -> Lucide.Rewind
             "infinity" -> Lucide.Infinity
             "archive" -> Lucide.Archive
+            else -> Lucide.Tag
+        }
+    }
+    
+    // --- FUNCIÓN DEDICADA PARA METAS DE AHORRO ---
+    fun getSavingsGoalIcon(goalKey: String): ImageVector {
+        return when (goalKey.lowercase()) {
+            "emergency" -> Lucide.Shield
+            "car" -> Lucide.Car
+            "house" -> Lucide.House
+            "travel" -> Lucide.Plane
+            "education" -> Lucide.GraduationCap
+            "retirement" -> Lucide.Landmark
+            "tech" -> Lucide.Laptop
+            "wedding" -> Lucide.Heart
+            "business" -> Lucide.Briefcase
+            "investment" -> Lucide.TrendingUp
+            "repairs" -> Lucide.Wrench
+            "gift" -> Lucide.Gift
+            "lock" -> Lucide.Lock
+            "other" -> Lucide.PiggyBank
             else -> Lucide.Tag
         }
     }

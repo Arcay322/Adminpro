@@ -11,7 +11,7 @@ import com.example.admin_ingresos.data.dao.SavingsGoalDao
 
 @Database(
     entities = [Category::class, PaymentMethod::class, Transaction::class, Budget::class, SavingsGoal::class],
-    version = 10, // <-- CAMBIO AQUÍ: Versión incrementada a 10
+    version = 11, // Versión incrementada a 11 para forzar actualización
     exportSchema = false
 )
 @TypeConverters(Converters::class)

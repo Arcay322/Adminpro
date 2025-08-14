@@ -1,11 +1,22 @@
 package com.example.admin_ingresos.ui.budget
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -13,35 +24,78 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.admin_ingresos.AppDatabaseProvider
-import com.example.admin_ingresos.data.*
-import com.example.admin_ingresos.ui.theme.*
-import com.example.admin_ingresos.ui.components.*
+import com.example.admin_ingresos.data.Budget
+import com.example.admin_ingresos.data.BudgetPeriod
+import com.example.admin_ingresos.data.BudgetProgress
+import com.example.admin_ingresos.data.Category
+import com.example.admin_ingresos.data.NotificationService
+import com.example.admin_ingresos.data.PreferencesManager
+import com.example.admin_ingresos.ui.components.GlassCard
+import com.example.admin_ingresos.ui.components.VibrantFAB
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
+import com.example.admin_ingresos.ui.theme.AccentVibrantStart
+import com.example.admin_ingresos.ui.theme.BackgroundEnd
+import com.example.admin_ingresos.ui.theme.BackgroundStart
+import com.example.admin_ingresos.ui.theme.CashFlowPrimary
+import com.example.admin_ingresos.ui.theme.ExpenseRed
+import com.example.admin_ingresos.ui.theme.GlassWhite
+import com.example.admin_ingresos.ui.theme.GlassWhiteStrong
+import com.example.admin_ingresos.ui.theme.GlassWhiteSubtle
+import com.example.admin_ingresos.ui.theme.IncomeGreen
+import com.example.admin_ingresos.ui.theme.TextPrimary
+import com.example.admin_ingresos.ui.theme.TextSecondary
 import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -362,8 +416,8 @@ fun BudgetProgressCard(
                         )
                         val remaining = budgetProgress.budget.amount - budgetProgress.spent
                         Text(
-                            text = if (remaining >= 0) "Restante: $${String.format("%.2f", remaining)}" 
-                                  else "Excedido: $${String.format("%.2f", -remaining)}",
+                            text = if (remaining >= 0) "Restante: $${String.format("%.2f", remaining)}"
+                            else "Excedido: $${String.format("%.2f", -remaining)}",
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.Medium
                             ),
@@ -760,8 +814,14 @@ private fun BudgetAnalyticsDashboard(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 LinearProgressIndicator(
-                    progress = averageProgress.coerceAtMost(1f),
-                    modifier = Modifier.fillMaxWidth(),
+                    progress = animateFloatAsState(
+                        targetValue = averageProgress.coerceAtMost(1f),
+                        animationSpec = tween(durationMillis = 1000), label = ""
+                    ).value,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(CircleShape),
                     color = when {
                         averageProgress >= 0.9f -> ExpenseRed
                         averageProgress >= 0.7f -> Color(0xFFFBBF24)
@@ -863,26 +923,26 @@ private fun BudgetTemplatesSection(
                             // Buscar categoria por nombre con mayor flexibilidad
                             val category = categories.find { category ->
                                 category.name.contains(template.name, ignoreCase = true) ||
-                                template.name.contains(category.name, ignoreCase = true) ||
-                                when (template.name.lowercase()) {
-                                    "alimentación" -> category.name.lowercase().contains("comida") || 
+                                        template.name.contains(category.name, ignoreCase = true) ||
+                                        when (template.name.lowercase()) {
+                                            "alimentación" -> category.name.lowercase().contains("comida") ||
                                                     category.name.lowercase().contains("alimentación") ||
                                                     category.name.lowercase().contains("restaurant") ||
                                                     category.name.lowercase().contains("supermercado")
-                                    "transporte" -> category.name.lowercase().contains("transporte") ||
-                                                   category.name.lowercase().contains("gasolina") ||
-                                                   category.name.lowercase().contains("taxi") ||
-                                                   category.name.lowercase().contains("uber")
-                                    "entretenimiento" -> category.name.lowercase().contains("entretenimiento") ||
-                                                        category.name.lowercase().contains("diversión") ||
-                                                        category.name.lowercase().contains("ocio") ||
-                                                        category.name.lowercase().contains("cine")
-                                    "compras" -> category.name.lowercase().contains("compras") ||
-                                                category.name.lowercase().contains("shopping") ||
-                                                category.name.lowercase().contains("ropa") ||
-                                                category.name.lowercase().contains("tienda")
-                                    else -> false
-                                }
+                                            "transporte" -> category.name.lowercase().contains("transporte") ||
+                                                    category.name.lowercase().contains("gasolina") ||
+                                                    category.name.lowercase().contains("taxi") ||
+                                                    category.name.lowercase().contains("uber")
+                                            "entretenimiento" -> category.name.lowercase().contains("entretenimiento") ||
+                                                    category.name.lowercase().contains("diversión") ||
+                                                    category.name.lowercase().contains("ocio") ||
+                                                    category.name.lowercase().contains("cine")
+                                            "compras" -> category.name.lowercase().contains("compras") ||
+                                                    category.name.lowercase().contains("shopping") ||
+                                                    category.name.lowercase().contains("ropa") ||
+                                                    category.name.lowercase().contains("tienda")
+                                            else -> false
+                                        }
                             } ?: categories.firstOrNull() // Usar la primera categoría como fallback
                             
                             category?.let {
@@ -1152,7 +1212,7 @@ private fun EnhancedBudgetCard(
                             },
                             leadingIcon = {
                                 Icon(
-                                    if (budgetProgress.budget.isActive) LucideIconMapper.Navigation.close 
+                                    if (budgetProgress.budget.isActive) LucideIconMapper.Navigation.close
                                     else LucideIconMapper.Navigation.check,
                                     contentDescription = null
                                 )
@@ -1212,8 +1272,14 @@ private fun EnhancedBudgetCard(
             
             // Progress bar
             LinearProgressIndicator(
-                progress = budgetProgress.percentage.coerceAtMost(1f),
-                modifier = Modifier.fillMaxWidth(),
+                progress = animateFloatAsState(
+                    targetValue = budgetProgress.percentage.coerceAtMost(1f),
+                    animationSpec = tween(durationMillis = 1000), label = ""
+                ).value,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(CircleShape),
                 color = progressColor,
                 trackColor = GlassWhiteSubtle
             )
@@ -1233,9 +1299,9 @@ private fun EnhancedBudgetCard(
                 )
                 
                 Text(
-                    text = if (budgetProgress.remaining >= 0) 
-                        "Restante: ${formatter.format(budgetProgress.remaining)}" 
-                    else 
+                    text = if (budgetProgress.remaining >= 0)
+                        "Restante: ${formatter.format(budgetProgress.remaining)}"
+                    else
                         "Excedido: ${formatter.format(-budgetProgress.remaining)}",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
@@ -1362,52 +1428,49 @@ private fun ModernCreateBudgetDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Category selector
-                var showCategoryDropdown by remember { mutableStateOf(false) }
                 Column {
                     Text("Categoría", style = MaterialTheme.typography.labelMedium)
-                    Button(
-                        onClick = { showCategoryDropdown = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.outlinedButtonColors()
-                    ) {
-                        Text(
-                            text = categories.find { it.id == selectedCategoryId }?.name ?: "Selecciona una categoría",
-                            modifier = Modifier.weight(1f)
-                        )
-                        Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                    }
-                    
-                    if (categoryError != null) {
-                        Text(
-                            text = categoryError,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                    
-                    DropdownMenu(
+                    ExposedDropdownMenuBox(
                         expanded = showCategoryDropdown,
-                        onDismissRequest = { showCategoryDropdown = false }
+                        onExpandedChange = { showCategoryDropdown = it }
                     ) {
-                        categories.forEach { category ->
-                            DropdownMenuItem(
-                                text = {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = category.icon,
-                                            fontSize = 16.sp
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(category.name)
+                        OutlinedTextField(
+                            value = categories.find { it.id == selectedCategoryId }?.name ?: "",
+                            onValueChange = { },
+                            readOnly = true,
+                            label = { Text("Categoría") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCategoryDropdown) },
+                            isError = categoryError != null,
+                            supportingText = categoryError?.let { { Text(it) } },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
+                        )
+                        
+                        ExposedDropdownMenu(
+                            expanded = showCategoryDropdown,
+                            onDismissRequest = { showCategoryDropdown = false }
+                        ) {
+                            categories.forEach { category ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = category.icon,
+                                                fontSize = 16.sp
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(category.name)
+                                        }
+                                    },
+                                    onClick = {
+                                        selectedCategoryId = category.id
+                                        showCategoryDropdown = false
                                     }
-                                },
-                                onClick = {
-                                    selectedCategoryId = category.id
-                                    showCategoryDropdown = false
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                 }
@@ -1524,48 +1587,48 @@ private fun ModernEditBudgetDialog(
 ) {
     var amount by remember { mutableStateOf(budget.amount.toString()) }
     val isFormValid = amount.toDoubleOrNull()?.let { it > 0 } == true
-
+    
     Dialog(onDismissRequest = onDismiss) {
-            GlassCard(
+        GlassCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Header
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = "Editar Presupuesto",
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = TextPrimary
-                            )
-                            Text(
-                                text = categoryName,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextSecondary
-                            )
-                        }
-                        
-                        Icon(
-                            imageVector = LucideIconMapper.getNavigationIcon("edit"),
-                            contentDescription = null,
-                            tint = AccentVibrantStart,
-                            modifier = Modifier.size(24.dp)
+                    Column {
+                        Text(
+                            text = "Editar Presupuesto",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = categoryName,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextSecondary
                         )
                     }
                     
-                    HorizontalDivider(
-                        color = TextSecondary.copy(alpha = 0.1f),
+                    Icon(
+                        imageVector = LucideIconMapper.getNavigationIcon("edit"),
+                        contentDescription = null,
+                        tint = AccentVibrantStart,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                
+                HorizontalDivider(
+                    color = TextSecondary.copy(alpha = 0.1f),
                     thickness = 1.dp
                 )
                 
@@ -1611,7 +1674,7 @@ private fun ModernEditBudgetDialog(
                 // New amount input
                 OutlinedTextField(
                     value = amount,
-                    onValueChange = { 
+                    onValueChange = {
                         if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d*$"))) {
                             amount = it
                         }

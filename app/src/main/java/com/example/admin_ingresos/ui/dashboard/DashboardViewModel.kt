@@ -1,17 +1,25 @@
 package com.example.admin_ingresos.ui.dashboard
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.admin_ingresos.data.TransactionRepository
-import com.example.admin_ingresos.data.Transaction
 import com.example.admin_ingresos.data.AppDatabase
+import com.example.admin_ingresos.data.Transaction
+import com.example.admin_ingresos.data.TransactionRepository
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.ui.graphics.Color
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import kotlin.math.abs
 
 data class DashboardUiState(
     val transactions: List<Transaction> = emptyList(),
@@ -42,13 +50,14 @@ data class CategoryExpense(
     val color: Color
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 class DashboardViewModel(
     private val repository: TransactionRepository,
     private val database: AppDatabase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
-    
+
     // Use Flow to automatically listen to database changes
     val transactions = repository.getAllTransactionsFlow()
         .stateIn(
@@ -56,15 +65,15 @@ class DashboardViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
-    
+
     // Also listen to category changes for instant updates
- private val categories = database.categoryDao().getAllCategories()
+    private val categories = database.categoryDao().getAllCategories()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList<com.example.admin_ingresos.data.Category>()
         )
-    
+
     // TODO: Listen to savings goals changes (commented out until database migration is complete)
     /*
     val savingsGoals = database.savingsGoalDao().getAllActiveFlow()
@@ -74,7 +83,7 @@ class DashboardViewModel(
             initialValue = emptyList()
         )
     */
-    
+
     // TODO: Weekly cash flow data based on real transactions (commented out until complete)
     /*
     val weeklyData = transactions
@@ -82,7 +91,7 @@ class DashboardViewModel(
             getWeeklyFlowData(transactionList)
         }
         .stateIn(
-            scope = viewModelScope, 
+            scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
@@ -91,14 +100,14 @@ class DashboardViewModel(
     init {
         // Load data when ViewModel is created
         loadDashboardData()
-        
+
         // Listen to transaction changes
         viewModelScope.launch {
             transactions.collect { transactionList ->
                 calculateDashboardMetrics(transactionList)
             }
         }
-        
+
         // Listen to category changes to update colors and icons instantly
         viewModelScope.launch {
             categories.collect { categoryList ->
@@ -126,7 +135,7 @@ class DashboardViewModel(
             }
         }
     }
-    
+
     private fun loadDashboardData() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
@@ -142,16 +151,16 @@ class DashboardViewModel(
             }
         }
     }
-    
+
     private suspend fun calculateDashboardMetrics(transactions: List<Transaction>) {
         try {
             val currentCategories = categories.value // Usar las categorías ya observadas
-            
+
             // Calcular balance actual
             val totalIncome = transactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
             val totalExpenses = transactions.filter { it.type == "Gasto" }.sumOf { it.amount }
             val currentBalance = totalIncome - totalExpenses
-            
+
             // Calcular ingresos y gastos del mes actual
             val currentMonth = Calendar.getInstance().apply {
                 set(Calendar.DAY_OF_MONTH, 1)
@@ -160,11 +169,11 @@ class DashboardViewModel(
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
             }.timeInMillis
-            
+
             val monthlyTransactions = transactions.filter { it.date >= currentMonth }
             val monthlyIncome = monthlyTransactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
             val monthlyExpenses = monthlyTransactions.filter { it.type == "Gasto" }.sumOf { it.amount }
-            
+
             // Obtener transacciones recientes (últimas 10)
             val recentTransactions = transactions
                 .sortedByDescending { it.date }
@@ -172,11 +181,11 @@ class DashboardViewModel(
                 .map { transaction ->
                     val category = currentCategories.find { it.id == transaction.categoryId }
                     val iconVector = if (category != null) {
-                        val iconOption = com.example.admin_ingresos.ui.icons.LucideIconMapper.getAvailableCategoryIcons().find { it.name == category.icon }
+                        val iconOption = LucideIconMapper.getAvailableCategoryIcons().find { it.name == category.icon }
                         if (iconOption != null) {
-                            com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromEmoji(iconOption.icon)
+                            LucideIconMapper.getIconFromEmoji(iconOption.icon)
                         } else {
-                            com.example.admin_ingresos.ui.icons.LucideIconMapper.getCategoryIcon(category)
+                            LucideIconMapper.getCategoryIcon(category)
                         }
                     } else {
                         getCategoryIcon(category?.name)
@@ -192,7 +201,7 @@ class DashboardViewModel(
                         isIncome = transaction.type == "Ingreso"
                     )
                 }
-            
+
             // Calcular gastos por categoría
             val expensesByCategory = monthlyTransactions
                 .filter { it.type == "Gasto" }
@@ -209,7 +218,7 @@ class DashboardViewModel(
                 }
                 .sortedByDescending { it.amount }
                 .take(5)
-            
+
             _uiState.value = _uiState.value.copy(
                 transactions = transactions,
                 currentBalance = currentBalance,
@@ -218,20 +227,20 @@ class DashboardViewModel(
                 recentTransactions = recentTransactions,
                 categoryExpenses = expensesByCategory
             )
-            
+
         } catch (e: Exception) {
             _uiState.value = _uiState.value.copy(
                 error = "Error al calcular métricas: ${e.message}"
             )
         }
     }
-    
+
     private fun formatDate(timestamp: Long): String {
         val date = Date(timestamp)
         val now = Date()
         val diffInMillis = now.time - date.time
         val diffInDays = diffInMillis / (24 * 60 * 60 * 1000)
-        
+
         return when {
             diffInDays == 0L -> "Hoy"
             diffInDays == 1L -> "Ayer"
@@ -242,7 +251,7 @@ class DashboardViewModel(
             }
         }
     }
-    
+
     private fun parseColorFromCategory(category: com.example.admin_ingresos.data.Category): Color {
         return try {
             // Parsear el color hex almacenado en la base de datos
@@ -260,7 +269,7 @@ class DashboardViewModel(
             getCategoryColorImproved(category.name)
         }
     }
-    
+
     private fun getCategoryColorImproved(categoryName: String?): Color {
         // Generar colores más variados y vibrantes para las categorías
         val colorPalette = listOf(
@@ -277,15 +286,15 @@ class DashboardViewModel(
             Color(0xFF059669), // Verde teal
             Color(0xFFDC2626)  // Rojo
         )
-        
+
         // Usar el hash del nombre para obtener un color consistente
         val hashCode = categoryName?.hashCode() ?: 0
-        val colorIndex = kotlin.math.abs(hashCode) % colorPalette.size
+        val colorIndex = abs(hashCode) % colorPalette.size
         return colorPalette[colorIndex]
     }
 
     private fun getCategoryColor(categoryName: String?): Color {
-        return when (categoryName?.lowercase()) {
+        return when (categoryName?.lowercase(Locale.getDefault())) {
             "alimentación", "comida", "restaurante" -> Color(0xFFFF6B6B)
             "transporte", "gasolina", "uber" -> Color(0xFF4ECDC4)
             "entretenimiento", "cine", "diversión" -> Color(0xFFFFBE0B)
@@ -297,17 +306,17 @@ class DashboardViewModel(
             else -> Color(0xFF6B7280)
         }
     }
-    
+
     /*
     private fun getWeeklyFlowData(transactions: List<com.example.admin_ingresos.data.Transaction>): List<DayData> {
         val calendar = Calendar.getInstance()
         val currentWeekData = mutableMapOf<Int, Pair<Double, Double>>() // dayOfWeek to (income, expense)
-        
+
         // Initialize with zeros for all days of the week (Monday = 1, Sunday = 7)
         for (i in 1..7) {
             currentWeekData[i] = Pair(0.0, 0.0)
         }
-        
+
         // Get current week's start (Monday)
         calendar.firstDayOfWeek = Calendar.MONDAY
         calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
@@ -316,30 +325,30 @@ class DashboardViewModel(
         calendar.set(Calendar.SECOND, 0)
         calendar.set(Calendar.MILLISECOND, 0)
         val weekStart = calendar.time
-        
+
         // Get week's end (Sunday)
         calendar.add(Calendar.DAY_OF_WEEK, 6)
         calendar.set(Calendar.HOUR_OF_DAY, 23)
         calendar.set(Calendar.MINUTE, 59)
         calendar.set(Calendar.SECOND, 59)
         val weekEnd = calendar.time
-        
+
         // Filter transactions for current week
         val weekTransactions = transactions.filter { transaction ->
             transaction.date.time >= weekStart.time && transaction.date.time <= weekEnd.time
         }
-        
+
         // Group by day of week
         weekTransactions.forEach { transaction ->
             val transactionCalendar = Calendar.getInstance()
             transactionCalendar.time = transaction.date
             transactionCalendar.firstDayOfWeek = Calendar.MONDAY
-            
+
             val dayOfWeek = transactionCalendar.get(Calendar.DAY_OF_WEEK)
             val adjustedDay = if (dayOfWeek == Calendar.SUNDAY) 7 else dayOfWeek - 1
-            
+
             val currentData = currentWeekData[adjustedDay] ?: Pair(0.0, 0.0)
-            
+
             if (transaction.type == "Ingreso") {
                 currentWeekData[adjustedDay] = Pair(
                     currentData.first + transaction.amount,
@@ -352,7 +361,7 @@ class DashboardViewModel(
                 )
             }
         }
-        
+
         // Convert to DayData list
         val dayLabels = listOf("L", "M", "X", "J", "V", "S", "D")
         return (1..7).map { dayIndex ->
@@ -365,7 +374,7 @@ class DashboardViewModel(
         }
     }
     */
-    
+
     private fun getCategoryIconFromData(category: com.example.admin_ingresos.data.Category): androidx.compose.ui.graphics.vector.ImageVector {
         // Usar el sistema de iconos Lucide para obtener iconos profesionales y consistentes
         return LucideIconMapper.getCategoryIcon(category)
@@ -376,10 +385,10 @@ class DashboardViewModel(
         return if (categoryName != null) {
             LucideIconMapper.getIconFromCategoryName(categoryName)
         } else {
-            LucideIconMapper.Navigation.add // Default fallback
+            Icons.Default.Add // Default fallback
         }
     }
-    
+
     fun refreshData() {
         loadDashboardData()
     }
