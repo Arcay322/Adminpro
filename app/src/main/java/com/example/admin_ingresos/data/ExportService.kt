@@ -19,6 +19,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileWriter
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
+import java.io.BufferedWriter
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -37,34 +40,46 @@ class ExportService(private val context: Context) {
         try {
             val fileName = "transacciones_${fileNameDateFormat.format(Date())}.csv"
             val file = File(context.getExternalFilesDir(null), fileName)
-            
-            FileWriter(file).use { writer ->
-                // Write headers if requested
-                if (includeHeaders) {
-                    val headers = customFields.joinToString(",") { it.displayName }
-                    writer.append(headers)
-                    writer.append("\n")
-                }
-                
-                // Write transaction data
-                transactions.forEach { transaction ->
-                    val category = categories.find { it.id == transaction.categoryId }
-                    val paymentMethod = paymentMethods.find { it.id == transaction.paymentMethodId }
-                    
-                    val row = customFields.joinToString(",") { field ->
-                        when (field) {
-                            ExportField.DATE -> "\"${dateFormat.format(Date(transaction.date))}\""
-                            ExportField.DESCRIPTION -> "\"${transaction.description.replace("\"", "\"\"")}\""
-                            ExportField.AMOUNT -> transaction.amount.toString()
-                            ExportField.TYPE -> "\"${transaction.type}\""
-                            ExportField.CATEGORY -> "\"${category?.name ?: "Sin categoría"}\""
-                            ExportField.PAYMENT_METHOD -> "\"${paymentMethod?.name ?: "No especificado"}\""
-                            ExportField.CATEGORY_ICON -> "\"${category?.icon ?: ""}\""
-                            ExportField.PAYMENT_METHOD_ICON -> "\"${paymentMethod?.icon ?: ""}\""
+            // Helper to escape CSV values
+            fun escapeCsv(value: String?): String {
+                if (value == null) return "\"\""
+                val escaped = value.replace("\"", "\"\"")
+                return "\"$escaped\""
+            }
+
+            // Sort descending by date to produce predictable order
+            val sortedTransactions = transactions.sortedByDescending { it.date }
+
+            FileOutputStream(file).use { fos ->
+                // Write UTF-8 BOM so Excel on Windows recognizes encoding
+                fos.write(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()))
+                OutputStreamWriter(fos, Charsets.UTF_8).use { osw ->
+                    BufferedWriter(osw).use { writer ->
+                        if (includeHeaders) {
+                            val headers = customFields.joinToString(",") { it.displayName }
+                            writer.append(headers).append("\r\n")
                         }
+
+                        sortedTransactions.forEach { transaction ->
+                            val category = categories.find { it.id == transaction.categoryId }
+                            val paymentMethod = paymentMethods.find { it.id == transaction.paymentMethodId }
+
+                            val row = customFields.joinToString(",") { field ->
+                                when (field) {
+                                    ExportField.DATE -> escapeCsv(dateFormat.format(Date(transaction.date)))
+                                    ExportField.DESCRIPTION -> escapeCsv(transaction.description)
+                                    ExportField.AMOUNT -> transaction.amount.toString()
+                                    ExportField.TYPE -> escapeCsv(transaction.type)
+                                    ExportField.CATEGORY -> escapeCsv(category?.name ?: "Sin categoría")
+                                    ExportField.PAYMENT_METHOD -> escapeCsv(paymentMethod?.name ?: "No especificado")
+                                    ExportField.CATEGORY_ICON -> escapeCsv(category?.icon ?: "")
+                                    ExportField.PAYMENT_METHOD_ICON -> escapeCsv(paymentMethod?.icon ?: "")
+                                }
+                            }
+                            writer.append(row).append("\r\n")
+                        }
+                        writer.flush()
                     }
-                    writer.append(row)
-                    writer.append("\n")
                 }
             }
             
@@ -87,28 +102,37 @@ class ExportService(private val context: Context) {
         try {
             val fileName = "presupuestos_${fileNameDateFormat.format(Date())}.csv"
             val file = File(context.getExternalFilesDir(null), fileName)
-            
-            FileWriter(file).use { writer ->
-                // Write headers
-                if (includeHeaders) {
-                    writer.append("Categoría,Presupuesto,Gastado,Restante,Porcentaje,Estado,Días Restantes,Período\n")
-                }
-                
-                // Write budget data
-                budgets.forEach { budgetProgress ->
-                    val row = listOf(
-                        "\"${budgetProgress.category.name}\"",
-                        budgetProgress.budget.amount.toString(),
-                        budgetProgress.spent.toString(),
-                        budgetProgress.remaining.toString(),
-                        "${(budgetProgress.percentage * 100).toInt()}%",
-                        "\"${budgetProgress.status.displayName}\"",
-                        budgetProgress.daysRemaining.toString(),
-                        "\"${budgetProgress.budget.period.displayName}\""
-                    ).joinToString(",")
-                    
-                    writer.append(row)
-                    writer.append("\n")
+            fun escapeCsv(value: String?): String {
+                if (value == null) return "\"\""
+                val escaped = value.replace("\"", "\"\"")
+                return "\"$escaped\""
+            }
+
+            FileOutputStream(file).use { fos ->
+                fos.write(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()))
+                OutputStreamWriter(fos, Charsets.UTF_8).use { osw ->
+                    BufferedWriter(osw).use { writer ->
+                        if (includeHeaders) {
+                            writer.append("Categoría,Presupuesto,Gastado,Restante,Porcentaje,Estado,Días Restantes,Período").append("\r\n")
+                        }
+
+                        budgets.forEach { budgetProgress ->
+                            val row = listOf(
+                                escapeCsv(budgetProgress.category.name),
+                                budgetProgress.budget.amount.toString(),
+                                budgetProgress.spent.toString(),
+                                budgetProgress.remaining.toString(),
+                                "${(budgetProgress.percentage * 100).toInt()}%",
+                                escapeCsv(budgetProgress.status.displayName),
+                                budgetProgress.daysRemaining.toString(),
+                                escapeCsv(budgetProgress.budget.period.displayName)
+                            ).joinToString(",")
+
+                            writer.append(row).append("\r\n")
+                        }
+
+                        writer.flush()
+                    }
                 }
             }
             

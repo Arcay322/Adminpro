@@ -3,6 +3,8 @@ package com.example.admin_ingresos.ui.reports
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.content.Context
+import android.net.Uri
 import com.example.admin_ingresos.data.AppDatabase
 import com.example.admin_ingresos.data.Budget
 import com.example.admin_ingresos.data.Category
@@ -14,6 +16,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 
 // --- Data Classes for UI State ---
@@ -64,6 +68,14 @@ enum class DateRangePreset(val displayName: String) {
     CUSTOM("Personalizado")
 }
 
+// Estado simple para exportación
+sealed interface ExportStatus {
+    object Idle : ExportStatus
+    object Loading : ExportStatus
+    data class Success(val uri: Uri) : ExportStatus
+    data class Error(val message: String) : ExportStatus
+}
+
 class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ReportsUiState())
@@ -72,9 +84,93 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
     private val transactionDao = db.transactionDao()
     private val budgetDao = db.budgetDao()
     private val categoryDao = db.categoryDao()
+    private val paymentDao = db.paymentMethodDao()
 
     init {
         setDateRange(DateRangePreset.THIS_MONTH)
+    }
+
+    // Export state
+    private val _exportState = MutableStateFlow<ExportStatus>(ExportStatus.Idle)
+    val exportState: StateFlow<ExportStatus> = _exportState.asStateFlow()
+
+    fun clearExportState() {
+        _exportState.value = ExportStatus.Idle
+    }
+
+    fun exportTransactionsCsv(context: Context) {
+        viewModelScope.launch {
+            _exportState.value = ExportStatus.Loading
+            val range = _uiState.value.selectedDateRange
+            if (range == null) {
+                _exportState.value = ExportStatus.Error("Rango de fechas no seleccionado")
+                return@launch
+            }
+            try {
+                val transactions = withContext(Dispatchers.IO) { transactionDao.getTransactionsByDateRange(range.startDate, range.endDate) }
+                val categories = withContext(Dispatchers.IO) { categoryDao.getCategoriesList() }
+                val paymentMethods = withContext(Dispatchers.IO) { paymentDao.getAll() }
+                val uri = withContext(Dispatchers.IO) {
+                    com.example.admin_ingresos.data.ExportService(context).exportTransactionsToCSV(
+                        transactions,
+                        categories,
+                        paymentMethods
+                    )
+                }
+                if (uri != null) {
+                    _exportState.value = ExportStatus.Success(uri)
+                } else {
+                    _exportState.value = ExportStatus.Error("Error al generar CSV")
+                }
+            } catch (e: Exception) {
+                _exportState.value = ExportStatus.Error(e.message ?: "Error desconocido")
+            }
+        }
+    }
+
+    fun exportTransactionsPdf(context: Context) {
+        viewModelScope.launch {
+            _exportState.value = ExportStatus.Loading
+            val range = _uiState.value.selectedDateRange
+            if (range == null) {
+                _exportState.value = ExportStatus.Error("Rango de fechas no seleccionado")
+                return@launch
+            }
+            try {
+                val transactions = withContext(Dispatchers.IO) { transactionDao.getTransactionsByDateRange(range.startDate, range.endDate) }
+                val categories = withContext(Dispatchers.IO) { categoryDao.getCategoriesList() }
+                val paymentMethods = withContext(Dispatchers.IO) { paymentDao.getAll() }
+                val uri = withContext(Dispatchers.IO) {
+                    com.example.admin_ingresos.data.ExportService(context).generateTransactionsPDFReport(
+                        transactions,
+                        categories,
+                        paymentMethods
+                    )
+                }
+                if (uri != null) {
+                    _exportState.value = ExportStatus.Success(uri)
+                } else {
+                    _exportState.value = ExportStatus.Error("Error al generar PDF")
+                }
+            } catch (e: Exception) {
+                _exportState.value = ExportStatus.Error(e.message ?: "Error desconocido")
+            }
+        }
+    }
+
+    fun shareTextSummary(context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val range = _uiState.value.selectedDateRange ?: return@launch
+            try {
+                val transactions = transactionDao.getTransactionsByDateRange(range.startDate, range.endDate)
+                val categories = categoryDao.getCategoriesList()
+                withContext(Dispatchers.Main) {
+                    com.example.admin_ingresos.data.ExportService(context).shareTextSummary(transactions, categories)
+                }
+            } catch (e: Exception) {
+                // no-op: sharing failure handled by Android chooser
+            }
+        }
     }
 
     fun setDateRange(preset: DateRangePreset, customRange: DateRange? = null) {

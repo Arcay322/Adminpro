@@ -26,6 +26,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import com.example.admin_ingresos.AppDatabaseProvider
 import com.example.admin_ingresos.ui.components.GlassCard
 import com.example.admin_ingresos.ui.dashboard.CategoryData
@@ -44,6 +47,11 @@ fun ReportsScreen() {
     })
 
     val uiState by viewModel.uiState.collectAsState()
+    val exportState by viewModel.exportState.collectAsState()
+    var showExportDialog by remember { mutableStateOf(false) }
+
+    // Launcher placeholder to grant URI permission if needed (not strictly necessary for FileProvider)
+    val shareLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { /* no-op */ }
 
     Box(
         modifier = Modifier
@@ -70,7 +78,7 @@ fun ReportsScreen() {
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
-                        IconButton(onClick = { /* TODO: Implement Export */ }) {
+                        IconButton(onClick = { showExportDialog = true }) {
                             Icon(Icons.Default.Share, contentDescription = "Exportar", tint = Color.White)
                         }
                     }
@@ -96,6 +104,51 @@ fun ReportsScreen() {
                     BudgetVsActualComparison(reportData = uiState.reportData)
                 }
             }
+        }
+    }
+
+    // Export dialog
+    if (showExportDialog) {
+        AlertDialog(
+            onDismissRequest = { showExportDialog = false },
+            title = { Text("Exportar Reporte") },
+            text = { Text("Selecciona el formato para exportar las transacciones del periodo seleccionado.") },
+            confirmButton = {
+                Row {
+                    TextButton(onClick = {
+                        showExportDialog = false
+                        viewModel.exportTransactionsCsv(context)
+                    }) { Text("CSV") }
+                    TextButton(onClick = {
+                        showExportDialog = false
+                        viewModel.exportTransactionsPdf(context)
+                    }) { Text("PDF") }
+                    TextButton(onClick = {
+                        showExportDialog = false
+                        viewModel.shareTextSummary(context)
+                    }) { Text("Texto") }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExportDialog = false }) { Text("Cancelar") }
+            }
+        )
+    }
+
+    // Observe export state and trigger sharing when ready
+    LaunchedEffect(exportState) {
+        when (exportState) {
+            is com.example.admin_ingresos.ui.reports.ExportStatus.Success -> {
+                val uri = (exportState as com.example.admin_ingresos.ui.reports.ExportStatus.Success).uri
+                // Share the file using ExportService helper on main thread
+                com.example.admin_ingresos.data.ExportService(context).shareFile(uri, mimeType = if (uri.toString().endsWith(".pdf")) "application/pdf" else "text/csv")
+                viewModel.clearExportState()
+            }
+            is com.example.admin_ingresos.ui.reports.ExportStatus.Error -> {
+                // Optionally show toast or snackbar; keep simple for now
+                viewModel.clearExportState()
+            }
+            else -> {}
         }
     }
 }
