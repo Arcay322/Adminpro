@@ -78,8 +78,7 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.5.0")
     
     // PDF generation
-    implementation("com.itextpdf:itext7-core:7.2.5")
-    implementation("com.itextpdf:layout:7.2.5")
+    // Using Android's PdfDocument instead of iText to avoid AGPL licensing.
     
     // WorkManager for background tasks
     implementation("androidx.work:work-runtime-ktx:2.9.0")

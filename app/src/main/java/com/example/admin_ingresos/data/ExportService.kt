@@ -4,17 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.FileProvider
-import com.itextpdf.kernel.pdf.PdfDocument
-import com.itextpdf.kernel.pdf.PdfWriter
-import com.itextpdf.layout.Document
-import com.itextpdf.layout.element.Paragraph
-import com.itextpdf.layout.element.Table
-import com.itextpdf.layout.element.Cell
-import com.itextpdf.layout.properties.TextAlignment
-import com.itextpdf.layout.properties.UnitValue
-import com.itextpdf.kernel.colors.ColorConstants
-import com.itextpdf.kernel.font.PdfFontFactory
-import com.itextpdf.kernel.font.PdfFont
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.pdf.PdfDocument
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -156,79 +148,93 @@ class ExportService(private val context: Context) {
         try {
             val fileName = "reporte_transacciones_${fileNameDateFormat.format(Date())}.pdf"
             val file = File(context.getExternalFilesDir(null), fileName)
-            
-            val pdfWriter = PdfWriter(file)
-            val pdfDocument = PdfDocument(pdfWriter)
-            val document = Document(pdfDocument)
-            
-            // Add title
-            val titleParagraph = Paragraph(reportTitle)
-                .setFontSize(18f)
-                .setBold()
-                .setTextAlignment(TextAlignment.CENTER)
-            document.add(titleParagraph)
-            
-            // Add generation date
-            val dateParagraph = Paragraph("Generado el: ${dateFormat.format(Date())}")
-                .setFontSize(10f)
-                .setTextAlignment(TextAlignment.CENTER)
-                .setMarginBottom(20f)
-            document.add(dateParagraph)
-            
-            // Add summary statistics
+            // Use Android PdfDocument to create a simple PDF (no external licensing)
+            val pdf = PdfDocument()
+
+            // Simple page config
+            var currentPageNum = 1
+            val pageInfo = PdfDocument.PageInfo.Builder(595, 842, currentPageNum).create() // A4-like in points
+            var page = pdf.startPage(pageInfo)
+            var canvas: Canvas = page.canvas
+            val paint = Paint().apply { isAntiAlias = true }
+
+            var y = 40f
+            paint.textSize = 18f
+            paint.isFakeBoldText = true
+            val titleX = (pageInfo.pageWidth / 2).toFloat()
+            canvas.drawText(reportTitle, 40f, y, paint)
+
+            y += 24f
+            paint.textSize = 10f
+            paint.isFakeBoldText = false
+            canvas.drawText("Generado el: ${dateFormat.format(Date())}", 40f, y, paint)
+
+            y += 24f
+            // Summary
             val totalIncome = transactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
             val totalExpenses = transactions.filter { it.type == "Gasto" }.sumOf { it.amount }
             val balance = totalIncome - totalExpenses
-            
-            val summaryTable = Table(UnitValue.createPercentArray(floatArrayOf(1f, 1f, 1f)))
-                .setWidth(UnitValue.createPercentValue(100f))
-            
-            // Summary headers
-            summaryTable.addHeaderCell(Cell().add(Paragraph("Total Ingresos").setBold()))
-            summaryTable.addHeaderCell(Cell().add(Paragraph("Total Gastos").setBold()))
-            summaryTable.addHeaderCell(Cell().add(Paragraph("Balance").setBold()))
-            
-            // Summary values
-            summaryTable.addCell(Cell().add(Paragraph("$${String.format("%.2f", totalIncome)}")))
-            summaryTable.addCell(Cell().add(Paragraph("$${String.format("%.2f", totalExpenses)}")))
-            summaryTable.addCell(Cell().add(Paragraph("$${String.format("%.2f", balance)}")))
-            
-            document.add(summaryTable)
-            document.add(Paragraph("\n"))
-            
-            // Add transactions table
-            val transactionsTable = Table(UnitValue.createPercentArray(floatArrayOf(2f, 3f, 1.5f, 1f, 2f)))
-                .setWidth(UnitValue.createPercentValue(100f))
-            
-            // Table headers
-            transactionsTable.addHeaderCell(Cell().add(Paragraph("Fecha").setBold()))
-            transactionsTable.addHeaderCell(Cell().add(Paragraph("Descripción").setBold()))
-            transactionsTable.addHeaderCell(Cell().add(Paragraph("Monto").setBold()))
-            transactionsTable.addHeaderCell(Cell().add(Paragraph("Tipo").setBold()))
-            transactionsTable.addHeaderCell(Cell().add(Paragraph("Categoría").setBold()))
-            
-            // Add transaction rows
-            transactions.forEach { transaction ->
-                val category = categories.find { it.id == transaction.categoryId }
-                
-                transactionsTable.addCell(Cell().add(Paragraph(dateFormat.format(Date(transaction.date)))))
-                transactionsTable.addCell(Cell().add(Paragraph(transaction.description)))
-                transactionsTable.addCell(Cell().add(Paragraph("$${String.format("%.2f", transaction.amount)}")))
-                transactionsTable.addCell(Cell().add(Paragraph(transaction.type)))
-                transactionsTable.addCell(Cell().add(Paragraph(category?.name ?: "Sin categoría")))
+
+            paint.textSize = 12f
+            paint.isFakeBoldText = true
+            canvas.drawText("Resumen:", 40f, y, paint)
+            paint.isFakeBoldText = false
+            y += 18f
+            canvas.drawText("Total Ingresos: $${String.format("%.2f", totalIncome)}", 40f, y, paint)
+            y += 14f
+            canvas.drawText("Total Gastos: $${String.format("%.2f", totalExpenses)}", 40f, y, paint)
+            y += 14f
+            canvas.drawText("Balance: $${String.format("%.2f", balance)}", 40f, y, paint)
+
+            y += 22f
+            paint.isFakeBoldText = true
+            canvas.drawText("Transacciones:", 40f, y, paint)
+            paint.isFakeBoldText = false
+            y += 18f
+
+            paint.textSize = 10f
+            // Table-like rendering: Date | Desc | Amount | Type | Category
+            val colX = listOf(40f, 140f, 380f, 450f, 510f)
+            // Header
+            canvas.drawText("Fecha", colX[0], y, paint)
+            canvas.drawText("Descripción", colX[1], y, paint)
+            canvas.drawText("Monto", colX[2], y, paint)
+            canvas.drawText("Tipo", colX[3], y, paint)
+            canvas.drawText("Categoría", colX[4], y, paint)
+
+            y += 12f
+            // Sort by date desc for consistency
+            val sorted = transactions.sortedByDescending { it.date }
+            for (t in sorted) {
+                if (y > pageInfo.pageHeight - 60) {
+                    pdf.finishPage(page)
+                    // start a new page
+                    currentPageNum += 1
+                    val nextPageInfo = PdfDocument.PageInfo.Builder(595, 842, currentPageNum).create()
+                    page = pdf.startPage(nextPageInfo)
+                    canvas = page.canvas
+                    y = 40f
+                }
+
+                canvas.drawText(dateFormat.format(Date(t.date)), colX[0], y, paint)
+                // Truncate description
+                val desc = if (t.description.length > 30) t.description.substring(0, 27) + "..." else t.description
+                canvas.drawText(desc, colX[1], y, paint)
+                canvas.drawText("$${String.format("%.2f", t.amount)}", colX[2], y, paint)
+                canvas.drawText(t.type, colX[3], y, paint)
+                val categoryName = categories.find { it.id == t.categoryId }?.name ?: "Sin categoría"
+                canvas.drawText(categoryName, colX[4], y, paint)
+                y += 12f
             }
-            
-            document.add(transactionsTable)
-            
-            // Add footer
-            document.add(Paragraph("\n"))
-            val footerParagraph = Paragraph("Total de transacciones: ${transactions.size}")
-                .setFontSize(10f)
-                .setTextAlignment(TextAlignment.CENTER)
-            document.add(footerParagraph)
-            
-            document.close()
-            
+
+            pdf.finishPage(page)
+
+            // Write to file
+            FileOutputStream(file).use { out ->
+                pdf.writeTo(out)
+            }
+            pdf.close()
+
             FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
@@ -247,81 +253,75 @@ class ExportService(private val context: Context) {
         try {
             val fileName = "reporte_presupuestos_${fileNameDateFormat.format(Date())}.pdf"
             val file = File(context.getExternalFilesDir(null), fileName)
-            
-            val pdfWriter = PdfWriter(file)
-            val pdfDocument = PdfDocument(pdfWriter)
-            val document = Document(pdfDocument)
-            
-            // Add title
-            val titleParagraph = Paragraph(reportTitle)
-                .setFontSize(18f)
-                .setBold()
-                .setTextAlignment(TextAlignment.CENTER)
-            document.add(titleParagraph)
-            
-            // Add generation date
-            val dateParagraph = Paragraph("Generado el: ${dateFormat.format(Date())}")
-                .setFontSize(10f)
-                .setTextAlignment(TextAlignment.CENTER)
-                .setMarginBottom(20f)
-            document.add(dateParagraph)
-            
-            // Add summary statistics
+            // Use PdfDocument for budgets report
+            val pdf = PdfDocument()
+            var currentPageNum = 1
+            val pageInfo = PdfDocument.PageInfo.Builder(595, 842, currentPageNum).create()
+            var page = pdf.startPage(pageInfo)
+            var canvas = page.canvas
+            val paint = Paint().apply { isAntiAlias = true }
+
+            var y = 40f
+            paint.textSize = 18f
+            paint.isFakeBoldText = true
+            canvas.drawText(reportTitle, 40f, y, paint)
+            y += 24f
+            paint.textSize = 10f
+            paint.isFakeBoldText = false
+            canvas.drawText("Generado el: ${dateFormat.format(Date())}", 40f, y, paint)
+
+            y += 24f
             val totalBudget = budgets.sumOf { it.budget.amount }
             val totalSpent = budgets.sumOf { it.spent }
             val totalRemaining = budgets.sumOf { it.remaining }
-            
-            val summaryTable = Table(UnitValue.createPercentArray(floatArrayOf(1f, 1f, 1f)))
-                .setWidth(UnitValue.createPercentValue(100f))
-            
-            // Summary headers
-            summaryTable.addHeaderCell(Cell().add(Paragraph("Total Presupuestado").setBold()))
-            summaryTable.addHeaderCell(Cell().add(Paragraph("Total Gastado").setBold()))
-            summaryTable.addHeaderCell(Cell().add(Paragraph("Total Restante").setBold()))
-            
-            // Summary values
-            summaryTable.addCell(Cell().add(Paragraph("$${String.format("%.2f", totalBudget)}")))
-            summaryTable.addCell(Cell().add(Paragraph("$${String.format("%.2f", totalSpent)}")))
-            summaryTable.addCell(Cell().add(Paragraph("$${String.format("%.2f", totalRemaining)}")))
-            
-            document.add(summaryTable)
-            document.add(Paragraph("\n"))
-            
-            // Add budgets table
-            val budgetsTable = Table(UnitValue.createPercentArray(floatArrayOf(2f, 1.5f, 1.5f, 1.5f, 1f, 1.5f, 1f)))
-                .setWidth(UnitValue.createPercentValue(100f))
-            
-            // Table headers
-            budgetsTable.addHeaderCell(Cell().add(Paragraph("Categoría").setBold()))
-            budgetsTable.addHeaderCell(Cell().add(Paragraph("Presupuesto").setBold()))
-            budgetsTable.addHeaderCell(Cell().add(Paragraph("Gastado").setBold()))
-            budgetsTable.addHeaderCell(Cell().add(Paragraph("Restante").setBold()))
-            budgetsTable.addHeaderCell(Cell().add(Paragraph("Porcentaje").setBold()))
-            budgetsTable.addHeaderCell(Cell().add(Paragraph("Estado").setBold()))
-            budgetsTable.addHeaderCell(Cell().add(Paragraph("Días Rest.").setBold()))
-            
-            // Add budget rows
-            budgets.forEach { budgetProgress ->
-                budgetsTable.addCell(Cell().add(Paragraph(budgetProgress.category.name)))
-                budgetsTable.addCell(Cell().add(Paragraph("$${String.format("%.2f", budgetProgress.budget.amount)}")))
-                budgetsTable.addCell(Cell().add(Paragraph("$${String.format("%.2f", budgetProgress.spent)}")))
-                budgetsTable.addCell(Cell().add(Paragraph("$${String.format("%.2f", budgetProgress.remaining)}")))
-                budgetsTable.addCell(Cell().add(Paragraph("${(budgetProgress.percentage * 100).toInt()}%")))
-                budgetsTable.addCell(Cell().add(Paragraph(budgetProgress.status.displayName)))
-                budgetsTable.addCell(Cell().add(Paragraph(budgetProgress.daysRemaining.toString())))
+
+            paint.textSize = 12f
+            paint.isFakeBoldText = true
+            canvas.drawText("Resumen:", 40f, y, paint)
+            paint.isFakeBoldText = false
+            y += 18f
+            canvas.drawText("Total Presupuestado: $${String.format("%.2f", totalBudget)}", 40f, y, paint)
+            y += 14f
+            canvas.drawText("Total Gastado: $${String.format("%.2f", totalSpent)}", 40f, y, paint)
+            y += 14f
+            canvas.drawText("Total Restante: $${String.format("%.2f", totalRemaining)}", 40f, y, paint)
+
+            y += 22f
+            paint.isFakeBoldText = true
+            canvas.drawText("Presupuestos:", 40f, y, paint)
+            paint.isFakeBoldText = false
+            y += 18f
+
+            paint.textSize = 10f
+            val colX = listOf(40f, 220f, 320f, 420f, 480f)
+            canvas.drawText("Categoría", colX[0], y, paint)
+            canvas.drawText("Presupuesto", colX[1], y, paint)
+            canvas.drawText("Gastado", colX[2], y, paint)
+            canvas.drawText("Restante", colX[3], y, paint)
+            canvas.drawText("%", colX[4], y, paint)
+            y += 12f
+
+            for (b in budgets) {
+                if (y > pageInfo.pageHeight - 60) {
+                    pdf.finishPage(page)
+                    currentPageNum += 1
+                    val nextPageInfo = PdfDocument.PageInfo.Builder(595, 842, currentPageNum).create()
+                    page = pdf.startPage(nextPageInfo)
+                    canvas = page.canvas
+                    y = 40f
+                }
+                canvas.drawText(b.category.name, colX[0], y, paint)
+                canvas.drawText("$${String.format("%.2f", b.budget.amount)}", colX[1], y, paint)
+                canvas.drawText("$${String.format("%.2f", b.spent)}", colX[2], y, paint)
+                canvas.drawText("$${String.format("%.2f", b.remaining)}", colX[3], y, paint)
+                canvas.drawText("${(b.percentage * 100).toInt()}%", colX[4], y, paint)
+                y += 12f
             }
-            
-            document.add(budgetsTable)
-            
-            // Add footer
-            document.add(Paragraph("\n"))
-            val footerParagraph = Paragraph("Total de presupuestos activos: ${budgets.size}")
-                .setFontSize(10f)
-                .setTextAlignment(TextAlignment.CENTER)
-            document.add(footerParagraph)
-            
-            document.close()
-            
+
+            pdf.finishPage(page)
+            FileOutputStream(file).use { out -> pdf.writeTo(out) }
+            pdf.close()
+
             FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
