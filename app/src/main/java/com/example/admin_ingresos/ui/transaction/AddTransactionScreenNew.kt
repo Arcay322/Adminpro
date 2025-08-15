@@ -70,7 +70,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
             val file = File.createTempFile("recibo_${'$'}timeStamp", ".jpg", storageDir)
             androidx.core.content.FileProvider.getUriForFile(
                 context,
-                context.packageName + ".provider",
+                context.packageName + ".fileprovider",
                 file
             )
         } catch (e: Exception) { null }

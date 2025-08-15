@@ -48,6 +48,8 @@ fun ReportsScreen() {
 
     val uiState by viewModel.uiState.collectAsState()
     val exportState by viewModel.exportState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var showLoadingOverlay by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
 
     // Launcher placeholder to grant URI permission if needed (not strictly necessary for FileProvider)
@@ -62,6 +64,19 @@ fun ReportsScreen() {
                 )
             )
     ) {
+        // Loading overlay for export
+        if (showLoadingOverlay) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .background(color = androidx.compose.ui.graphics.Color(0x88000000))
+            ) {
+                Column(modifier = Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Exportando...", color = Color.White)
+                }
+            }
+        }
         if (uiState.isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
@@ -117,15 +132,20 @@ fun ReportsScreen() {
                 Row {
                     TextButton(onClick = {
                         showExportDialog = false
-                        viewModel.exportTransactionsCsv(context)
+                            viewModel.exportTransactionsCsv(context)
+                            // show overlay while exporting
+                            showLoadingOverlay = true
                     }) { Text("CSV") }
                     TextButton(onClick = {
                         showExportDialog = false
-                        viewModel.exportTransactionsPdf(context)
+                            viewModel.exportTransactionsPdf(context)
+                            showLoadingOverlay = true
                     }) { Text("PDF") }
                     TextButton(onClick = {
                         showExportDialog = false
-                        viewModel.shareTextSummary(context)
+                            viewModel.shareTextSummary(context)
+                            // textual share uses chooser; show a subtle loading state briefly
+                            showLoadingOverlay = true
                     }) { Text("Texto") }
                 }
             },
@@ -136,20 +156,34 @@ fun ReportsScreen() {
     }
 
     // Observe export state and trigger sharing when ready
+    // Observe export state and react: share on success, show snackbar on error, hide loading overlay
     LaunchedEffect(exportState) {
         when (exportState) {
             is com.example.admin_ingresos.ui.reports.ExportStatus.Success -> {
                 val uri = (exportState as com.example.admin_ingresos.ui.reports.ExportStatus.Success).uri
-                // Share the file using ExportService helper on main thread
                 com.example.admin_ingresos.data.ExportService(context).shareFile(uri, mimeType = if (uri.toString().endsWith(".pdf")) "application/pdf" else "text/csv")
                 viewModel.clearExportState()
+                showLoadingOverlay = false
+                snackbarHostState.showSnackbar("Exportado correctamente")
             }
             is com.example.admin_ingresos.ui.reports.ExportStatus.Error -> {
-                // Optionally show toast or snackbar; keep simple for now
+                val message = (exportState as com.example.admin_ingresos.ui.reports.ExportStatus.Error).message
                 viewModel.clearExportState()
+                showLoadingOverlay = false
+                snackbarHostState.showSnackbar("Error: $message")
             }
-            else -> {}
+            is com.example.admin_ingresos.ui.reports.ExportStatus.Loading -> {
+                showLoadingOverlay = true
+            }
+            is com.example.admin_ingresos.ui.reports.ExportStatus.Idle -> {
+                showLoadingOverlay = false
+            }
         }
+    }
+
+    // Snackbar host
+    Box(modifier = Modifier.fillMaxSize()) {
+        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
     }
 }
 
