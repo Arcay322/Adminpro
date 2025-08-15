@@ -40,6 +40,7 @@ import com.example.admin_ingresos.ui.category.CategoryDetailScreen
 import com.example.admin_ingresos.ui.category.CategoryDetailViewModel
 import com.example.admin_ingresos.ui.category.CategoryScreen
 import com.example.admin_ingresos.ui.category.CategoryViewModel
+import com.example.admin_ingresos.ui.reports.ReportsScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -112,7 +113,7 @@ fun MainAppNavigation() {
                     DashboardScreen(
                         onNavigateToTransactions = { navController.navigate("history") },
                         onNavigateToAddTransaction = { showAddTransactionModal = true },
-                        onNavigateToReports = { /* No-op */ },
+                        onNavigateToReports = { navController.navigate("reports") },
                         onNavigateToSettings = { /* No-op */ }
                     )
                 }
@@ -129,6 +130,9 @@ fun MainAppNavigation() {
                 }
                 composable("history") {
                     TransactionHistoryScreen()
+                }
+                composable("reports") {
+                    ReportsScreen()
                 }
 
                 composable(

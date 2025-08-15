@@ -9,7 +9,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -452,7 +456,7 @@ private fun MainBalanceCards(
                 title = "Ingresos",
                 value = formatter.format(monthlyIncome),
                 subtitle = "Este mes",
-                icon = Icons.Default.TrendingUp,
+                icon = Icons.AutoMirrored.Filled.TrendingUp,
                 color = IncomeGreen,
                 modifier = Modifier.weight(1f)
             )
@@ -461,7 +465,7 @@ private fun MainBalanceCards(
                 title = "Gastos",
                 value = formatter.format(monthlyExpenses),
                 subtitle = "Este mes",
-                icon = Icons.Default.TrendingDown,
+                icon = Icons.AutoMirrored.Filled.TrendingDown,
                 color = ExpenseRed,
                 modifier = Modifier.weight(1f)
             )
@@ -799,7 +803,7 @@ private fun TrendsAndInsights(
                         title = "Ingresos",
                         value = formatter.format(monthlyIncome),
                         subtitle = "Este mes",
-                        icon = Icons.Default.TrendingUp,
+                        icon = Icons.AutoMirrored.Filled.TrendingUp,
                         color = IncomeGreen,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -819,7 +823,7 @@ private fun TrendsAndInsights(
                         title = "Gastos",
                         value = formatter.format(monthlyExpenses),
                         subtitle = "Este mes",
-                        icon = Icons.Default.TrendingDown,
+                        icon = Icons.AutoMirrored.Filled.TrendingDown,
                         color = ExpenseRed,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -867,7 +871,7 @@ private fun TrendsAndInsights(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 LinearProgressIndicator(
-                    progress = (savingsRate / 25.0).toFloat().coerceAtMost(1f),
+                    progress = { (savingsRate / 25.0).toFloat().coerceAtMost(1f) },
                     modifier = Modifier.fillMaxWidth(),
                     color = if (savingsRate >= 25) IncomeGreen else AccentVibrantStart,
                     trackColor = GlassWhiteSubtle
@@ -1312,7 +1316,7 @@ private fun SavingsGoalCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             LinearProgressIndicator(
-                progress = progress,
+                progress = { progress },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
@@ -1427,8 +1431,8 @@ private fun DeleteConfirmationDialog(
                     containerColor = ExpenseRed,
                     contentColor = Color.White
                 )
-            ) {
-                Text("Eliminar")
+            ) { 
+                Text("Eliminar") 
             }
         },
         dismissButton = {

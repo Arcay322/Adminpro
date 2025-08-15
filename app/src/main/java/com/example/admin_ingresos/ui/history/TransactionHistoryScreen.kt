@@ -16,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,6 +28,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.admin_ingresos.AppDatabaseProvider
 import com.example.admin_ingresos.data.Transaction
@@ -43,72 +43,45 @@ import java.util.*
 @Composable
 fun TransactionHistoryScreen() {
     val context = LocalContext.current
-    val db = remember { AppDatabaseProvider.getDatabase(context) }
-    val coroutineScope = rememberCoroutineScope()
-    
-    // Estados para búsqueda y filtros
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedType by remember { mutableStateOf("Todos") }
-    var sortOrder by remember { mutableStateOf("Fecha (Reciente)") }
-    var showFilters by remember { mutableStateOf(false) }
-    var showAnalytics by remember { mutableStateOf(false) }
-    
-    // Estados para diálogos
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    var transactionToDelete by remember { mutableStateOf<Transaction?>(null) }
-    var showEditDialog by remember { mutableStateOf(false) }
-    var transactionToEdit by remember { mutableStateOf<Transaction?>(null) }
-    
-    // Estados para el formulario de edición
-    var editDescription by remember { mutableStateOf("") }
-    var editAmount by remember { mutableStateOf("") }
-    var editType by remember { mutableStateOf("Ingreso") }
-    
-    // Estado para forzar recarga de transacciones
-    var reloadTrigger by remember { mutableStateOf(0) }
-    
-    // Cargar transacciones de forma reactiva
-    val transactions by produceState(initialValue = emptyList<Transaction>(), db, reloadTrigger) {
-        value = db.transactionDao().getAll()
-    }
-    
-    // Filtrar y ordenar transacciones
-    val filteredTransactions = remember(transactions, searchQuery, selectedType, sortOrder) {
-        var filtered = transactions
-        
-        // Filtrar por tipo
-        if (selectedType != "Todos") {
-            filtered = filtered.filter { it.type == selectedType }
+    val viewModel: TransactionHistoryViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+            @Suppress("UNCHECKED_CAST")
+            return TransactionHistoryViewModel(AppDatabaseProvider.getDatabase(context)) as T
         }
-        
+    })
+    val uiState by viewModel.uiState.collectAsState()
+
+    // Filtrar y ordenar transacciones
+    val filteredTransactions = remember(uiState.transactions, uiState.searchQuery, uiState.sortOption) {
+        var filtered = uiState.transactions
+
         // Filtrar por búsqueda
-        if (searchQuery.isNotBlank()) {
+        if (uiState.searchQuery.isNotBlank()) {
             filtered = filtered.filter { transaction ->
-                transaction.description.contains(searchQuery, ignoreCase = true) ||
-                transaction.amount.toString().contains(searchQuery)
+                transaction.description.contains(uiState.searchQuery, ignoreCase = true) ||
+                        transaction.amount.toString().contains(uiState.searchQuery)
             }
         }
-        
+
         // Ordenar
-        when (sortOrder) {
-            "Fecha (Reciente)" -> filtered.sortedByDescending { it.date }
-            "Fecha (Antiguo)" -> filtered.sortedBy { it.date }
-            "Monto (Mayor)" -> filtered.sortedByDescending { it.amount }
-            "Monto (Menor)" -> filtered.sortedBy { it.amount }
-            "Nombre (A-Z)" -> filtered.sortedBy { it.description }
-            "Nombre (Z-A)" -> filtered.sortedByDescending { it.description }
-            else -> filtered.sortedByDescending { it.date }
+        when (uiState.sortOption) {
+            SortOption.DATE_DESC -> filtered.sortedByDescending { it.date }
+            SortOption.DATE_ASC -> filtered.sortedBy { it.date }
+            SortOption.AMOUNT_DESC -> filtered.sortedByDescending { it.amount }
+            SortOption.AMOUNT_ASC -> filtered.sortedBy { it.amount }
+            SortOption.DESCRIPTION -> filtered.sortedBy { it.description }
+            SortOption.CATEGORY -> filtered.sortedByDescending { it.description }
         }
     }
-    
+
     // Agrupar transacciones por fecha
     val groupedTransactions = remember(filteredTransactions) {
-        filteredTransactions.groupBy { transaction ->
-            val date = Date(transaction.date)
+        filteredTransactions.groupBy {
+            val date = Date(it.date)
             SimpleDateFormat("dd MMMM yyyy", Locale("es", "ES")).format(date)
         }
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -132,322 +105,245 @@ fun TransactionHistoryScreen() {
             item {
                 ModernHistoryHeader()
             }
-            
+
             // Estadísticas de transacciones
             if (filteredTransactions.isNotEmpty()) {
                 item {
                     ModernTransactionStats(
                         transactions = filteredTransactions,
-                        onAnalyticsClick = { showAnalytics = true }
+                        onAnalyticsClick = { viewModel.onAnalyticsClick(true) }
                     )
                 }
             }
-            
+
             // Búsqueda y filtros con glassmorphism
             item {
                 ModernSearchAndFilters(
-                    searchQuery = searchQuery,
-                    onSearchQueryChange = { searchQuery = it },
-                    selectedType = selectedType,
-                    onTypeChange = { selectedType = it },
-                    sortOrder = sortOrder,
-                    onSortOrderChange = { sortOrder = it },
-                    showFilters = showFilters,
-                    onToggleFilters = { showFilters = !showFilters }
+                    searchQuery = uiState.searchQuery,
+                    onSearchQueryChange = viewModel::onSearchQueryChanged,
+                    selectedType = "Todos", // TODO: Implement type filter in ViewModel
+                    onTypeChange = { /* TODO */ },
+                    sortOption = uiState.sortOption,
+                    onSortOrderChange = viewModel::onSortOptionChanged,
+                    showFilters = uiState.showFilters,
+                    onToggleFilters = { viewModel.onToggleFilters(!uiState.showFilters) }
                 )
             }
-            
+
             // Indicador de resultados
             if (filteredTransactions.isNotEmpty()) {
                 item {
                     ModernResultsIndicator(
                         totalResults = filteredTransactions.size,
-                        hasFilters = selectedType != "Todos" || searchQuery.isNotBlank()
+                        hasFilters = uiState.searchQuery.isNotBlank() // TODO: Enhance this
                     )
                 }
             }
-            
+
             // Lista de transacciones agrupadas
             if (groupedTransactions.isNotEmpty()) {
                 groupedTransactions.forEach { (date, dayTransactions) ->
                     item {
                         ModernDateHeader(date = date, transactionCount = dayTransactions.size)
                     }
-                    
-                    items(dayTransactions) { transaction ->
+
+                    items(dayTransactions) {
                         ModernTransactionItem(
-                            transaction = transaction,
-                            onEdit = { 
-                                println("🔧 Preparando edición de: ${transaction.description}")
-                                transactionToEdit = transaction
-                                // Cargar datos en el formulario
-                                editDescription = transaction.description
-                                editAmount = transaction.amount.toString()
-                                editType = transaction.type
-                                showEditDialog = true
-                            },
-                            onDelete = { 
-                                println("🗑️ Confirmando eliminación de: ${transaction.description}")
-                                transactionToDelete = transaction
-                                showDeleteDialog = true
-                            }
+                            transaction = it,
+                            onEdit = { viewModel.showEditDialog(it) },
+                            onDelete = { viewModel.showDeleteDialog(it) }
                         )
                     }
                 }
             } else {
                 item {
                     ModernEmptyHistoryState(
-                        hasSearch = searchQuery.isNotBlank(),
-                        onClearSearch = { searchQuery = "" }
+                        hasSearch = uiState.searchQuery.isNotBlank(),
+                        onClearSearch = { viewModel.onSearchQueryChanged("") }
                     )
                 }
             }
         }
-        
+
         // Analytics Modal
-        if (showAnalytics) {
+        if (uiState.showAnalytics) {
             ModernAnalyticsModal(
                 transactions = filteredTransactions,
-                onClose = { showAnalytics = false }
+                onClose = { viewModel.onAnalyticsClick(false) }
             )
         }
-        
+
         // Delete Confirmation Dialog
-        if (showDeleteDialog && transactionToDelete != null) {
-            AlertDialog(
-                onDismissRequest = { 
-                    showDeleteDialog = false
-                    transactionToDelete = null
-                },
-                title = {
-                    Text(
-                        text = "Confirmar Eliminación",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                text = {
-                    Text(
-                        text = "¿Estás seguro de que deseas eliminar la transacción '${transactionToDelete!!.description}'?\n\nEsta acción no se puede deshacer.",
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            transactionToDelete?.let { transaction ->
-                                println("✅ Eliminando transacción: ${transaction.description}")
-                                // Eliminar de la base de datos usando corrutina
-                                coroutineScope.launch {
-                                    try {
-                                        db.transactionDao().delete(transaction)
-                                        println("✅ Transacción eliminada exitosamente")
-                                        // Forzar recarga de transacciones
-                                        reloadTrigger++
-                                    } catch (e: Exception) {
-                                        println("❌ Error al eliminar: ${e.message}")
-                                    }
-                                }
-                            }
-                            showDeleteDialog = false
-                            transactionToDelete = null
-                        }
-                    ) {
-                        Text(
-                            text = "Eliminar",
-                            color = MaterialTheme.colorScheme.error,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = {
-                            showDeleteDialog = false
-                            transactionToDelete = null
-                        }
-                    ) {
-                        Text(
-                            text = "Cancelar",
-                            color = Color.White.copy(alpha = 0.7f)
-                        )
-                    }
-                },
-                containerColor = Color(0xFF1a1a2e).copy(alpha = 0.95f),
-                iconContentColor = Color.White,
-                titleContentColor = Color.White,
-                textContentColor = Color.White
+        uiState.transactionToDelete?.let { transaction ->
+            DeleteConfirmationDialog(
+                transaction = transaction,
+                onConfirm = { viewModel.deleteTransaction(transaction) },
+                onDismiss = { viewModel.hideDeleteDialog() }
             )
         }
-        
+
         // Edit Dialog
-        if (showEditDialog && transactionToEdit != null) {
-            AlertDialog(
-                onDismissRequest = { 
-                    showEditDialog = false
-                    transactionToEdit = null
-                },
-                title = {
-                    Text(
-                        text = "Editar Transacción",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                text = {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Campo descripción
-                        OutlinedTextField(
-                            value = editDescription,
-                            onValueChange = { editDescription = it },
-                            label = { 
-                                Text(
-                                    text = "Descripción",
-                                    color = Color.White.copy(alpha = 0.7f)
-                                ) 
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White,
-                                focusedBorderColor = CashFlowPrimary,
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
-                                cursorColor = CashFlowPrimary
-                            ),
-                            singleLine = true
-                        )
-                        
-                        // Campo monto
-                        OutlinedTextField(
-                            value = editAmount,
-                            onValueChange = { newValue ->
-                                // Solo permitir números y punto decimal
-                                if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
-                                    editAmount = newValue
-                                }
-                            },
-                            label = { 
-                                Text(
-                                    text = "Monto",
-                                    color = Color.White.copy(alpha = 0.7f)
-                                ) 
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White,
-                                focusedBorderColor = CashFlowPrimary,
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
-                                cursorColor = CashFlowPrimary
-                            ),
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                keyboardType = KeyboardType.Decimal
-                            ),
-                            singleLine = true
-                        )
-                        
-                        // Selector de tipo
-                        Text(
-                            text = "Tipo de transacción",
-                            color = Color.White.copy(alpha = 0.7f),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            listOf("Ingreso", "Gasto").forEach { type ->
-                                FilterChip(
-                                    selected = editType == type,
-                                    onClick = { editType = type },
-                                    label = { 
-                                        Text(
-                                            text = type,
-                                            style = MaterialTheme.typography.bodySmall.copy(
-                                                fontWeight = FontWeight.Medium
-                                            )
-                                        )
-                                    },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = CashFlowPrimary,
-                                        selectedLabelColor = Color.White,
-                                        containerColor = Color.White.copy(alpha = 0.1f),
-                                        labelColor = Color.White.copy(alpha = 0.8f)
-                                    )
-                                )
-                            }
-                        }
-                    }
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            transactionToEdit?.let { originalTransaction ->
-                                val updatedAmount = editAmount.toDoubleOrNull()
-                                if (editDescription.isNotBlank() && updatedAmount != null && updatedAmount > 0) {
-                                    val updatedTransaction = originalTransaction.copy(
-                                        description = editDescription.trim(),
-                                        amount = updatedAmount,
-                                        type = editType
-                                    )
-                                    
-                                    coroutineScope.launch {
-                                        try {
-                                            db.transactionDao().update(updatedTransaction)
-                                            println("✅ Transacción actualizada exitosamente: ${updatedTransaction.description}")
-                                            // Forzar recarga de transacciones
-                                            reloadTrigger++
-                                        } catch (e: Exception) {
-                                            println("❌ Error al actualizar: ${e.message}")
-                                        }
-                                    }
-                                    
-                                    showEditDialog = false
-                                    transactionToEdit = null
-                                } else {
-                                    println("❌ Por favor completa todos los campos correctamente")
-                                }
-                            }
-                        },
-                        enabled = editDescription.isNotBlank() && 
-                                editAmount.isNotBlank() && 
-                                editAmount.toDoubleOrNull() != null &&
-                                editAmount.toDoubleOrNull()!! > 0
-                    ) {
-                        Text(
-                            text = "Guardar",
-                            color = if (editDescription.isNotBlank() && 
-                                      editAmount.isNotBlank() && 
-                                      editAmount.toDoubleOrNull() != null &&
-                                      editAmount.toDoubleOrNull()!! > 0) 
-                                CashFlowPrimary else Color.White.copy(alpha = 0.5f),
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = {
-                            showEditDialog = false
-                            transactionToEdit = null
-                        }
-                    ) {
-                        Text(
-                            text = "Cancelar",
-                            color = Color.White.copy(alpha = 0.7f)
-                        )
-                    }
-                },
-                containerColor = Color(0xFF1a1a2e).copy(alpha = 0.95f),
-                iconContentColor = Color.White,
-                titleContentColor = Color.White,
-                textContentColor = Color.White
+        uiState.transactionToEdit?.let { transaction ->
+            EditTransactionDialog(
+                transaction = transaction,
+                onConfirm = { updatedTransaction -> viewModel.updateTransaction(updatedTransaction) },
+                onDismiss = { viewModel.hideEditDialog() }
             )
         }
     }
 }
+
+@Composable
+fun DeleteConfirmationDialog(
+    transaction: Transaction,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Confirmar Eliminación",
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Text(
+                text = "¿Estás seguro de que deseas eliminar la transacción '${transaction.description}'?\n\nEsta acción no se puede deshacer.",
+                color = Color.White.copy(alpha = 0.9f)
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    text = "Eliminar",
+                    color = MaterialTheme.colorScheme.error,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = "Cancelar",
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+            }
+        },
+        containerColor = Color(0xFF1a1a2e).copy(alpha = 0.95f),
+        iconContentColor = Color.White,
+        titleContentColor = Color.White,
+        textContentColor = Color.White
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditTransactionDialog(
+    transaction: Transaction,
+    onConfirm: (Transaction) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var editDescription by remember { mutableStateOf(transaction.description) }
+    var editAmount by remember { mutableStateOf(transaction.amount.toString()) }
+    var editType by remember { mutableStateOf(transaction.type) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Editar Transacción",
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                OutlinedTextField(
+                    value = editDescription,
+                    onValueChange = { editDescription = it },
+                    label = { Text("Descripción", color = Color.White.copy(alpha = 0.7f)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = CashFlowPrimary,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                        cursorColor = CashFlowPrimary
+                    ),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = editAmount,
+                    onValueChange = { newValue ->
+                        if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
+                            editAmount = newValue
+                        }
+                    },
+                    label = { Text("Monto", color = Color.White.copy(alpha = 0.7f)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = CashFlowPrimary,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                        cursorColor = CashFlowPrimary
+                    ),
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal),
+                    singleLine = true
+                )
+
+                Text("Tipo de transacción", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodyMedium)
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("Ingreso", "Gasto").forEach { type ->
+                        FilterChip(
+                            selected = editType == type,
+                            onClick = { editType = type },
+                            label = { Text(type, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = CashFlowPrimary,
+                                selectedLabelColor = Color.White,
+                                containerColor = Color.White.copy(alpha = 0.1f),
+                                labelColor = Color.White.copy(alpha = 0.8f)
+                            )
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            val updatedAmount = editAmount.toDoubleOrNull()
+            val isEnabled = editDescription.isNotBlank() && updatedAmount != null && updatedAmount > 0
+            TextButton(
+                onClick = {
+                    if (isEnabled) {
+                        val updatedTransaction = transaction.copy(
+                            description = editDescription.trim(),
+                            amount = updatedAmount!!,
+                            type = editType
+                        )
+                        onConfirm(updatedTransaction)
+                    }
+                },
+                enabled = isEnabled
+            ) {
+                Text("Guardar", color = if (isEnabled) CashFlowPrimary else Color.White.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar", color = Color.White.copy(alpha = 0.7f))
+            }
+        },
+        containerColor = Color(0xFF1a1a2e).copy(alpha = 0.95f)
+    )
+}
+
 
 @Composable
 fun ModernTransactionItem(
@@ -878,8 +774,8 @@ fun ModernSearchAndFilters(
     onSearchQueryChange: (String) -> Unit,
     selectedType: String,
     onTypeChange: (String) -> Unit,
-    sortOrder: String,
-    onSortOrderChange: (String) -> Unit,
+    sortOption: SortOption,
+    onSortOrderChange: (SortOption) -> Unit,
     showFilters: Boolean,
     onToggleFilters: () -> Unit
 ) {
@@ -934,7 +830,7 @@ fun ModernSearchAndFilters(
                     Icon(
                         imageVector = LucideIconMapper.getNavigationIcon("Filter"),
                         contentDescription = "Filtros",
-                        tint = if (selectedType != "Todos" || sortOrder != "Fecha (Reciente)") 
+                        tint = if (selectedType != "Todos" || sortOption != SortOption.DATE_DESC) 
                             CashFlowPrimary else Color.White.copy(alpha = 0.7f),
                         modifier = Modifier.size(20.dp)
                     )
@@ -1013,18 +909,12 @@ fun ModernSearchAndFilters(
                         color = Color.White
                     )
                     
-                    val sortOptions = listOf(
-                        "Fecha (Reciente)", "Fecha (Antiguo)",
-                        "Monto (Mayor)", "Monto (Menor)",
-                        "Nombre (A-Z)", "Nombre (Z-A)"
-                    )
-                    
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(sortOptions) { option ->
+                        items(SortOption.values()) { option ->
                             FilterChip(
-                                selected = sortOrder == option,
+                                selected = sortOption == option,
                                 onClick = { onSortOrderChange(option) },
                                 label = { 
                                     Row(
@@ -1033,19 +923,18 @@ fun ModernSearchAndFilters(
                                     ) {
                                         Icon(
                                             imageVector = when (option) {
-                                                "Fecha (Reciente)" -> LucideIconMapper.getNavigationIcon("CalendarDown")
-                                                "Fecha (Antiguo)" -> LucideIconMapper.getNavigationIcon("CalendarUp")
-                                                "Monto (Mayor)" -> LucideIconMapper.getNavigationIcon("ArrowUp")
-                                                "Monto (Menor)" -> LucideIconMapper.getNavigationIcon("ArrowDown")
-                                                "Nombre (A-Z)" -> LucideIconMapper.getNavigationIcon("ArrowUp")
-                                                "Nombre (Z-A)" -> LucideIconMapper.getNavigationIcon("ArrowDown")
-                                                else -> LucideIconMapper.getNavigationIcon("Sort")
+                                                SortOption.DATE_DESC -> LucideIconMapper.getNavigationIcon("CalendarDown")
+                                                SortOption.DATE_ASC -> LucideIconMapper.getNavigationIcon("CalendarUp")
+                                                SortOption.AMOUNT_DESC -> LucideIconMapper.getNavigationIcon("ArrowUp")
+                                                SortOption.AMOUNT_ASC -> LucideIconMapper.getNavigationIcon("ArrowDown")
+                                                SortOption.DESCRIPTION -> LucideIconMapper.getNavigationIcon("ArrowUp")
+                                                SortOption.CATEGORY -> LucideIconMapper.getNavigationIcon("ArrowDown")
                                             },
                                             contentDescription = null,
                                             modifier = Modifier.size(14.dp)
                                         )
                                         Text(
-                                            text = option, 
+                                            text = option.displayName, 
                                             maxLines = 1,
                                             style = MaterialTheme.typography.bodySmall.copy(
                                                 fontWeight = FontWeight.Medium

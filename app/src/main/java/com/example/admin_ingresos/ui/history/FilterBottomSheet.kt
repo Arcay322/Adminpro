@@ -2,9 +2,7 @@ package com.example.admin_ingresos.ui.history
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Clear
@@ -12,11 +10,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.admin_ingresos.data.*
+import com.example.admin_ingresos.data.Category
+import com.example.admin_ingresos.data.PaymentMethod
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -33,9 +31,9 @@ fun FilterBottomSheet(
     var selectedDatePreset by remember { mutableStateOf(DateRangePreset.CUSTOM) }
     var showDatePicker by remember { mutableStateOf(false) }
     var isSelectingStartDate by remember { mutableStateOf(true) }
-    
+
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         modifier = Modifier.fillMaxHeight(0.9f)
@@ -57,7 +55,7 @@ fun FilterBottomSheet(
                         fontWeight = FontWeight.Bold
                     )
                 )
-                
+
                 Row {
                     TextButton(
                         onClick = {
@@ -73,7 +71,7 @@ fun FilterBottomSheet(
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("Limpiar")
                     }
-                    
+
                     Button(
                         onClick = {
                             onFilterChanged(tempFilter)
@@ -84,9 +82,9 @@ fun FilterBottomSheet(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -129,11 +127,11 @@ fun FilterBottomSheet(
                                     )
                                 }
                             }
-                            
+
                             // Custom date range
                             if (selectedDatePreset == DateRangePreset.CUSTOM) {
                                 Spacer(modifier = Modifier.height(8.dp))
-                                
+
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -152,12 +150,12 @@ fun FilterBottomSheet(
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
-                                            text = tempFilter.dateRange?.let { 
-                                                dateFormat.format(Date(it.startDate)) 
+                                            text = tempFilter.dateRange?.let {
+                                                dateFormat.format(Date(it.startDate))
                                             } ?: "Desde"
                                         )
                                     }
-                                    
+
                                     OutlinedButton(
                                         onClick = {
                                             isSelectingStartDate = false
@@ -172,8 +170,8 @@ fun FilterBottomSheet(
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
-                                            text = tempFilter.dateRange?.let { 
-                                                dateFormat.format(Date(it.endDate)) 
+                                            text = tempFilter.dateRange?.let {
+                                                dateFormat.format(Date(it.endDate))
                                             } ?: "Hasta"
                                         )
                                     }
@@ -182,12 +180,12 @@ fun FilterBottomSheet(
                         }
                     }
                 }
-                
+
                 // Transaction Types Section
                 item {
                     FilterSection(title = "Tipo de transacción") {
                         val transactionTypes = listOf("Ingreso", "Gasto")
-                        
+
                         transactionTypes.forEach { type ->
                             Row(
                                 modifier = Modifier
@@ -214,7 +212,7 @@ fun FilterBottomSheet(
                         }
                     }
                 }
-                
+
                 // Categories Section
                 if (categories.isNotEmpty()) {
                     item {
@@ -251,7 +249,7 @@ fun FilterBottomSheet(
                         }
                     }
                 }
-                
+
                 // Payment Methods Section
                 if (paymentMethods.isNotEmpty()) {
                     item {
@@ -288,20 +286,20 @@ fun FilterBottomSheet(
                         }
                     }
                 }
-                
+
                 // Amount Range Section
                 item {
                     FilterSection(title = "Rango de monto") {
                         var minAmount by remember { mutableStateOf(tempFilter.amountRange?.minAmount?.toString() ?: "") }
                         var maxAmount by remember { mutableStateOf(tempFilter.amountRange?.maxAmount?.toString() ?: "") }
-                        
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             OutlinedTextField(
                                 value = minAmount,
-                                onValueChange = { 
+                                onValueChange = {
                                     minAmount = it
                                     val min = it.toDoubleOrNull()
                                     val max = maxAmount.toDoubleOrNull()
@@ -320,10 +318,10 @@ fun FilterBottomSheet(
                                 singleLine = true,
                                 modifier = Modifier.weight(1f)
                             )
-                            
+
                             OutlinedTextField(
                                 value = maxAmount,
-                                onValueChange = { 
+                                onValueChange = {
                                     maxAmount = it
                                     val min = minAmount.toDoubleOrNull()
                                     val max = it.toDoubleOrNull()
@@ -345,7 +343,7 @@ fun FilterBottomSheet(
                         }
                     }
                 }
-                
+
                 // Bottom spacing
                 item {
                     Spacer(modifier = Modifier.height(80.dp))
@@ -353,7 +351,7 @@ fun FilterBottomSheet(
             }
         }
     }
-    
+
     // Date Picker Dialog
     if (showDatePicker) {
         // TODO: Implement date picker dialog
@@ -386,9 +384,9 @@ fun FilterSection(
                 ),
                 color = MaterialTheme.colorScheme.onSurface
             )
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             content()
         }
     }

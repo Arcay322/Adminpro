@@ -1,4 +1,3 @@
-
 package com.example.admin_ingresos.data
 
 import androidx.room.Entity
@@ -16,7 +15,13 @@ data class Category(
     val order: Int = 0, // Para reordenamiento persistente
     val type: CategoryType = CategoryType.GASTO,
     val isArchived: Boolean = false
-)
+) {
+    companion object {
+        fun uncategorized(): Category {
+            return Category(id = -1, name = "Sin Categoría", icon = "❓", color = "#808080")
+        }
+    }
+}
 
 // Simple class that Room can handle
 data class CategoryWithCount(
