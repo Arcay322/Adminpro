@@ -179,6 +179,156 @@ object TestDataSeeder {
         }
     }
 
+    /**
+     * Remove budgets and transactions that look like they were created by the seeder.
+     * This is conservative: it deletes budgets that match the commonBudgets categories and
+     * transactions in the last 12 months that match debug categories. Use carefully.
+     */
+    suspend fun clearSeedData(database: AppDatabase) = withContext(Dispatchers.IO) {
+        try {
+            val categories = database.categoryDao().getCategoriesList()
+            val catNames = categories.map { it.name }
+
+            // delete budgets for categories present in our debug list
+            val debugNames = debugCategories.map { it.name }
+            for (name in debugNames) {
+                val cat = categories.find { it.name == name }
+                if (cat != null) {
+                    database.budgetDao().deleteBudgetsByCategory(cat.id)
+                }
+            }
+
+            // Delete recent transactions (last 12 months) for debug categories
+            val cal = Calendar.getInstance()
+            cal.add(Calendar.MONTH, -12)
+            val since = cal.timeInMillis
+            val txs = database.transactionDao().getTransactionsByDateRange(since, System.currentTimeMillis())
+            txs.filter { debugNames.contains(categories.find { c -> c.id == it.categoryId }?.name) }
+                .forEach { database.transactionDao().delete(it) }
+        } catch (_: Exception) {
+            // be forgiving in tests
+        }
+    }
+
+    suspend fun seedCleanBudgetsForReports(database: AppDatabase) = withContext(Dispatchers.IO) {
+        // Clear existing seeded budgets first
+        clearSeedData(database)
+
+        val categories = database.categoryDao().getCategoriesList()
+        if (categories.isEmpty()) return@withContext
+
+        val start = Calendar.getInstance().apply { set(Calendar.DAY_OF_MONTH, 1); set(Calendar.HOUR_OF_DAY,0); set(Calendar.MINUTE,0); set(Calendar.SECOND,0) }.timeInMillis
+        val end = Calendar.getInstance().apply { add(Calendar.MONTH, 1); set(Calendar.DAY_OF_MONTH, 1); add(Calendar.DAY_OF_MONTH, -1); set(Calendar.HOUR_OF_DAY,23); set(Calendar.MINUTE,59); set(Calendar.SECOND,59) }.timeInMillis
+
+        // Slightly adjusted amounts to reduce extreme percentages in demos
+        val cleanBudgets = listOf(
+            Pair("Alimentación", 600.0),
+            Pair("Transporte", 200.0),
+            Pair("Entretenimiento", 150.0),
+            Pair("Salud", 250.0),
+            Pair("Hogar", 500.0),
+            Pair("Servicios", 300.0)
+        )
+
+        cleanBudgets.forEach { (name, amount) ->
+            val cat = categories.find { it.name == name } ?: return@forEach
+            val existing = database.budgetDao().getActiveBudgetByCategory(cat.id)
+            if (existing == null) {
+                val b = Budget(
+                    categoryId = cat.id,
+                    amount = amount,
+                    period = BudgetPeriod.MONTHLY,
+                    startDate = start,
+                    endDate = end,
+                    isActive = true,
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis()
+                )
+                database.budgetDao().insertBudget(b)
+            }
+        }
+    }
+
+    suspend fun seedCleanTransactionsForReports(database: AppDatabase) = withContext(Dispatchers.IO) {
+        try {
+            val categories = database.categoryDao().getCategoriesList()
+            if (categories.isEmpty()) return@withContext
+
+            val categoryMap = categories.associateBy { it.name }
+
+            // Define which categories we created budgets for
+            val targetCategories = listOf("Alimentación", "Transporte", "Entretenimiento", "Salud", "Hogar", "Servicios")
+
+            // Generate expenses that roughly sum to a proportion of each budget for the current month
+            val now = Calendar.getInstance()
+            val end = now.timeInMillis
+            val startCal = Calendar.getInstance()
+            startCal.add(Calendar.DAY_OF_MONTH, -60) // last 60 days
+            val start = startCal.timeInMillis
+
+            val transactions = mutableListOf<Transaction>()
+
+            // For each target category, create several expense transactions summing to 40-70% of budget
+            for (name in targetCategories) {
+                val cat = categoryMap[name] ?: continue
+                val budget = when (name) {
+                    "Alimentación" -> 600.0
+                    "Transporte" -> 200.0
+                    "Entretenimiento" -> 150.0
+                    "Salud" -> 250.0
+                    "Hogar" -> 500.0
+                    "Servicios" -> 300.0
+                    else -> 100.0
+                }
+
+                val targetTotal = (budget * (0.4 + Random.nextDouble() * 0.3)) // 40% - 70%
+                var remaining = targetTotal
+                var attempts = 0
+                while (remaining > 5.0 && attempts < 12) {
+                    val portion = (remaining / (1 + Random.nextDouble() * 3)).coerceAtLeast(2.0)
+                    remaining -= portion
+                    val date = randomTimeBetween(start, end)
+                    val descs = sampleDescriptions[name] ?: listOf("Compra")
+                    transactions.add(
+                        Transaction(
+                            amount = ((portion * 100).toInt()) / 100.0,
+                            type = "Gasto",
+                            categoryId = cat.id,
+                            description = descs.random(),
+                            date = date,
+                            paymentMethodId = null
+                        )
+                    )
+                    attempts++
+                }
+            }
+
+            // Add a few income transactions under 'Trabajo'
+            val trabajoCat = categoryMap["Trabajo"]
+            if (trabajoCat != null) {
+                repeat(6) {
+                    val amt = ((Random.nextDouble(800.0, 3200.0) * 100).toInt()) / 100.0
+                    transactions.add(
+                        Transaction(
+                            amount = amt,
+                            type = "Ingreso",
+                            categoryId = trabajoCat.id,
+                            description = listOf("Salario", "Pago Freelance", "Bonificación").random(),
+                            date = randomTimeBetween(start, end),
+                            paymentMethodId = null
+                        )
+                    )
+                }
+            }
+
+            // Shuffle and insert
+            transactions.shuffle()
+            transactions.forEach { database.transactionDao().insert(it) }
+        } catch (_: Exception) {
+            // ignore
+        }
+    }
+
     private fun randomTimeBetween(start: Long, end: Long): Long {
         val lower = minOf(start, end)
         val upper = maxOf(start, end)

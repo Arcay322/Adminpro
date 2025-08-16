@@ -23,6 +23,10 @@ interface BudgetDao {
     @Query("SELECT * FROM budgets WHERE isActive = 1 ORDER BY createdAt DESC")
     fun getBudgetsWithCategories(): Flow<List<BudgetWithCategory>>
 
+    @Transaction
+    @Query("SELECT * FROM budgets WHERE isActive = 0 ORDER BY updatedAt DESC")
+    fun getInactiveBudgetsWithCategories(): Flow<List<BudgetWithCategory>>
+
     @Query("""
         SELECT b.*, c.name as categoryName, c.icon as categoryIcon, c.color as categoryColor,
                COALESCE(SUM(CASE WHEN t.type = 'Gasto' AND t.date >= b.startDate AND t.date <= b.endDate THEN t.amount ELSE 0 END), 0) as spent
@@ -66,8 +70,14 @@ interface BudgetDao {
     @Query("UPDATE budgets SET isActive = 0 WHERE id = :id")
     suspend fun deactivateBudget(id: Int)
 
+    @Query("UPDATE budgets SET isActive = 1 WHERE id = :id")
+    suspend fun activateBudget(id: Int)
+
     @Query("DELETE FROM budgets WHERE categoryId = :categoryId")
     suspend fun deleteBudgetsByCategory(categoryId: Int)
+
+    @Query("UPDATE budgets SET isActive = 0 WHERE isActive = 1 AND endDate < :now")
+    suspend fun deactivateExpiredBudgets(now: Long)
 
     @Query("""
         SELECT COUNT(*) FROM budgets 

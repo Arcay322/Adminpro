@@ -400,26 +400,85 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
     }
 
     private fun proratedAmountForRange(budget: Budget, range: DateRange): Double {
-        // If budget has invalid dates (0 or end <= start), treat it as a recurring budget
-        // using its BudgetPeriod duration as the base period for proration.
+        // If budget has explicit dates, use overlap-based proration.
         val hasValidDates = budget.startDate > 0L && budget.endDate > budget.startDate
-        if (!hasValidDates) {
-            try {
-                val periodMs = budget.period.durationInMillis.toDouble()
-                val rangeDuration = (range.endDate - range.startDate).coerceAtLeast(1L).toDouble()
-                return budget.amount * (rangeDuration / periodMs)
-            } catch (_: Exception) {
-                // fallback to full amount if something unexpected happens
-                return budget.amount
-            }
+        if (hasValidDates) {
+            val overlapStart = maxOf(budget.startDate, range.startDate)
+            val overlapEnd = minOf(budget.endDate, range.endDate)
+            if (overlapEnd <= overlapStart) return 0.0
+            val budgetDuration = (budget.endDate - budget.startDate).coerceAtLeast(1L).toDouble()
+            val overlapDuration = (overlapEnd - overlapStart).toDouble()
+            return budget.amount * (overlapDuration / budgetDuration)
         }
 
-        val overlapStart = maxOf(budget.startDate, range.startDate)
-        val overlapEnd = minOf(budget.endDate, range.endDate)
-        if (overlapEnd <= overlapStart) return 0.0
-        val budgetDuration = (budget.endDate - budget.startDate).coerceAtLeast(1L).toDouble()
-        val overlapDuration = (overlapEnd - overlapStart).toDouble()
-        return budget.amount * (overlapDuration / budgetDuration)
+        // Budget is a recurring template (no concrete start/end) -> generate calendar-aligned
+        // periods that intersect the requested range and sum prorrated contributions.
+        try {
+            val periods = mutableListOf<Pair<Long, Long>>()
+            val cal = Calendar.getInstance()
+            cal.timeInMillis = range.startDate
+
+            // Align calendar to the beginning of the period that contains range.startDate
+            when (budget.period) {
+                BudgetPeriod.WEEKLY -> {
+                    cal.firstDayOfWeek = Calendar.MONDAY
+                    cal.set(Calendar.DAY_OF_WEEK, cal.firstDayOfWeek)
+                    cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
+                }
+                BudgetPeriod.MONTHLY -> {
+                    cal.set(Calendar.DAY_OF_MONTH, 1)
+                    cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
+                }
+                BudgetPeriod.QUARTERLY -> {
+                    val month = cal.get(Calendar.MONTH)
+                    val quarterStartMonth = (month / 3) * 3
+                    cal.set(Calendar.MONTH, quarterStartMonth)
+                    cal.set(Calendar.DAY_OF_MONTH, 1)
+                    cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
+                }
+                BudgetPeriod.YEARLY -> {
+                    cal.set(Calendar.MONTH, Calendar.JANUARY)
+                    cal.set(Calendar.DAY_OF_MONTH, 1)
+                    cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
+                }
+            }
+
+            // Generate successive period windows until we pass range.endDate
+            while (cal.timeInMillis <= range.endDate) {
+                val periodStart = cal.timeInMillis
+                // compute next period start
+                when (budget.period) {
+                    BudgetPeriod.WEEKLY -> cal.add(Calendar.WEEK_OF_YEAR, 1)
+                    BudgetPeriod.MONTHLY -> cal.add(Calendar.MONTH, 1)
+                    BudgetPeriod.QUARTERLY -> cal.add(Calendar.MONTH, 3)
+                    BudgetPeriod.YEARLY -> cal.add(Calendar.YEAR, 1)
+                }
+                val periodEndExclusive = cal.timeInMillis
+                periods.add(Pair(periodStart, periodEndExclusive))
+                // safety: break if infinite loop
+                if (periods.size > 1000) break
+            }
+
+            var total = 0.0
+            val periodMs = budget.period.durationInMillis.toDouble()
+            for ((pStart, pEndExclusive) in periods) {
+                val overlapStart = maxOf(pStart, range.startDate)
+                val overlapEnd = minOf(pEndExclusive, range.endDate)
+                if (overlapEnd <= overlapStart) continue
+                val overlapDur = (overlapEnd - overlapStart).toDouble()
+                total += budget.amount * (overlapDur / periodMs)
+            }
+
+            // Treat very small prorated totals as zero to avoid huge % due to rounding
+            if (total < 0.01) return 0.0
+            return total
+        } catch (_: Exception) {
+            // In unexpected cases, fallback to proportional by simple duration
+            val periodMs = budget.period.durationInMillis.toDouble()
+            val rangeDuration = (range.endDate - range.startDate).coerceAtLeast(1L).toDouble()
+            val fallback = budget.amount * (rangeDuration / periodMs)
+            return if (fallback < 0.01) 0.0 else fallback
+        }
     }
 
     private suspend fun calculateBudgetVsActual(expenses: List<Transaction>, budgets: List<Budget>, range: DateRange? = null): List<BudgetComparison> {
@@ -436,11 +495,14 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
         for (catId in allCategoryIds) {
             val actual = expensesByCategory[catId] ?: 0.0
             val budgetsForCat = budgetsByCategory[catId] ?: emptyList()
-            val prorated = if (range != null) {
+            var prorated = if (range != null) {
                 budgetsForCat.sumOf { proratedAmountForRange(it, range) }
             } else {
                 budgetsForCat.sumOf { it.amount }
             }
+
+            // Normalize tiny prorated amounts to zero (practical threshold)
+            if (prorated < 0.01) prorated = 0.0
 
             val category = if (budgetsForCat.isNotEmpty()) {
                 // pick first for metadata (color/name), prefer actual category lookup
@@ -469,7 +531,8 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
             )
         }
 
-        return result.sortedByDescending { it.progress }
+        // Sort: prefer items with an applicable prorated budget ordered by progress; otherwise sort by actual spent
+        return result.sortedWith(compareByDescending<BudgetComparison> { if (it.proratedAmount > 0.0) it.progress else it.actualAmount.toFloat() })
     }
 
     private fun getStartOfDay(timestamp: Long): Long {

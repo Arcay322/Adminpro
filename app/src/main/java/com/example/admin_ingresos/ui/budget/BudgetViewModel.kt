@@ -35,6 +35,14 @@ class BudgetViewModel(
             initialValue = emptyList()
         )
 
+    // Inactive budgets (for reactivation UI)
+    val inactiveBudgetsWithCategories = budgetDao.getInactiveBudgetsWithCategories()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
     // Categories for budget creation
     val categories = categoryDao.getAllCategories()
         .stateIn(
@@ -48,10 +56,19 @@ class BudgetViewModel(
     val budgetProgress: StateFlow<List<BudgetProgress>> = _budgetProgress.asStateFlow()
 
     init {
-        loadBudgetProgress()
-
-        // Listen to transaction changes to update budget progress
+        // On startup, deactivate any non-recurring budgets whose endDate has passed
         viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            try {
+                budgetDao.deactivateExpiredBudgets(now)
+            } catch (e: Exception) {
+                // ignore failures here; continue to load progress
+            }
+
+            // Initial load after attempting deactivation
+            loadBudgetProgress()
+
+            // Listen to transaction changes to update budget progress
             database.transactionDao().getAllTransactions().collect {
                 loadBudgetProgress()
             }
@@ -62,20 +79,29 @@ class BudgetViewModel(
         categoryId: Int,
         amount: Double,
         period: BudgetPeriod,
-        startDate: Long = System.currentTimeMillis()
+        startDate: Long = System.currentTimeMillis(),
+        asTemplate: Boolean = false
     ) {
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-                val endDate = startDate + period.durationInMillis
+                val (insertStart, insertEnd) = if (asTemplate) {
+                    // Template budgets stored with zeroed dates to indicate recurrence
+                    Pair(0L, 0L)
+                } else {
+                    Pair(startDate, startDate + period.durationInMillis)
+                }
 
                 // Check for overlapping budgets
-                val overlappingCount = budgetDao.countOverlappingBudgets(
-                    categoryId = categoryId,
-                    newStartDate = startDate,
-                    newEndDate = endDate
-                )
+                // Only check overlapping if this is a concrete budget (not a template)
+                val overlappingCount = if (!asTemplate) {
+                    budgetDao.countOverlappingBudgets(
+                        categoryId = categoryId,
+                        newStartDate = insertStart,
+                        newEndDate = insertEnd
+                    )
+                } else 0
 
                 if (overlappingCount > 0) {
                     _uiState.value = _uiState.value.copy(
@@ -89,8 +115,8 @@ class BudgetViewModel(
                     categoryId = categoryId,
                     amount = amount,
                     period = period,
-                    startDate = startDate,
-                    endDate = endDate
+                    startDate = insertStart,
+                    endDate = insertEnd
                 )
 
                 budgetDao.insertBudget(budget)
@@ -151,6 +177,19 @@ class BudgetViewModel(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     error = "Error al desactivar presupuesto: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun activateBudget(budgetId: Int) {
+        viewModelScope.launch {
+            try {
+                budgetDao.activateBudget(budgetId)
+                loadBudgetProgress()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Error al activar presupuesto: ${e.message}"
                 )
             }
         }

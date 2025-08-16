@@ -124,9 +124,15 @@ fun ReportsScreen() {
                                 coroutineScope.launch {
                                     showLoadingOverlay = true
                                     try {
-                                        com.example.admin_ingresos.data.TestDataSeeder.seedBudgetsForReports(AppDatabaseProvider.getDatabase(context))
+                                        val db = AppDatabaseProvider.getDatabase(context)
+                                        // Clear previous seed data that may distort demo results
+                                        com.example.admin_ingresos.data.TestDataSeeder.clearSeedData(db)
+                                        // Insert a cleaner set of budgets
+                                        com.example.admin_ingresos.data.TestDataSeeder.seedCleanBudgetsForReports(db)
+                                        // Insert coherent expense/income transactions aligned with budgets
+                                        com.example.admin_ingresos.data.TestDataSeeder.seedCleanTransactionsForReports(db)
                                         viewModel.reloadAll()
-                                        snackbarHostState.showSnackbar("Presupuestos de ejemplo creados")
+                                        snackbarHostState.showSnackbar("Presupuestos de ejemplo actualizados")
                                     } catch (e: Exception) {
                                         snackbarHostState.showSnackbar("Error: ${e.message}")
                                     } finally {
@@ -821,18 +827,17 @@ fun BudgetComparisonItem(item: BudgetComparison) {
                 Text(text = item.category.name, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
                 // percentage badge (formatted, capped). Handle no/prorated=0 and Infinity safely.
-                val pctForm: String
                 val badgeColor = when {
                     item.progress.isFinite() && item.progress > 1f -> ExpenseRed
                     item.progress.isFinite() && item.progress >= 0.75f -> androidx.compose.ui.graphics.Color(0xFFF0A500)
                     else -> IncomeGreen
                 }
 
-                pctForm = when {
+                val pctForm = when {
                     item.proratedAmount <= 0.0 -> "Sin presupuesto"
                     item.progress.isFinite() -> {
                         val pctFloat = (item.progress * 100f)
-                        val pctCapped = pctFloat.coerceAtMost(999.9f)
+                        val pctCapped = pctFloat.coerceAtMost(500f)
                         DecimalFormat("#0.#").format(pctCapped) + "%"
                     }
                     item.actualAmount > 0.0 -> "--"
@@ -845,12 +850,12 @@ fun BudgetComparisonItem(item: BudgetComparison) {
 
         // Custom progress bar with animation and color thresholds
         val displayProgress = when {
-            item.progress.isFinite() -> item.progress.coerceAtLeast(0f)
+            item.progress.isFinite() -> item.progress.coerceIn(0f, 1f)
             else -> 0f
         }
         val barColor = when {
-            item.progress > 1f -> ExpenseRed
-            item.progress >= 0.75f -> androidx.compose.ui.graphics.Color(0xFFF0A500)
+            item.progress.isFinite() && item.progress > 1f -> ExpenseRed
+            item.progress.isFinite() && item.progress >= 0.75f -> androidx.compose.ui.graphics.Color(0xFFF0A500)
             else -> IncomeGreen
         }
         BudgetProgressBar(progress = displayProgress, color = barColor, modifier = Modifier.fillMaxWidth())
@@ -864,12 +869,17 @@ fun BudgetComparisonItem(item: BudgetComparison) {
                     Text(text = "Original: ${formatter.format(item.budget.amount)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                 }
             }
-            // show absolute over/remaining amounts
-            val overAmount = item.actualAmount - item.budget.amount
-            if (overAmount > 0.0) {
-                Text(text = "Sobre: ${formatter.format(overAmount)}", color = ExpenseRed, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
+            // show absolute over/remaining amounts relative to the prorated budget for the selected range
+            if (item.proratedAmount <= 0.0) {
+                // No budget applied to this period
+                Text(text = "No hay presupuesto para este período", color = TextSecondary, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
             } else {
-                Text(text = "Libre: ${formatter.format(-overAmount)}", color = IncomeGreen, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
+                val overAmount = item.actualAmount - item.proratedAmount
+                if (overAmount > 0.0) {
+                    Text(text = "Sobre: ${formatter.format(overAmount)}", color = ExpenseRed, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
+                } else {
+                    Text(text = "Libre: ${formatter.format(-overAmount)}", color = IncomeGreen, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
+                }
             }
         }
     }

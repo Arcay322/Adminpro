@@ -117,6 +117,7 @@ fun BudgetScreen() {
     val uiState by viewModel.uiState.collectAsState()
     val budgetProgress by viewModel.budgetProgress.collectAsState()
     val categories by viewModel.categories.collectAsState()
+    val inactiveBudgets by viewModel.inactiveBudgetsWithCategories.collectAsState()
     val formatter = remember { NumberFormat.getCurrencyInstance(Locale("es", "CO")) }
     
     LazyColumn(
@@ -168,6 +169,31 @@ fun BudgetScreen() {
                 }
             )
         }
+
+        // Inactive budgets section
+        if (inactiveBudgets.isNotEmpty()) {
+            item {
+                GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhite, cornerRadius = 20.dp) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(text = "Presupuestos inactivos", fontWeight = FontWeight.Bold, color = TextPrimary)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        inactiveBudgets.forEach { withCat ->
+                            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Column {
+                                    Text(text = withCat.category.name, color = TextPrimary, fontWeight = FontWeight.Medium)
+                                    Text(text = "Último: ${withCat.budget.period.displayName}", color = TextSecondary, fontSize = 12.sp)
+                                }
+                                Row {
+                                    TextButton(onClick = { viewModel.activateBudget(withCat.budget.id) }) {
+                                        Text("Activar")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         
         // Smart Insights (nueva funcionalidad)
         if (budgetProgress.isNotEmpty()) {
@@ -202,13 +228,13 @@ fun BudgetScreen() {
     // Create Budget Dialog
     if (uiState.showCreateDialog) {
         ModernCreateBudgetDialog(
-            categories = categories,
-            onDismiss = { viewModel.hideCreateDialog() },
-            onCreateBudget = { categoryId, amount, period ->
-                viewModel.createBudget(categoryId, amount, period)
-            },
-            isLoading = uiState.isLoading
-        )
+                categories = categories,
+                onDismiss = { viewModel.hideCreateDialog() },
+                onCreateBudget = { categoryId, amount, period, asTemplate ->
+                    viewModel.createBudget(categoryId, amount, period, asTemplate = asTemplate)
+                },
+                isLoading = uiState.isLoading
+            )
     }
     
     // Edit Budget Dialog
@@ -282,20 +308,20 @@ fun BudgetProgressCard(
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Category icon with background
+                        // Category icon with background (tinted with category color)
+                        val catColor = try { Color(android.graphics.Color.parseColor(budgetProgress.category.color)) } catch (_: Exception) { progressColor }
                         Box(
                             modifier = Modifier
                                 .size(48.dp)
                                 .background(
-                                    progressColor.copy(alpha = 0.1f),
+                                    catColor.copy(alpha = 0.12f),
                                     CircleShape
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = budgetProgress.category.icon,
-                                style = MaterialTheme.typography.titleLarge
-                            )
+                            // if we have a vector icon mapping, use it; otherwise fall back to emoji/text
+                            val iconVec = LucideIconMapper.getCategoryIcon(budgetProgress.category)
+                            Icon(imageVector = iconVec, contentDescription = null, tint = catColor, modifier = Modifier.size(24.dp))
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
@@ -1147,18 +1173,19 @@ private fun EnhancedBudgetCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    val catColor2 = try { Color(android.graphics.Color.parseColor(budgetProgress.category.color)) } catch (_: Exception) { progressColor }
                     Box(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(progressColor.copy(alpha = 0.2f))
-                            .border(1.dp, progressColor.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
+                            .background(catColor2.copy(alpha = 0.12f))
+                            .border(1.dp, catColor2.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = LucideIconMapper.getCategoryIcon(budgetProgress.category),
                             contentDescription = null,
-                            tint = progressColor,
+                            tint = catColor2,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -1189,7 +1216,9 @@ private fun EnhancedBudgetCard(
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    
+
+                    var showConfirmDeactivate by remember { mutableStateOf(false) }
+
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
@@ -1208,7 +1237,15 @@ private fun EnhancedBudgetCard(
                             text = { Text(if (budgetProgress.budget.isActive) "Desactivar" else "Activar") },
                             onClick = {
                                 showMenu = false
-                                onToggleActive()
+                                if (budgetProgress.budget.isActive) {
+                                    // show a confirmation dialog before deactivating
+                                    showConfirmDeactivate = true
+                                } else {
+                                    // reactivate directly
+                                    // call the ViewModel's activate function through the hosting scope
+                                    // (we capture it via onToggleActive lambda argument)
+                                    onToggleActive()
+                                }
                             },
                             leadingIcon = {
                                 Icon(
@@ -1226,6 +1263,23 @@ private fun EnhancedBudgetCard(
                             },
                             leadingIcon = {
                                 Icon(LucideIconMapper.Navigation.delete, contentDescription = null)
+                            }
+                        )
+                    }
+
+                    if (showConfirmDeactivate) {
+                        AlertDialog(
+                            onDismissRequest = { showConfirmDeactivate = false },
+                            title = { Text("Confirmar desactivación") },
+                            text = { Text("¿Estás seguro que quieres desactivar este presupuesto? No se eliminará, pero dejará de contarse como activo.") },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    showConfirmDeactivate = false
+                                    onToggleActive()
+                                }) { Text("Desactivar") }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showConfirmDeactivate = false }) { Text("Cancelar") }
                             }
                         )
                     }
@@ -1393,7 +1447,7 @@ private fun EmptyBudgetState(
 private fun ModernCreateBudgetDialog(
     categories: List<Category>,
     onDismiss: () -> Unit,
-    onCreateBudget: (categoryId: Int, amount: Double, period: BudgetPeriod) -> Unit,
+    onCreateBudget: (categoryId: Int, amount: Double, period: BudgetPeriod, asTemplate: Boolean) -> Unit,
     isLoading: Boolean = false
 ) {
     var selectedCategoryId by remember { mutableStateOf<Int?>(null) }
@@ -1401,6 +1455,7 @@ private fun ModernCreateBudgetDialog(
     var selectedPeriod by remember { mutableStateOf(BudgetPeriod.MONTHLY) }
     var showCategoryDropdown by remember { mutableStateOf(false) }
     var showPeriodDropdown by remember { mutableStateOf(false) }
+    var asTemplate by remember { mutableStateOf(false) }
     
     // Validation
     val amountError = when {
@@ -1522,6 +1577,12 @@ private fun ModernCreateBudgetDialog(
                         }
                     }
                 }
+
+                // Template toggle
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Crear como plantilla recurrente", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                    androidx.compose.material3.Switch(checked = asTemplate, onCheckedChange = { asTemplate = it })
+                }
             }
         },
         confirmButton = {
@@ -1529,7 +1590,7 @@ private fun ModernCreateBudgetDialog(
                 onClick = {
                     selectedCategoryId?.let { categoryId ->
                         amount.toDoubleOrNull()?.let { amountValue ->
-                            onCreateBudget(categoryId, amountValue, selectedPeriod)
+                            onCreateBudget(categoryId, amountValue, selectedPeriod, asTemplate)
                         }
                     }
                 },
