@@ -45,6 +45,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.example.admin_ingresos.AppDatabaseProvider
 import com.example.admin_ingresos.ui.components.GlassCard
+import com.example.admin_ingresos.ui.components.GlassmorphismScreen
 import com.example.admin_ingresos.ui.dashboard.CategoryData
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.*
@@ -72,15 +73,7 @@ fun ReportsScreen() {
     // Launcher placeholder to grant URI permission if needed (not strictly necessary for FileProvider)
     val shareLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { /* no-op */ }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(BackgroundStart, BackgroundEnd)
-                )
-            )
-    ) {
+    GlassmorphismScreen(modifier = Modifier.fillMaxSize()) {
         // Loading overlay for export
         if (showLoadingOverlay) {
             Box(modifier = Modifier
@@ -103,7 +96,7 @@ fun ReportsScreen() {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = LucideIconMapper.Navigation.reports,
@@ -111,13 +104,15 @@ fun ReportsScreen() {
                                 tint = AccentVibrantStart,
                                 modifier = Modifier.size(28.dp)
                             )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = "Reportes",
-                                style = MaterialTheme.typography.headlineLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(verticalArrangement = Arrangement.Center) {
+                                Text(
+                                    text = "Reportes",
+                                    style = MaterialTheme.typography.headlineLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             TextButton(onClick = {

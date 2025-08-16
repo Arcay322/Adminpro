@@ -33,8 +33,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.admin_ingresos.AppDatabaseProvider
 import com.example.admin_ingresos.data.Transaction
 import com.example.admin_ingresos.ui.components.*
+import com.example.admin_ingresos.ui.components.GlassmorphismScreen
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.CashFlowPrimary
+import com.example.admin_ingresos.ui.theme.AccentVibrantStart
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -82,20 +84,7 @@ fun TransactionHistoryScreen() {
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        Color(0xFF667eea).copy(alpha = 0.3f),
-                        Color(0xFF764ba2).copy(alpha = 0.2f),
-                        Color(0xFF1a1a2e).copy(alpha = 0.9f)
-                    ),
-                    radius = 1200f
-                )
-            )
-    ) {
+    GlassmorphismScreen(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
@@ -454,44 +443,27 @@ fun ModernTransactionItem(
 
 @Composable
 fun ModernHistoryHeader() {
-    GlassCard {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Icono principal con glassmorphism
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                Color(0xFF667eea).copy(alpha = 0.3f),
-                                Color(0xFF764ba2).copy(alpha = 0.1f)
-                            ),
-                            radius = 60f
-                        ),
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = LucideIconMapper.getNavigationIcon("History"),
-                    contentDescription = "Historial",
-                    tint = Color(0xFF667eea),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(20.dp))
-            
-            // Título y descripción
-            Column(modifier = Modifier.weight(1f)) {
+    // Standalone header (icon + title) moved outside any GlassCard to match Reports style
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+            Icon(
+                imageVector = LucideIconMapper.getNavigationIcon("History"),
+                contentDescription = "Historial",
+                tint = AccentVibrantStart,
+                modifier = Modifier.size(28.dp)
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(verticalArrangement = Arrangement.Center) {
                 Text(
                     text = "Historial de Transacciones",
-                    style = MaterialTheme.typography.headlineMedium.copy(
+                    style = MaterialTheme.typography.headlineLarge.copy(
                         fontWeight = FontWeight.Bold
                     ),
                     color = Color.White

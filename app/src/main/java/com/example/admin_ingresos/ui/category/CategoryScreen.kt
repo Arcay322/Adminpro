@@ -7,6 +7,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -56,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -100,33 +103,51 @@ fun CategoryScreen(
             modifier = Modifier.fillMaxSize()
         ) { paddingValues ->
             Box(modifier = Modifier.fillMaxSize()) {
+                val layoutDir = androidx.compose.ui.platform.LocalLayoutDirection.current
+
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
+                        .padding(
+                            start = paddingValues.calculateStartPadding(layoutDir),
+                            end = paddingValues.calculateEndPadding(layoutDir),
+                            bottom = paddingValues.calculateBottomPadding()
+                        )
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
-                    // Header
+                    // Header (styled to match Reports title)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 2.dp),
+                            .padding(top = 16.dp, bottom = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Categorías",
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = TextPrimary,
-                                fontWeight = FontWeight.Bold
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = LucideIconMapper.getNavigationIcon("list"),
+                                contentDescription = "Categorías",
+                                tint = AccentVibrantStart,
+                                modifier = Modifier.size(28.dp)
                             )
-                            Text(
-                                text = "Mantén presionado para reordenar",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextSecondary
-                            )
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
+                                Text(
+                                    text = "Categorías",
+                                    style = MaterialTheme.typography.headlineLarge,
+                                    color = TextPrimary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "Mantén presionado para reordenar",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextSecondary
+                                )
+                            }
                         }
+
                         IconButton(onClick = { viewModel.showAddEditDialog(Category(name = "", type = uiState.selectedTab)) }) {
                             Icon(
                                 Icons.Default.Add,
