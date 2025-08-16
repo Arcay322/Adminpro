@@ -38,6 +38,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import android.net.Uri
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.animation.core.animateFloatAsState
+import java.text.DecimalFormat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.example.admin_ingresos.AppDatabaseProvider
@@ -617,14 +619,30 @@ fun BudgetComparisonItem(item: BudgetComparison) {
                 }
                 Text(text = item.category.name, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            // percentage badge
-            val pct = (item.progress * 100).toInt()
-            Text(text = "$pct%", color = if (item.progress > 1f) ExpenseRed else IncomeGreen, fontWeight = FontWeight.Bold)
+            // percentage badge (formatted, capped)
+                val pctFloat = (item.progress * 100f)
+                val pctCapped = pctFloat.coerceAtMost(999.9f)
+                val pctForm = DecimalFormat("#0.#").format(pctCapped) + "%"
+                val badgeColor = when {
+                    item.progress > 1f -> ExpenseRed
+                    item.progress >= 0.75f -> androidx.compose.ui.graphics.Color(0xFFF0A500) // yellow-ish
+                    else -> IncomeGreen
+                }
+                Text(text = pctForm, color = badgeColor, fontWeight = FontWeight.Bold)
         }
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Custom progress bar with percentage overlay
-        BudgetProgressBar(progress = item.progress.coerceAtLeast(0f), color = if (item.progress > 1f) ExpenseRed else IncomeGreen, modifier = Modifier.fillMaxWidth())
+        // Custom progress bar with animation and color thresholds
+        val displayProgress = when {
+            item.progress.isFinite() -> item.progress.coerceAtLeast(0f)
+            else -> 0f
+        }
+        val barColor = when {
+            item.progress > 1f -> ExpenseRed
+            item.progress >= 0.75f -> androidx.compose.ui.graphics.Color(0xFFF0A500)
+            else -> IncomeGreen
+        }
+        BudgetProgressBar(progress = displayProgress, color = barColor, modifier = Modifier.fillMaxWidth())
 
         Spacer(modifier = Modifier.height(6.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -632,11 +650,12 @@ fun BudgetComparisonItem(item: BudgetComparison) {
                 Text(text = "Gastado: ${formatter.format(item.actualAmount)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                 Text(text = "Presupuesto: ${formatter.format(item.budget.amount)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
             }
-            // show over/under label
-            if (item.progress > 1f) {
-                Text(text = "Sobre: ${(item.progress - 1f) * 100f}%", color = ExpenseRed, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
+            // show absolute over/remaining amounts
+            val overAmount = item.actualAmount - item.budget.amount
+            if (overAmount > 0.0) {
+                Text(text = "Sobre: ${formatter.format(overAmount)}", color = ExpenseRed, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
             } else {
-                Text(text = "Libre: ${(1f - item.progress) * 100f}%", color = TextSecondary, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
+                Text(text = "Libre: ${formatter.format(-overAmount)}", color = TextSecondary, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
             }
         }
     }
@@ -644,6 +663,7 @@ fun BudgetComparisonItem(item: BudgetComparison) {
 
 @Composable
 fun BudgetProgressBar(progress: Float, color: Color, modifier: Modifier = Modifier) {
+    val animated = animateFloatAsState(targetValue = progress.coerceIn(0f, 1f))
     Box(modifier = modifier.height(14.dp)) {
         // track
         Box(modifier = Modifier
@@ -652,7 +672,7 @@ fun BudgetProgressBar(progress: Float, color: Color, modifier: Modifier = Modifi
         )
         // fill
         Box(modifier = Modifier
-            .fillMaxWidth(progress.coerceIn(0f, 1f))
+            .fillMaxWidth(animated.value)
             .height(14.dp)
             .clip(CircleShape)
             .background(color.copy(alpha = 0.95f))
