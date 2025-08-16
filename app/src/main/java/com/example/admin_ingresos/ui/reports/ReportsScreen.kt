@@ -12,6 +12,14 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import java.text.SimpleDateFormat
+import java.util.Date
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -380,6 +388,8 @@ private fun CategoryLegendItem(category: CategoryData, amount: Double = 0.0) {
 
 @Composable
 fun IncomeVsExpenseTrendChart(reportData: ReportData) {
+    val sdf = remember { SimpleDateFormat("dd MMM", Locale("es", "PE")) }
+
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -388,9 +398,31 @@ fun IncomeVsExpenseTrendChart(reportData: ReportData) {
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Legend
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.size(10.dp).background(IncomeGreen, CircleShape))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Ingresos", color = TextSecondary, fontSize = 12.sp)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.size(10.dp).background(ExpenseRed, CircleShape))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Gastos", color = TextSecondary, fontSize = 12.sp)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             if (reportData.incomeVsExpenseTrend.isNotEmpty()) {
-                LineChart(data = reportData.incomeVsExpenseTrend, modifier = Modifier.fillMaxWidth().height(200.dp))
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                ) {
+                    LineChart(data = reportData.incomeVsExpenseTrend, modifier = Modifier.fillMaxSize())
+                }
             } else {
                 Text(text = "No hay datos de tendencias para este período.", color = TextSecondary)
             }
@@ -400,28 +432,128 @@ fun IncomeVsExpenseTrendChart(reportData: ReportData) {
 
 @Composable
 fun LineChart(data: List<TrendDataPoint>, modifier: Modifier = Modifier) {
-    val maxAmount = data.maxOfOrNull { maxOf(it.income, it.expense) }?.toFloat() ?: 1f
+    val lastTapX = remember { mutableStateOf<Float?>(null) }
+    val selectedIndex = remember { mutableStateOf(-1) }
+    val canvasWidth = remember { mutableStateOf(0f) }
+    val density = LocalDensity.current
+    val formatter = remember { java.text.NumberFormat.getCurrencyInstance(Locale("es", "PE")) }
+    val sdf = remember { SimpleDateFormat("dd MMM", Locale("es", "PE")) }
 
-    Canvas(modifier = modifier) { 
-        val pathIncome = Path()
-        val pathExpense = Path()
+    if (data.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("Sin datos", color = TextSecondary)
+        }
+        return
+    }
 
-        data.forEachIndexed { index, point ->
-            val x = size.width * (index.toFloat() / (data.size - 1).toFloat())
-            val yIncome = size.height * (1 - (point.income.toFloat() / maxAmount))
-            val yExpense = size.height * (1 - (point.expense.toFloat() / maxAmount))
+    val maxAmount = (data.flatMap { listOf(it.income, it.expense) }.maxOrNull() ?: 1.0).toFloat()
 
-            if (index == 0) {
-                pathIncome.moveTo(x, yIncome)
-                pathExpense.moveTo(x, yExpense)
-            } else {
-                pathIncome.lineTo(x, yIncome)
-                pathExpense.lineTo(x, yExpense)
+    Box(modifier = modifier) {
+        Canvas(modifier = Modifier
+            .fillMaxSize()
+            .onGloballyPositioned { canvasWidth.value = it.size.width.toFloat() }
+            .pointerInput(data) {
+                detectTapGestures { offset ->
+                    lastTapX.value = offset.x
+                    val w = canvasWidth.value.takeIf { it > 0f } ?: return@detectTapGestures
+                    val idx = if (data.size > 1) ((offset.x / w) * (data.size - 1)).toInt() else 0
+                    selectedIndex.value = idx.coerceIn(0, data.size - 1)
+                }
+            }
+        ) {
+            // draw subtle horizontal grid lines
+            val gridColor = Color.White.copy(alpha = 0.06f)
+            val gridLines = 4
+            for (i in 0..gridLines) {
+                val y = size.height * (i.toFloat() / gridLines.toFloat())
+                drawLine(color = gridColor, start = Offset(0f, y), end = Offset(size.width, y), strokeWidth = 1.dp.toPx())
+            }
+
+            val pathIncome = Path()
+            val pathExpense = Path()
+            val areaIncome = Path()
+            val areaExpense = Path()
+
+            data.forEachIndexed { index, point ->
+                val x = if (data.size > 1) size.width * (index.toFloat() / (data.size - 1).toFloat()) else size.width / 2f
+                val yIncome = size.height * (1f - (point.income.toFloat() / maxAmount))
+                val yExpense = size.height * (1f - (point.expense.toFloat() / maxAmount))
+
+                if (index == 0) {
+                    pathIncome.moveTo(x, yIncome)
+                    pathExpense.moveTo(x, yExpense)
+                    areaIncome.moveTo(x, size.height)
+                    areaIncome.lineTo(x, yIncome)
+                    areaExpense.moveTo(x, size.height)
+                    areaExpense.lineTo(x, yExpense)
+                } else {
+                    pathIncome.lineTo(x, yIncome)
+                    pathExpense.lineTo(x, yExpense)
+                    areaIncome.lineTo(x, yIncome)
+                    areaExpense.lineTo(x, yExpense)
+                }
+            }
+
+            // close area paths
+            areaIncome.lineTo(size.width, size.height)
+            areaIncome.close()
+            areaExpense.lineTo(size.width, size.height)
+            areaExpense.close()
+
+            // draw filled areas (subtle)
+            drawPath(path = areaIncome, color = IncomeGreen.copy(alpha = 0.10f))
+            drawPath(path = areaExpense, color = ExpenseRed.copy(alpha = 0.10f))
+
+            // draw lines
+            drawPath(path = pathIncome, color = IncomeGreen, style = Stroke(width = 2.dp.toPx()))
+            drawPath(path = pathExpense, color = ExpenseRed, style = Stroke(width = 2.dp.toPx()))
+
+            // draw points
+            data.forEachIndexed { index, point ->
+                val x = if (data.size > 1) size.width * (index.toFloat() / (data.size - 1).toFloat()) else size.width / 2f
+                val yIncome = size.height * (1f - (point.income.toFloat() / maxAmount))
+                val yExpense = size.height * (1f - (point.expense.toFloat() / maxAmount))
+                drawCircle(color = IncomeGreen, radius = 3.dp.toPx(), center = Offset(x, yIncome))
+                drawCircle(color = ExpenseRed, radius = 3.dp.toPx(), center = Offset(x, yExpense))
+            }
+
+            // highlight selected index if any
+            val sel = selectedIndex.value
+            if (sel in data.indices) {
+                val sPoint = data[sel]
+                val x = if (data.size > 1) size.width * (sel.toFloat() / (data.size - 1).toFloat()) else size.width / 2f
+                // vertical guide
+                drawLine(color = Color.White.copy(alpha = 0.18f), start = Offset(x, 0f), end = Offset(x, size.height), strokeWidth = 1.dp.toPx())
+                // larger circles to highlight
+                val yi = size.height * (1f - (sPoint.income.toFloat() / maxAmount))
+                val ye = size.height * (1f - (sPoint.expense.toFloat() / maxAmount))
+                drawCircle(Color.White, radius = 6.dp.toPx(), center = Offset(x, yi))
+                drawCircle(Color.White, radius = 6.dp.toPx(), center = Offset(x, ye))
             }
         }
 
-        drawPath(path = pathIncome, color = IncomeGreen, style = Stroke(width = 3.dp.toPx()))
-        drawPath(path = pathExpense, color = ExpenseRed, style = Stroke(width = 3.dp.toPx()))
+        // Tooltip overlay
+        val sel = selectedIndex.value
+        val w = canvasWidth.value
+        if (sel in data.indices && w > 0f) {
+            val point = data[sel]
+            val tooltipX = if (data.size > 1) ((sel.toFloat() / (data.size - 1).toFloat()) * w) else (w / 2f)
+            // convert px -> dp offset
+            val xDp = with(density) { tooltipX.toDp() }
+            Box(modifier = Modifier
+                .offset { IntOffset((tooltipX - 60f).toInt().coerceIn(0, w.toInt() - 120), -70) }
+                .wrapContentSize()
+            ) {
+                Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF222222)), modifier = Modifier.padding(4.dp)) {
+                    Column(modifier = Modifier.padding(8.dp)) {
+                        Text(text = sdf.format(Date(point.timestamp)), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = "Ingresos: ${formatter.format(point.income)}", color = IncomeGreen, fontSize = 12.sp)
+                        Text(text = "Gastos: ${formatter.format(point.expense)}", color = ExpenseRed, fontSize = 12.sp)
+                    }
+                }
+            }
+        }
     }
 }
 
