@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.admin_ingresos.data.*
+import android.net.Uri
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -225,6 +226,7 @@ fun ExportDialog(
                             val canExport = when (exportFormat) {
                                 ExportFormat.CSV -> selectedFields.isNotEmpty()
                                 ExportFormat.PDF -> true // PDF doesn't need field selection
+                                ExportFormat.EXCEL -> true // Excel will export full dataset
                             }
                             
                             if (canExport) {
@@ -233,7 +235,7 @@ fun ExportDialog(
                                     exportResult = null
                                     
                                     try {
-                                        val uri = when (exportFormat) {
+                                        val result = when (exportFormat) {
                                             ExportFormat.CSV -> exportService.exportTransactionsToCSV(
                                                 transactions = transactions,
                                                 categories = categories,
@@ -247,13 +249,35 @@ fun ExportDialog(
                                                 paymentMethods = paymentMethods,
                                                 reportTitle = "Reporte de Transacciones"
                                             )
+                                            ExportFormat.EXCEL -> exportService.exportTransactionsToXlsx(
+                                                transactions = transactions,
+                                                categories = categories,
+                                                paymentMethods = paymentMethods
+                                            )
                                         }
-                                        
-                                        if (uri != null) {
-                                            exportService.shareFile(uri, exportFormat.mimeType)
-                                            exportResult = "✅ ${exportFormat.displayName} exportado y compartido exitosamente"
-                                        } else {
-                                            exportResult = "❌ Error al exportar el archivo"
+                                        // Normalize result: CSV/PDF return Uri, EXCEL returns ExportResult
+                                        when (result) {
+                                            is com.example.admin_ingresos.data.ExportResult -> {
+                                                val uri = result.uri
+                                                if (uri != null) {
+                                                    val mime = if (result.usedFallback) "text/csv" else exportFormat.mimeType
+                                                    exportService.shareFile(uri, mime)
+                                                    exportResult = if (result.usedFallback) "✅ Exportado (fallback CSV) y compartido" else "✅ ${exportFormat.displayName} exportado y compartido exitosamente"
+                                                } else {
+                                                    exportResult = "❌ Error al exportar el archivo"
+                                                }
+                                            }
+                                            is android.net.Uri -> {
+                                                val uri = result as android.net.Uri
+                                                exportService.shareFile(uri, exportFormat.mimeType)
+                                                exportResult = "✅ ${exportFormat.displayName} exportado y compartido exitosamente"
+                                            }
+                                            null -> {
+                                                exportResult = "❌ Error al exportar el archivo"
+                                            }
+                                            else -> {
+                                                exportResult = "❌ Error al exportar el archivo"
+                                            }
                                         }
                                     } catch (e: Exception) {
                                         exportResult = "❌ Error: ${e.message}"

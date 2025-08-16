@@ -85,6 +85,21 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
     private val budgetDao = db.budgetDao()
     private val categoryDao = db.categoryDao()
     private val paymentDao = db.paymentMethodDao()
+    private val exportRecordDao = db.exportRecordDao()
+
+    // Filters state
+    private val _selectedCategoryId = MutableStateFlow<Int?>(null)
+    val selectedCategoryId: StateFlow<Int?> = _selectedCategoryId.asStateFlow()
+
+    private val _selectedPaymentMethodId = MutableStateFlow<Int?>(null)
+    val selectedPaymentMethodId: StateFlow<Int?> = _selectedPaymentMethodId.asStateFlow()
+
+    private val _minAmount = MutableStateFlow<Double?>(null)
+    private val _maxAmount = MutableStateFlow<Double?>(null)
+
+    // Recent exports
+    private val _recentExports = MutableStateFlow<List<com.example.admin_ingresos.data.ExportRecord>>(emptyList())
+    val recentExports = _recentExports.asStateFlow()
 
     init {
         setDateRange(DateRangePreset.THIS_MONTH)
@@ -173,6 +188,117 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
         }
     }
 
+    // Helpers used by UI to fetch data for direct exports
+    suspend fun getAllTransactionsForCurrentRange(): List<Transaction> {
+        val range = _uiState.value.selectedDateRange ?: return emptyList()
+        return transactionDao.getTransactionsByDateRange(range.startDate, range.endDate)
+    }
+
+    suspend fun getCategories(): List<Category> {
+        return categoryDao.getCategoriesList()
+    }
+
+    suspend fun getPaymentMethods(): List<com.example.admin_ingresos.data.PaymentMethod> {
+        return paymentDao.getAll()
+    }
+
+    // Filter helpers
+    fun setCategoryFilter(categoryId: Int?) {
+        _selectedCategoryId.value = categoryId
+        loadReportData()
+    }
+
+    fun setPaymentMethodFilter(paymentMethodId: Int?) {
+        _selectedPaymentMethodId.value = paymentMethodId
+        loadReportData()
+    }
+
+    fun setAmountRange(min: Double?, max: Double?) {
+        _minAmount.value = min
+        _maxAmount.value = max
+        loadReportData()
+    }
+
+    // Delete an export record by id
+    fun deleteExportRecord(id: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                exportRecordDao.deleteById(id)
+                loadRecentExports()
+            } catch (_: Exception) {}
+        }
+    }
+
+    // Drill-down: get transactions for a given category or date
+    suspend fun getTransactionsForCategory(categoryId: Int, range: DateRange): List<Transaction> {
+        val all = transactionDao.getTransactionsByDateRange(range.startDate, range.endDate)
+        return all.filter { it.categoryId == categoryId }
+    }
+
+    // Compare two periods and return pair of ReportData (A,B)
+    suspend fun comparePeriods(rangeA: DateRange, rangeB: DateRange): Pair<ReportData, ReportData> = withContext(Dispatchers.IO) {
+        val txA = transactionDao.getTransactionsByDateRange(rangeA.startDate, rangeA.endDate)
+        val txB = transactionDao.getTransactionsByDateRange(rangeB.startDate, rangeB.endDate)
+
+        val reportA = buildReportFromTransactions(txA)
+        val reportB = buildReportFromTransactions(txB)
+        Pair(reportA, reportB)
+    }
+
+    private suspend fun buildReportFromTransactions(transactions: List<Transaction>): ReportData {
+        val totalIncome = transactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
+        val totalExpenses = transactions.filter { it.type == "Gasto" }.sumOf { it.amount }
+        val expenseByCategory = calculateExpenseByCategory(transactions.filter { it.type == "Gasto" })
+        val incomeVsExpenseTrend = calculateIncomeVsExpenseTrend(transactions)
+        val budgets = budgetDao.getAllBudgets().first()
+        val budgetVsActual = calculateBudgetVsActual(transactions.filter { it.type == "Gasto" }, budgets)
+
+        return ReportData(
+            totalIncome = totalIncome,
+            totalExpenses = totalExpenses,
+            netSavings = totalIncome - totalExpenses,
+            expenseByCategory = expenseByCategory,
+            incomeVsExpenseTrend = incomeVsExpenseTrend,
+            budgetVsActual = budgetVsActual
+        )
+    }
+
+    // Public helper to get a DateRange for a preset (UI can call this)
+    fun getRangeForPreset(preset: DateRangePreset): DateRange? {
+        return when (preset) {
+            DateRangePreset.TODAY -> getTodayRange()
+            DateRangePreset.THIS_WEEK -> getThisWeekRange()
+            DateRangePreset.THIS_MONTH -> getThisMonthRange()
+            DateRangePreset.LAST_3_MONTHS -> getLastNMonthsRange(3)
+            DateRangePreset.THIS_YEAR -> getThisYearRange()
+            DateRangePreset.CUSTOM -> null
+        }
+    }
+
+    // Load recent exports
+    fun loadRecentExports() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val list = exportRecordDao.getRecentExports()
+                _recentExports.value = list
+            } catch (_: Exception) {
+                _recentExports.value = emptyList()
+            }
+        }
+    }
+
+    /**
+     * Refresh top-level UI data: report payload and recent exports.
+     * Useful after seeding data or external changes.
+     */
+    fun reloadAll() {
+        viewModelScope.launch {
+            // reload exports and report data; each function handles its own coroutine/dispatcher
+            loadRecentExports()
+            loadReportData()
+        }
+    }
+
     fun setDateRange(preset: DateRangePreset, customRange: DateRange? = null) {
         val range = when (preset) {
             DateRangePreset.TODAY -> getTodayRange()
@@ -195,7 +321,24 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
                 return@launch
             }
             try {
-                val transactions = transactionDao.getTransactionsByDateRange(range.startDate, range.endDate)
+                // Apply filters: category, payment method, min/max amount
+                val minAmount = _minAmount.value
+                val maxAmount = _maxAmount.value
+                val categoriesFilter = _selectedCategoryId.value?.let { listOf(it) }
+                val paymentFilter = _selectedPaymentMethodId.value?.let { listOf(it) }
+
+                val transactions = transactionDao.getFilteredTransactions(
+                    searchQuery = "",
+                    startDate = range.startDate,
+                    endDate = range.endDate,
+                    categories = categoriesFilter,
+                    paymentMethods = paymentFilter,
+                    transactionTypes = null,
+                    minAmount = minAmount,
+                    maxAmount = maxAmount,
+                    sortBy = "DATE_DESC"
+                )
+
                 val budgets = budgetDao.getAllBudgets().first()
 
                 val totalIncome = transactions.filter { it.type == "Ingreso" }.sumOf { it.amount }

@@ -2,6 +2,7 @@ package com.example.admin_ingresos.data
 
 import android.content.Context
 import android.content.Intent
+import com.example.admin_ingresos.AppDatabaseProvider
 import android.net.Uri
 import androidx.core.content.FileProvider
 import android.graphics.Canvas
@@ -16,6 +17,11 @@ import java.io.OutputStreamWriter
 import java.io.BufferedWriter
 import java.text.SimpleDateFormat
 import java.util.*
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.apache.poi.ss.usermodel.IndexedColors
+import org.apache.poi.ss.usermodel.FillPatternType
+
+data class ExportResult(val uri: Uri?, val usedFallback: Boolean = false)
 
 class ExportService(private val context: Context) {
     
@@ -75,12 +81,18 @@ class ExportService(private val context: Context) {
                 }
             }
             
-            // Return file URI using FileProvider
-            FileProvider.getUriForFile(
+            // Record export and return file URI using FileProvider
+            val uri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
                 file
             )
+            try {
+                // Save a record of the export (best-effort)
+                val db = AppDatabaseProvider.getDatabase(context)
+                val id = db.exportRecordDao().insert(ExportRecord(fileName = fileName, uri = uri.toString(), type = "csv"))
+            } catch (_: Exception) {}
+            uri
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -128,11 +140,16 @@ class ExportService(private val context: Context) {
                 }
             }
             
-            FileProvider.getUriForFile(
+            val uri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
                 file
             )
+            try {
+                val db = AppDatabaseProvider.getDatabase(context)
+                db.exportRecordDao().insert(ExportRecord(fileName = fileName, uri = uri.toString(), type = "csv"))
+            } catch (_: Exception) {}
+            uri
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -235,11 +252,16 @@ class ExportService(private val context: Context) {
             }
             pdf.close()
 
-            FileProvider.getUriForFile(
+            val uri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
                 file
             )
+            try {
+                val db = AppDatabaseProvider.getDatabase(context)
+                db.exportRecordDao().insert(ExportRecord(fileName = fileName, uri = uri.toString(), type = "pdf"))
+            } catch (_: Exception) {}
+            uri
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -409,6 +431,88 @@ class ExportService(private val context: Context) {
         chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(chooserIntent)
     }
+    
+    // Excel (.xlsx) export function
+    suspend fun exportTransactionsToXlsx(
+        transactions: List<Transaction>,
+        categories: List<Category>,
+        paymentMethods: List<PaymentMethod>
+    ): ExportResult = withContext(Dispatchers.IO) {
+        try {
+            val fileName = "transacciones_${fileNameDateFormat.format(Date())}.xlsx"
+            val file = File(context.getExternalFilesDir(null), fileName)
+
+            val workbook = XSSFWorkbook()
+            val sheet = workbook.createSheet("Transacciones")
+
+            // Header style
+            val headerStyle = workbook.createCellStyle().apply {
+                fillForegroundColor = IndexedColors.GREY_25_PERCENT.index.toShort()
+                fillPattern = FillPatternType.SOLID_FOREGROUND
+            }
+
+            var rowNum = 0
+
+            val headerRow = sheet.createRow(rowNum++)
+
+            val headers = listOf("Fecha", "Descripcion", "Monto", "Tipo", "Categoria", "Metodo de Pago")
+
+            headers.forEachIndexed { idx, title ->
+                val cell = headerRow.createCell(idx)
+                cell.setCellValue(title)
+                cell.cellStyle = headerStyle
+            }
+
+            val sorted = transactions.sortedByDescending { it.date }
+
+            val dateFormatter = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+
+            for (t in sorted) {
+                val row = sheet.createRow(rowNum++)
+
+                row.createCell(0).setCellValue(dateFormatter.format(Date(t.date)))
+                row.createCell(1).setCellValue(t.description ?: "")
+                row.createCell(2).setCellValue(t.amount)
+                row.createCell(3).setCellValue(t.type)
+                row.createCell(4).setCellValue(categories.find { it.id == t.categoryId }?.name ?: "Sin categoria")
+                row.createCell(5).setCellValue(paymentMethods.find { it.id == t.paymentMethodId }?.name ?: "No especificado")
+            }
+
+            // Autosize columns a bit
+            for (i in headers.indices) sheet.autoSizeColumn(i)
+
+            FileOutputStream(file).use { out -> workbook.write(out) }
+
+            workbook.close()
+
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+
+            try {
+                val db = AppDatabaseProvider.getDatabase(context)
+
+                db.exportRecordDao().insert(ExportRecord(fileName = fileName, uri = uri.toString(), type = "xlsx"))
+
+            } catch (_: Exception) {}
+
+            ExportResult(uri = uri, usedFallback = false)
+
+        } catch (t: Throwable) {
+            // If POI classes are missing at runtime (NoClassDefFoundError), fall back to CSV export
+            if (t is NoClassDefFoundError) {
+                try {
+                    val csvUri = exportTransactionsToCSV(transactions, categories, paymentMethods, includeHeaders = true)
+                    return@withContext ExportResult(uri = csvUri, usedFallback = true)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    return@withContext ExportResult(uri = null, usedFallback = true)
+                }
+            }
+
+            t.printStackTrace()
+            ExportResult(uri = null, usedFallback = false)
+        }
+    }
+
 }
 
 enum class ExportField(val displayName: String) {
@@ -434,5 +538,7 @@ enum class ExportField(val displayName: String) {
 
 enum class ExportFormat(val displayName: String, val extension: String, val mimeType: String) {
     CSV("CSV (Excel)", "csv", "text/csv"),
-    PDF("PDF (Reporte)", "pdf", "application/pdf")
+    PDF("PDF (Reporte)", "pdf", "application/pdf"),
+    EXCEL("Excel (.xlsx)", "xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 }
+

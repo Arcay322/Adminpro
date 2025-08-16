@@ -457,8 +457,11 @@ fun BudgetComparisonItem(item: BudgetComparison) {
         }
         Spacer(modifier = Modifier.height(4.dp))
         LinearProgressIndicator(
-            progress = { item.progress.coerceAtMost(1f) },
-            modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
+            progress = item.progress.coerceAtMost(1f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(CircleShape),
             color = if (item.progress > 1f) ExpenseRed else IncomeGreen,
             trackColor = Color.Gray
         )

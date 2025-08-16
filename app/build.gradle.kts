@@ -82,6 +82,8 @@ dependencies {
     
     // WorkManager for background tasks
     implementation("androidx.work:work-runtime-ktx:2.9.0")
+    // Apache POI for Excel export (lightweight components)
+    implementation("org.apache.poi:poi-ooxml:5.2.3")
     
     // Foundation and Lazy components
     implementation("androidx.compose.foundation:foundation:1.6.7")

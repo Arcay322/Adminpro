@@ -10,8 +10,8 @@ import com.example.admin_ingresos.data.model.SavingsGoal
 import com.example.admin_ingresos.data.dao.SavingsGoalDao
 
 @Database(
-    entities = [Category::class, PaymentMethod::class, Transaction::class, Budget::class, SavingsGoal::class],
-    version = 11, // Versión incrementada a 11 para forzar actualización
+    entities = [Category::class, PaymentMethod::class, Transaction::class, Budget::class, SavingsGoal::class, com.example.admin_ingresos.data.ExportRecord::class],
+    version = 12,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -21,6 +21,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun budgetDao(): BudgetDao
     abstract fun savingsGoalDao(): SavingsGoalDao
+    abstract fun exportRecordDao(): ExportRecordDao
     
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -86,6 +87,24 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_5_6, MIGRATION_6_7)
+    // NOTE: ALL_MIGRATIONS is defined later to include newer migrations (e.g. MIGRATION_11_12).
+    // Previous duplicate declaration removed to avoid conflicting declarations.
+
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS export_records (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        fileName TEXT NOT NULL,
+                        uri TEXT NOT NULL,
+                        type TEXT NOT NULL,
+                        createdAt INTEGER NOT NULL
+                    )
+                """
+                )
+            }
+        }
+
+        val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_11_12)
     }
 }
