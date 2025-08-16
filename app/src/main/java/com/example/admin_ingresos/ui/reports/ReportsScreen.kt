@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
+import com.example.admin_ingresos.ui.history.DateRange
 import androidx.lifecycle.viewmodel.compose.viewModel
 import android.net.Uri
 import androidx.compose.material.icons.filled.Warning
@@ -149,7 +150,7 @@ fun ReportsScreen() {
                 }
 
                 item {
-                    BudgetVsActualComparison(reportData = uiState.reportData)
+                    BudgetVsActualComparison(reportData = uiState.reportData, viewModel = viewModel, currentRange = uiState.selectedDateRange)
                 }
             }
         }
@@ -583,7 +584,7 @@ fun LineChart(data: List<TrendDataPoint>, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun BudgetVsActualComparison(reportData: ReportData) {
+fun BudgetVsActualComparison(reportData: ReportData, viewModel: ReportsViewModel, currentRange: DateRange?) {
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -592,13 +593,32 @@ fun BudgetVsActualComparison(reportData: ReportData) {
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
             if (reportData.budgetVsActual.isNotEmpty()) {
                 // show highest progress first (items closest to/exceeding budget)
                 val sorted = reportData.budgetVsActual.sortedByDescending { it.progress }
-                sorted.forEach { budgetComparison ->
-                    BudgetComparisonItem(budgetComparison)
-                    Spacer(modifier = Modifier.height(8.dp))
+                sorted.forEachIndexed { idx, budgetComparison ->
+                    val cardColor = Color(android.graphics.Color.parseColor(budgetComparison.category.color))
+                    GlassCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        cornerRadius = 20.dp,
+                        backgroundColor = cardColor.copy(alpha = 0.10f),
+                        borderColor = cardColor.copy(alpha = 0.20f)
+                    ) {
+                        // match Category card internals: fill available area and use modest inner padding
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp)) {
+                                BudgetComparisonItemWithExtras(
+                                    item = budgetComparison,
+                                    viewModel = viewModel,
+                                    currentRange = currentRange,
+                                    rowIndex = idx
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
             } else {
                 Text(text = "No hay presupuestos activos para este período.", color = TextSecondary)
@@ -608,9 +628,37 @@ fun BudgetVsActualComparison(reportData: ReportData) {
 }
 
 @Composable
+fun BudgetComparisonItemWithExtras(item: BudgetComparison, viewModel: ReportsViewModel, currentRange: DateRange?, rowIndex: Int) {
+    // animate with slight stagger per rowIndex
+    val animationDelay = (rowIndex * 50)
+    // ...existing content from BudgetComparisonItem adapted
+    BudgetComparisonItem(item)
+    // Add extra info row: days left, percent time used, sparkline, forecast
+    Spacer(modifier = Modifier.height(6.dp))
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Column {
+            // days left and percent time used (if dates available)
+            if (item.budget.startDate > 0L && item.budget.endDate > 0L) {
+                val now = System.currentTimeMillis()
+                val millisPerDay = 1000L * 60 * 60 * 24
+                val totalDays = ((item.budget.endDate - item.budget.startDate) / millisPerDay).coerceAtLeast(1L)
+                val elapsedDays = ((now - item.budget.startDate) / millisPerDay).coerceIn(0L, totalDays)
+                val daysLeft = ((item.budget.endDate - now) / millisPerDay).coerceAtLeast(0L)
+                val percentTime = ((elapsedDays.toFloat() / totalDays.toFloat()) * 100f).coerceIn(0f, 100f)
+                Text(text = "Días restantes: $daysLeft", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                Text(text = "Periodo usado: ${DecimalFormat("#0.#").format(percentTime)}%", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+
+    // removed mini-sparkline by user request; keep layout compact
+    Spacer(modifier = Modifier.width(8.dp))
+    }
+}
+
+@Composable
 fun BudgetComparisonItem(item: BudgetComparison) {
     val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
-    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+    Column(modifier = Modifier.padding(vertical = 6.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (item.progress > 1f) {
@@ -655,7 +703,7 @@ fun BudgetComparisonItem(item: BudgetComparison) {
             if (overAmount > 0.0) {
                 Text(text = "Sobre: ${formatter.format(overAmount)}", color = ExpenseRed, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
             } else {
-                Text(text = "Libre: ${formatter.format(-overAmount)}", color = TextSecondary, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
+                Text(text = "Libre: ${formatter.format(-overAmount)}", color = IncomeGreen, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
             }
         }
     }
