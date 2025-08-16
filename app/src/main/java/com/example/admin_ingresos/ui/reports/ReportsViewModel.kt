@@ -7,6 +7,7 @@ import android.content.Context
 import android.net.Uri
 import com.example.admin_ingresos.data.AppDatabase
 import com.example.admin_ingresos.data.Budget
+import com.example.admin_ingresos.data.BudgetPeriod
 import com.example.admin_ingresos.data.Category
 import com.example.admin_ingresos.data.Transaction
 import com.example.admin_ingresos.ui.history.DateRange
@@ -56,7 +57,8 @@ data class BudgetComparison(
     val budget: Budget,
     val category: Category,
     val actualAmount: Double,
-    val progress: Float
+    val progress: Float,
+    val proratedAmount: Double = 0.0
 )
 
 enum class DateRangePreset(val displayName: String) {
@@ -250,8 +252,9 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
         val totalExpenses = transactions.filter { it.type == "Gasto" }.sumOf { it.amount }
         val expenseByCategory = calculateExpenseByCategory(transactions.filter { it.type == "Gasto" })
         val incomeVsExpenseTrend = calculateIncomeVsExpenseTrend(transactions)
-        val budgets = budgetDao.getAllBudgets().first()
-        val budgetVsActual = calculateBudgetVsActual(transactions.filter { it.type == "Gasto" }, budgets)
+    val budgets = budgetDao.getAllBudgets().first()
+    // when called without an explicit UI range, assume budgets cover their own ranges; no proration
+    val budgetVsActual = calculateBudgetVsActual(transactions.filter { it.type == "Gasto" }, budgets, null)
 
         return ReportData(
             totalIncome = totalIncome,
@@ -346,7 +349,7 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
 
                 val expenseByCategory = calculateExpenseByCategory(transactions.filter { it.type == "Gasto" })
                 val incomeVsExpenseTrend = calculateIncomeVsExpenseTrend(transactions)
-                val budgetVsActual = calculateBudgetVsActual(transactions.filter { it.type == "Gasto" }, budgets)
+                val budgetVsActual = calculateBudgetVsActual(transactions.filter { it.type == "Gasto" }, budgets, range)
 
                 val newReportData = ReportData(
                     totalIncome = totalIncome,
@@ -396,18 +399,77 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
             .sortedBy { it.timestamp }
     }
 
-    private suspend fun calculateBudgetVsActual(expenses: List<Transaction>, budgets: List<Budget>): List<BudgetComparison> {
-        return budgets.map { budget ->
-            val categoryExpenses = expenses.filter { it.categoryId == budget.categoryId }.sumOf { it.amount }
-            val progress = if (budget.amount > 0) (categoryExpenses / budget.amount).toFloat() else 0f
-            val category = categoryDao.getCategoryById(budget.categoryId) ?: Category.uncategorized()
-            BudgetComparison(
-                budget = budget,
-                category = category,
-                actualAmount = categoryExpenses,
-                progress = progress
+    private fun proratedAmountForRange(budget: Budget, range: DateRange): Double {
+        // If budget has invalid dates (0 or end <= start), treat it as a recurring budget
+        // using its BudgetPeriod duration as the base period for proration.
+        val hasValidDates = budget.startDate > 0L && budget.endDate > budget.startDate
+        if (!hasValidDates) {
+            try {
+                val periodMs = budget.period.durationInMillis.toDouble()
+                val rangeDuration = (range.endDate - range.startDate).coerceAtLeast(1L).toDouble()
+                return budget.amount * (rangeDuration / periodMs)
+            } catch (_: Exception) {
+                // fallback to full amount if something unexpected happens
+                return budget.amount
+            }
+        }
+
+        val overlapStart = maxOf(budget.startDate, range.startDate)
+        val overlapEnd = minOf(budget.endDate, range.endDate)
+        if (overlapEnd <= overlapStart) return 0.0
+        val budgetDuration = (budget.endDate - budget.startDate).coerceAtLeast(1L).toDouble()
+        val overlapDuration = (overlapEnd - overlapStart).toDouble()
+        return budget.amount * (overlapDuration / budgetDuration)
+    }
+
+    private suspend fun calculateBudgetVsActual(expenses: List<Transaction>, budgets: List<Budget>, range: DateRange? = null): List<BudgetComparison> {
+        // Sum expenses by category (expenses list assumed already filtered to range where appropriate)
+        val expensesByCategory = expenses.groupBy { it.categoryId }.mapValues { entry -> entry.value.sumOf { it.amount } }
+
+        // Sum prorated (or full) budgets by category
+        val budgetsByCategory = budgets.groupBy { it.categoryId }
+
+        val result = mutableListOf<BudgetComparison>()
+
+        val allCategoryIds = (expensesByCategory.keys + budgetsByCategory.keys).toSet()
+
+        for (catId in allCategoryIds) {
+            val actual = expensesByCategory[catId] ?: 0.0
+            val budgetsForCat = budgetsByCategory[catId] ?: emptyList()
+            val prorated = if (range != null) {
+                budgetsForCat.sumOf { proratedAmountForRange(it, range) }
+            } else {
+                budgetsForCat.sumOf { it.amount }
+            }
+
+            val category = if (budgetsForCat.isNotEmpty()) {
+                // pick first for metadata (color/name), prefer actual category lookup
+                categoryDao.getCategoryById(budgetsForCat.first().categoryId) ?: Category.uncategorized()
+            } else {
+                categoryDao.getCategoryById(catId) ?: Category.uncategorized()
+            }
+
+            val progress = when {
+                prorated > 0.0 -> (actual / prorated).toFloat()
+                actual > 0.0 -> Float.POSITIVE_INFINITY
+                else -> 0f
+            }
+
+            // For budget metadata, if we have a budget entity, use the first one; otherwise create a placeholder
+            val budgetMeta = budgetsForCat.firstOrNull() ?: Budget(id = 0, categoryId = catId, amount = prorated, period = BudgetPeriod.MONTHLY, startDate = range?.startDate ?: 0L, endDate = range?.endDate ?: 0L)
+
+            result.add(
+                BudgetComparison(
+                    budget = budgetMeta,
+                    category = category,
+                    actualAmount = actual,
+                    progress = progress,
+                    proratedAmount = prorated
+                )
             )
         }
+
+        return result.sortedByDescending { it.progress }
     }
 
     private fun getStartOfDay(timestamp: Long): Long {

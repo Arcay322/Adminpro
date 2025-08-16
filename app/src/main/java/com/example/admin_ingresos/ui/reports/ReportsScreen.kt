@@ -46,9 +46,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.example.admin_ingresos.AppDatabaseProvider
 import com.example.admin_ingresos.ui.components.GlassCard
 import com.example.admin_ingresos.ui.dashboard.CategoryData
+import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.*
 import java.text.NumberFormat
 import java.util.Locale
+import androidx.compose.ui.window.Dialog
 
 @Composable
 fun ReportsScreen() {
@@ -102,12 +104,21 @@ fun ReportsScreen() {
             ) {
                 item {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "Reportes",
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = LucideIconMapper.Navigation.reports,
+                                contentDescription = "Reportes",
+                                tint = AccentVibrantStart,
+                                modifier = Modifier.size(28.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "Reportes",
+                                style = MaterialTheme.typography.headlineLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             TextButton(onClick = {
                                 coroutineScope.launch {
@@ -134,7 +145,7 @@ fun ReportsScreen() {
                 }
 
                 item {
-                    DateRangeSelector(selectedPreset = uiState.dateRangePreset, onPresetSelected = { viewModel.setDateRange(it) })
+                    DateRangeSelector(selectedPreset = uiState.dateRangePreset, onPresetSelected = { preset, custom -> viewModel.setDateRange(preset, custom) })
                 }
 
                 item {
@@ -222,14 +233,46 @@ fun ReportsScreen() {
 }
 
 @Composable
-fun DateRangeSelector(selectedPreset: DateRangePreset, onPresetSelected: (DateRangePreset) -> Unit) {
+fun DateRangeSelector(selectedPreset: DateRangePreset, onPresetSelected: (DateRangePreset, DateRange?) -> Unit) {
+    var showCustomDialog by remember { mutableStateOf(false) }
+    var pendingCustomPreset by remember { mutableStateOf<DateRangePreset?>(null) }
+
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(DateRangePreset.values()) { preset ->
+            val selected = selectedPreset == preset
+            val presetIcon = when (preset) {
+                DateRangePreset.TODAY -> LucideIconMapper.Navigation.clock
+                DateRangePreset.THIS_WEEK -> LucideIconMapper.getNavigationIcon("calendardays")
+                DateRangePreset.THIS_MONTH -> LucideIconMapper.getNavigationIcon("calendar")
+                DateRangePreset.LAST_3_MONTHS -> LucideIconMapper.getNavigationIcon("calendardown")
+                DateRangePreset.THIS_YEAR -> LucideIconMapper.getNavigationIcon("calendarup")
+                DateRangePreset.CUSTOM -> LucideIconMapper.getNavigationIcon("calendar")
+            }
+
             FilterChip(
-                selected = selectedPreset == preset,
-                onClick = { onPresetSelected(preset) },
+                selected = selected,
+                onClick = {
+                    if (preset == DateRangePreset.CUSTOM) {
+                        // open dialog to pick custom range
+                        pendingCustomPreset = preset
+                        showCustomDialog = true
+                    } else {
+                        onPresetSelected(preset, null)
+                    }
+                },
+                leadingIcon = {
+                    Icon(imageVector = presetIcon, contentDescription = null, tint = if (selected) AccentVibrantStart else TextSecondary, modifier = Modifier.size(14.dp))
+                },
                 label = { Text(preset.displayName) }
             )
+        }
+    }
+
+    if (showCustomDialog && pendingCustomPreset != null) {
+        DateRangeDialog(onDismiss = { showCustomDialog = false; pendingCustomPreset = null }) { customRange ->
+            showCustomDialog = false
+            onPresetSelected(pendingCustomPreset!!, customRange)
+            pendingCustomPreset = null
         }
     }
 }
@@ -239,11 +282,105 @@ fun FinancialSummary(reportData: ReportData) {
     val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Large balance card first (like the design samples)
+        BalanceCardLarge(
+            title = "Balance Total",
+            amount = formatter.format(reportData.netSavings),
+            subtitle = "Actualizado ahora",
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        // Two small summary cards: Ingresos / Gastos
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            SummaryCard("Ingresos Totales", formatter.format(reportData.totalIncome), IncomeGreen, Modifier.weight(1f))
-            SummaryCard("Gastos Totales", formatter.format(reportData.totalExpenses), ExpenseRed, Modifier.weight(1f))
+                MiniSummaryCard(
+                    title = "Ingresos",
+                    amount = formatter.format(reportData.totalIncome),
+                    color = IncomeGreen,
+                    modifier = Modifier.weight(1f)
+                )
+
+                MiniSummaryCard(
+                    title = "Gastos",
+                    amount = formatter.format(reportData.totalExpenses),
+                    color = ExpenseRed,
+                    modifier = Modifier.weight(1f)
+                )
         }
-        SummaryCard("Balance Neto", formatter.format(reportData.netSavings), TextPrimary, Modifier.fillMaxWidth())
+    }
+}
+
+@Composable
+fun BalanceCardLarge(title: String, amount: String, subtitle: String? = null, modifier: Modifier = Modifier) {
+    GlassCard(modifier = modifier) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
+                Column {
+                    Text(text = title, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = amount, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 34.sp)
+                }
+                // subtle ghost circle for visual accent (like sample)
+                Box(modifier = Modifier.size(36.dp).background(Color.White.copy(alpha = 0.03f), shape = CircleShape))
+            }
+            if (!subtitle.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+            }
+        }
+    }
+}
+
+@Composable
+fun MiniSummaryCard(title: String, amount: String, color: Color, modifier: Modifier = Modifier) {
+    // Use a colored border to indicate type (green/red) per design request
+    GlassCard(modifier = modifier, borderColor = color.copy(alpha = 0.45f)) {
+        Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            Column {
+                Text(text = title, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(text = amount, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+            }
+
+            // keep the right side clean (no icon) — border indicates type
+            Spacer(modifier = Modifier.width(4.dp))
+        }
+    }
+}
+
+@Composable
+fun DateRangeDialog(onDismiss: () -> Unit, onConfirm: (DateRange) -> Unit) {
+    var startText by remember { mutableStateOf("") }
+    var endText by remember { mutableStateOf("") }
+    val sdf = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = MaterialTheme.shapes.medium, color = Color(0xFF222227)) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(text = "Rango personalizado", style = MaterialTheme.typography.titleMedium, color = TextPrimary)
+
+                OutlinedTextField(value = startText, onValueChange = { startText = it }, label = { Text("Fecha inicio (dd/MM/yyyy)") }, singleLine = true)
+                OutlinedTextField(value = endText, onValueChange = { endText = it }, label = { Text("Fecha fin (dd/MM/yyyy)") }, singleLine = true)
+
+                error?.let { Text(text = it, color = ExpenseRed) }
+
+                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                    TextButton(onClick = onDismiss) { Text("Cancelar") }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(onClick = {
+                        try {
+                            val start = sdf.parse(startText)?.time
+                            val end = sdf.parse(endText)?.time
+                            if (start == null || end == null) throw IllegalArgumentException("Fechas inválidas")
+                            if (end < start) throw IllegalArgumentException("La fecha fin debe ser posterior a la de inicio")
+                            onConfirm(DateRange(start, end))
+                        } catch (e: Exception) {
+                            error = e.message ?: "Formato inválido"
+                        }
+                    }) { Text("Aplicar") }
+                }
+            }
+        }
     }
 }
 
@@ -426,16 +563,20 @@ fun IncomeVsExpenseTrendChart(reportData: ReportData) {
             )
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Legend
+            // Legend with clearer glyphs inside colored circles
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(10.dp).background(IncomeGreen, CircleShape))
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Box(modifier = Modifier.size(18.dp).clip(CircleShape).background(IncomeGreen), contentAlignment = Alignment.Center) {
+                        Icon(LucideIconMapper.getTransactionTypeIcon("ingreso"), contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text("Ingresos", color = TextSecondary, fontSize = 12.sp)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(10.dp).background(ExpenseRed, CircleShape))
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Box(modifier = Modifier.size(18.dp).clip(CircleShape).background(ExpenseRed), contentAlignment = Alignment.Center) {
+                        Icon(LucideIconMapper.getTransactionTypeIcon("gasto"), contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text("Gastos", color = TextSecondary, fontSize = 12.sp)
                 }
             }
@@ -661,21 +802,43 @@ fun BudgetComparisonItem(item: BudgetComparison) {
     Column(modifier = Modifier.padding(vertical = 6.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                // category icon like CategoryScreen
+                val cardColor = Color(android.graphics.Color.parseColor(item.category.color))
+                Box(
+                    Modifier
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(cardColor.copy(alpha = 0.85f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(LucideIconMapper.getCategoryIcon(item.category), null, tint = TextPrimary, modifier = Modifier.size(18.dp))
+                }
+                Spacer(modifier = Modifier.width(8.dp))
                 if (item.progress > 1f) {
                     Icon(Icons.Default.Warning, contentDescription = "Excedido", tint = ExpenseRed, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                 }
                 Text(text = item.category.name, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            // percentage badge (formatted, capped)
-                val pctFloat = (item.progress * 100f)
-                val pctCapped = pctFloat.coerceAtMost(999.9f)
-                val pctForm = DecimalFormat("#0.#").format(pctCapped) + "%"
+                // percentage badge (formatted, capped). Handle no/prorated=0 and Infinity safely.
+                val pctForm: String
                 val badgeColor = when {
-                    item.progress > 1f -> ExpenseRed
-                    item.progress >= 0.75f -> androidx.compose.ui.graphics.Color(0xFFF0A500) // yellow-ish
+                    item.progress.isFinite() && item.progress > 1f -> ExpenseRed
+                    item.progress.isFinite() && item.progress >= 0.75f -> androidx.compose.ui.graphics.Color(0xFFF0A500)
                     else -> IncomeGreen
                 }
+
+                pctForm = when {
+                    item.proratedAmount <= 0.0 -> "Sin presupuesto"
+                    item.progress.isFinite() -> {
+                        val pctFloat = (item.progress * 100f)
+                        val pctCapped = pctFloat.coerceAtMost(999.9f)
+                        DecimalFormat("#0.#").format(pctCapped) + "%"
+                    }
+                    item.actualAmount > 0.0 -> "--"
+                    else -> "0%"
+                }
+
                 Text(text = pctForm, color = badgeColor, fontWeight = FontWeight.Bold)
         }
         Spacer(modifier = Modifier.height(8.dp))
@@ -694,9 +857,12 @@ fun BudgetComparisonItem(item: BudgetComparison) {
 
         Spacer(modifier = Modifier.height(6.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Column {
+                Column {
                 Text(text = "Gastado: ${formatter.format(item.actualAmount)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-                Text(text = "Presupuesto: ${formatter.format(item.budget.amount)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                Text(text = "Presupuesto (ajust.): ${formatter.format(item.proratedAmount)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                if (item.proratedAmount != item.budget.amount) {
+                    Text(text = "Original: ${formatter.format(item.budget.amount)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                }
             }
             // show absolute over/remaining amounts
             val overAmount = item.actualAmount - item.budget.amount
