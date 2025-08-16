@@ -142,6 +142,43 @@ object TestDataSeeder {
         transactions.forEach { database.transactionDao().insert(it) }
     }
 
+    suspend fun seedBudgetsForReports(database: AppDatabase) = withContext(Dispatchers.IO) {
+        // create budgets for common categories for the next month
+        val categories = database.categoryDao().getCategoriesList()
+        if (categories.isEmpty()) return@withContext
+
+        val now = Calendar.getInstance()
+        val start = Calendar.getInstance().apply { set(Calendar.DAY_OF_MONTH, 1); set(Calendar.HOUR_OF_DAY,0); set(Calendar.MINUTE,0); set(Calendar.SECOND,0) }.timeInMillis
+        val end = Calendar.getInstance().apply { add(Calendar.MONTH, 1); set(Calendar.DAY_OF_MONTH, 1); add(Calendar.DAY_OF_MONTH, -1); set(Calendar.HOUR_OF_DAY,23); set(Calendar.MINUTE,59); set(Calendar.SECOND,59) }.timeInMillis
+
+        val commonBudgets = listOf(
+            Pair("Alimentación", 400.0),
+            Pair("Transporte", 120.0),
+            Pair("Entretenimiento", 80.0),
+            Pair("Salud", 150.0),
+            Pair("Hogar", 300.0),
+            Pair("Servicios", 200.0)
+        )
+
+        commonBudgets.forEach { (name, amount) ->
+            val cat = categories.find { it.name == name } ?: return@forEach
+            val existing = database.budgetDao().getActiveBudgetByCategory(cat.id)
+            if (existing == null) {
+                val b = Budget(
+                    categoryId = cat.id,
+                    amount = amount,
+                    period = BudgetPeriod.MONTHLY,
+                    startDate = start,
+                    endDate = end,
+                    isActive = true,
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis()
+                )
+                database.budgetDao().insertBudget(b)
+            }
+        }
+    }
+
     private fun randomTimeBetween(start: Long, end: Long): Long {
         val lower = minOf(start, end)
         val upper = maxOf(start, end)

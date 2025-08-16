@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.input.pointer.pointerInput
@@ -35,6 +36,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import android.net.Uri
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.ui.text.font.FontStyle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.example.admin_ingresos.AppDatabaseProvider
@@ -59,6 +62,7 @@ fun ReportsScreen() {
     val snackbarHostState = remember { SnackbarHostState() }
     var showLoadingOverlay by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     // Launcher placeholder to grant URI permission if needed (not strictly necessary for FileProvider)
     val shareLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { /* no-op */ }
@@ -101,8 +105,27 @@ fun ReportsScreen() {
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
-                        IconButton(onClick = { showExportDialog = true }) {
-                            Icon(Icons.Default.Share, contentDescription = "Exportar", tint = Color.White)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            TextButton(onClick = {
+                                coroutineScope.launch {
+                                    showLoadingOverlay = true
+                                    try {
+                                        com.example.admin_ingresos.data.TestDataSeeder.seedBudgetsForReports(AppDatabaseProvider.getDatabase(context))
+                                        viewModel.reloadAll()
+                                        snackbarHostState.showSnackbar("Presupuestos de ejemplo creados")
+                                    } catch (e: Exception) {
+                                        snackbarHostState.showSnackbar("Error: ${e.message}")
+                                    } finally {
+                                        showLoadingOverlay = false
+                                    }
+                                }
+                            }) {
+                                Text("Sembrar presupuestos", color = Color.White)
+                            }
+                            Spacer(modifier = Modifier.width(4.dp))
+                            IconButton(onClick = { showExportDialog = true }) {
+                                Icon(Icons.Default.Share, contentDescription = "Exportar", tint = Color.White)
+                            }
                         }
                     }
                 }
@@ -569,8 +592,11 @@ fun BudgetVsActualComparison(reportData: ReportData) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             if (reportData.budgetVsActual.isNotEmpty()) {
-                reportData.budgetVsActual.forEach { budgetComparison ->
+                // show highest progress first (items closest to/exceeding budget)
+                val sorted = reportData.budgetVsActual.sortedByDescending { it.progress }
+                sorted.forEach { budgetComparison ->
                     BudgetComparisonItem(budgetComparison)
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             } else {
                 Text(text = "No hay presupuestos activos para este período.", color = TextSecondary)
@@ -583,24 +609,54 @@ fun BudgetVsActualComparison(reportData: ReportData) {
 fun BudgetComparisonItem(item: BudgetComparison) {
     val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(text = item.category.name, fontWeight = FontWeight.Bold, color = TextPrimary)
-            Text(text = "${(item.progress * 100).toInt()}%", color = TextSecondary)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (item.progress > 1f) {
+                    Icon(Icons.Default.Warning, contentDescription = "Excedido", tint = ExpenseRed, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text(text = item.category.name, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            // percentage badge
+            val pct = (item.progress * 100).toInt()
+            Text(text = "$pct%", color = if (item.progress > 1f) ExpenseRed else IncomeGreen, fontWeight = FontWeight.Bold)
         }
-        Spacer(modifier = Modifier.height(4.dp))
-        LinearProgressIndicator(
-            progress = item.progress.coerceAtMost(1f),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(8.dp)
-                .clip(CircleShape),
-            color = if (item.progress > 1f) ExpenseRed else IncomeGreen,
-            trackColor = Color.Gray
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Custom progress bar with percentage overlay
+        BudgetProgressBar(progress = item.progress.coerceAtLeast(0f), color = if (item.progress > 1f) ExpenseRed else IncomeGreen, modifier = Modifier.fillMaxWidth())
+
+        Spacer(modifier = Modifier.height(6.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Column {
+                Text(text = "Gastado: ${formatter.format(item.actualAmount)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                Text(text = "Presupuesto: ${formatter.format(item.budget.amount)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+            }
+            // show over/under label
+            if (item.progress > 1f) {
+                Text(text = "Sobre: ${(item.progress - 1f) * 100f}%", color = ExpenseRed, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
+            } else {
+                Text(text = "Libre: ${(1f - item.progress) * 100f}%", color = TextSecondary, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
+            }
+        }
+    }
+}
+
+@Composable
+fun BudgetProgressBar(progress: Float, color: Color, modifier: Modifier = Modifier) {
+    Box(modifier = modifier.height(14.dp)) {
+        // track
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF2A2A2A), shape = CircleShape)
         )
-        Spacer(modifier = Modifier.height(4.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(text = "Gastado: ${formatter.format(item.actualAmount)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-            Text(text = "Presupuesto: ${formatter.format(item.budget.amount)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-        }
+        // fill
+        Box(modifier = Modifier
+            .fillMaxWidth(progress.coerceIn(0f, 1f))
+            .height(14.dp)
+            .clip(CircleShape)
+            .background(color.copy(alpha = 0.95f))
+        )
+    // end percentage pill removed to avoid duplication with top-line badge
     }
 }
