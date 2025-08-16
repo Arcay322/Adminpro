@@ -68,10 +68,93 @@ fun ReportsScreen() {
     val snackbarHostState = remember { SnackbarHostState() }
     var showLoadingOverlay by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
+    var showDownloadDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
     // Launcher placeholder to grant URI permission if needed (not strictly necessary for FileProvider)
     val shareLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { /* no-op */ }
+
+    // CreateDocument launchers for user-driven downloads (save as)
+    var pendingDownloadSourceUri by remember { mutableStateOf<Uri?>(null) }
+    var isDownloadPending by remember { mutableStateOf(false) }
+    var pendingDownloadMime by remember { mutableStateOf<String?>(null) }
+
+    val createCsvLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { destUri ->
+        if (destUri != null && pendingDownloadSourceUri != null) {
+                try {
+                context.contentResolver.openInputStream(pendingDownloadSourceUri!!).use { input ->
+                    context.contentResolver.openOutputStream(destUri).use { output ->
+                        if (input != null && output != null) {
+                            input.copyTo(output)
+                        }
+                    }
+                }
+                coroutineScope.launch { snackbarHostState.showSnackbar("Descargado correctamente") }
+            } catch (e: Exception) {
+                coroutineScope.launch { snackbarHostState.showSnackbar("Error al guardar: ${e.message}") }
+            } finally {
+                pendingDownloadSourceUri = null
+                isDownloadPending = false
+                pendingDownloadMime = null
+            }
+        } else {
+            // user cancelled
+            pendingDownloadSourceUri = null
+            isDownloadPending = false
+            pendingDownloadMime = null
+        }
+    }
+
+    val createPdfLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { destUri ->
+        if (destUri != null && pendingDownloadSourceUri != null) {
+                try {
+                context.contentResolver.openInputStream(pendingDownloadSourceUri!!).use { input ->
+                    context.contentResolver.openOutputStream(destUri).use { output ->
+                        if (input != null && output != null) {
+                            input.copyTo(output)
+                        }
+                    }
+                }
+                coroutineScope.launch { snackbarHostState.showSnackbar("Descargado correctamente") }
+            } catch (e: Exception) {
+                coroutineScope.launch { snackbarHostState.showSnackbar("Error al guardar: ${e.message}") }
+            } finally {
+                pendingDownloadSourceUri = null
+                isDownloadPending = false
+                pendingDownloadMime = null
+            }
+        } else {
+            pendingDownloadSourceUri = null
+            isDownloadPending = false
+            pendingDownloadMime = null
+        }
+    }
+
+    val xlsxMime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    val createXlsxLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(xlsxMime)) { destUri ->
+        if (destUri != null && pendingDownloadSourceUri != null) {
+            try {
+                context.contentResolver.openInputStream(pendingDownloadSourceUri!!).use { input ->
+                    context.contentResolver.openOutputStream(destUri).use { output ->
+                        if (input != null && output != null) {
+                            input.copyTo(output)
+                        }
+                    }
+                }
+                coroutineScope.launch { snackbarHostState.showSnackbar("Descargado correctamente") }
+            } catch (e: Exception) {
+                coroutineScope.launch { snackbarHostState.showSnackbar("Error al guardar: ${e.message}") }
+            } finally {
+                pendingDownloadSourceUri = null
+                isDownloadPending = false
+                pendingDownloadMime = null
+            }
+        } else {
+            pendingDownloadSourceUri = null
+            isDownloadPending = false
+            pendingDownloadMime = null
+        }
+    }
 
     GlassmorphismScreen(modifier = Modifier.fillMaxSize()) {
         // Loading overlay for export
@@ -115,31 +198,17 @@ fun ReportsScreen() {
                             }
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            TextButton(onClick = {
-                                coroutineScope.launch {
-                                    showLoadingOverlay = true
-                                    try {
-                                        val db = AppDatabaseProvider.getDatabase(context)
-                                        // Clear previous seed data that may distort demo results
-                                        com.example.admin_ingresos.data.TestDataSeeder.clearSeedData(db)
-                                        // Insert a cleaner set of budgets
-                                        com.example.admin_ingresos.data.TestDataSeeder.seedCleanBudgetsForReports(db)
-                                        // Insert coherent expense/income transactions aligned with budgets
-                                        com.example.admin_ingresos.data.TestDataSeeder.seedCleanTransactionsForReports(db)
-                                        viewModel.reloadAll()
-                                        snackbarHostState.showSnackbar("Presupuestos de ejemplo actualizados")
-                                    } catch (e: Exception) {
-                                        snackbarHostState.showSnackbar("Error: ${e.message}")
-                                    } finally {
-                                        showLoadingOverlay = false
-                                    }
-                                }
-                            }) {
-                                Text("Sembrar presupuestos", color = Color.White)
-                            }
-                            Spacer(modifier = Modifier.width(4.dp))
                             IconButton(onClick = { showExportDialog = true }) {
                                 Icon(Icons.Default.Share, contentDescription = "Exportar", tint = Color.White)
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            IconButton(onClick = {
+                                showDownloadDialog = true
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar("Abriendo diálogo de descargas...")
+                                }
+                            }) {
+                                Icon(LucideIconMapper.Navigation.download, contentDescription = "Descargar", tint = Color.White)
                             }
                         }
                     }
@@ -176,27 +245,98 @@ fun ReportsScreen() {
             text = { Text("Selecciona el formato para exportar las transacciones del periodo seleccionado.") },
             confirmButton = {
                 Row {
+                    // Export and share (existing behaviour)
                     TextButton(onClick = {
                         showExportDialog = false
-                            viewModel.exportTransactionsCsv(context)
-                            // show overlay while exporting
-                            showLoadingOverlay = true
+                        viewModel.exportTransactionsCsv(context)
+                        // show overlay while exporting
+                        showLoadingOverlay = true
                     }) { Text("CSV") }
                     TextButton(onClick = {
                         showExportDialog = false
-                            viewModel.exportTransactionsPdf(context)
-                            showLoadingOverlay = true
+                        viewModel.exportTransactionsPdf(context)
+                        showLoadingOverlay = true
                     }) { Text("PDF") }
                     TextButton(onClick = {
                         showExportDialog = false
-                            viewModel.shareTextSummary(context)
-                            // textual share uses chooser; show a subtle loading state briefly
-                            showLoadingOverlay = true
+                        viewModel.shareTextSummary(context)
+                        // textual share uses chooser; show a subtle loading state briefly
+                        showLoadingOverlay = true
                     }) { Text("Texto") }
+
+                    // Download options were moved to the dedicated Download dialog
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showExportDialog = false }) { Text("Cancelar") }
+            }
+        )
+    }
+
+    // Download dialog (separate from export/share dialog)
+    if (showDownloadDialog) {
+        AlertDialog(
+            onDismissRequest = { showDownloadDialog = false },
+            title = { Text("Descargar Reporte") },
+            text = {
+                Column {
+                    Text("Selecciona el formato para descargar las transacciones del periodo seleccionado.")
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(onClick = {
+                        showDownloadDialog = false
+                        isDownloadPending = true
+                        pendingDownloadMime = "text/csv"
+                        viewModel.exportTransactionsCsv(context)
+                        showLoadingOverlay = true
+                    }) {
+                        Text("Descargar CSV")
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(onClick = {
+                        showDownloadDialog = false
+                        isDownloadPending = true
+                        pendingDownloadMime = "application/pdf"
+                        viewModel.exportTransactionsPdf(context)
+                        showLoadingOverlay = true
+                    }) {
+                        Text("Descargar PDF")
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(onClick = {
+                        showDownloadDialog = false
+                        showLoadingOverlay = true
+                        coroutineScope.launch {
+                            try {
+                                val transactions = viewModel.getAllTransactionsForCurrentRange()
+                                val categories = viewModel.getCategories()
+                                val paymentMethods = viewModel.getPaymentMethods()
+                                val exportResult = com.example.admin_ingresos.data.ExportService(context).exportTransactionsToXlsx(transactions, categories, paymentMethods)
+                                if (exportResult.uri != null) {
+                                    pendingDownloadSourceUri = exportResult.uri
+                                    isDownloadPending = true
+                                    pendingDownloadMime = xlsxMime
+                                    createXlsxLauncher.launch("reporte_${System.currentTimeMillis()}.xlsx")
+                                } else {
+                                    coroutineScope.launch { snackbarHostState.showSnackbar("Error al generar Excel") }
+                                }
+                            } catch (e: Exception) {
+                                coroutineScope.launch { snackbarHostState.showSnackbar("Error: ${e.message}") }
+                            } finally {
+                                showLoadingOverlay = false
+                            }
+                        }
+                    }) {
+                        Text("Descargar Excel")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showDownloadDialog = false }) { Text("Cerrar") }
             }
         )
     }
@@ -207,10 +347,30 @@ fun ReportsScreen() {
         when (exportState) {
             is com.example.admin_ingresos.ui.reports.ExportStatus.Success -> {
                 val uri = (exportState as com.example.admin_ingresos.ui.reports.ExportStatus.Success).uri
-                com.example.admin_ingresos.data.ExportService(context).shareFile(uri, mimeType = if (uri.toString().endsWith(".pdf")) "application/pdf" else "text/csv")
-                viewModel.clearExportState()
-                showLoadingOverlay = false
-                snackbarHostState.showSnackbar("Exportado correctamente")
+                // If a download was requested by the user, open a Save-As dialog and copy the generated file
+                if (isDownloadPending && uri != null) {
+                    pendingDownloadSourceUri = uri
+                    // launch appropriate create document based on pending mime
+                    if (pendingDownloadMime == "application/pdf") {
+                        createPdfLauncher.launch("reporte_${System.currentTimeMillis()}.pdf")
+                    } else {
+                        createCsvLauncher.launch("reporte_${System.currentTimeMillis()}.csv")
+                    }
+                    // clear viewmodel state but keep overlay until user finishes
+                    viewModel.clearExportState()
+                    showLoadingOverlay = false
+                    // snackbar will be shown after copy completes in launcher callback
+                } else if (uri != null) {
+                    // Default behavior: open share chooser
+                    com.example.admin_ingresos.data.ExportService(context).shareFile(uri, mimeType = if (uri.toString().endsWith(".pdf")) "application/pdf" else "text/csv")
+                    viewModel.clearExportState()
+                    showLoadingOverlay = false
+                    snackbarHostState.showSnackbar("Exportado correctamente")
+                } else {
+                    viewModel.clearExportState()
+                    showLoadingOverlay = false
+                    snackbarHostState.showSnackbar("Exportación finalizada, pero no se encontró el archivo generado")
+                }
             }
             is com.example.admin_ingresos.ui.reports.ExportStatus.Error -> {
                 val message = (exportState as com.example.admin_ingresos.ui.reports.ExportStatus.Error).message
