@@ -114,7 +114,7 @@ fun MainAppNavigation() {
                         onNavigateToTransactions = { navController.navigate("history") },
                         onNavigateToAddTransaction = { showAddTransactionModal = true },
                         onNavigateToReports = { navController.navigate("reports") },
-                        onNavigateToSettings = { /* No-op */ }
+                        onNavigateToSettings = { navController.navigate("profile") }
                     )
                 }
                 composable("budget") {
@@ -133,6 +133,13 @@ fun MainAppNavigation() {
                 }
                 composable("reports") {
                     ReportsScreen()
+                }
+
+                composable("profile") {
+                    com.example.admin_ingresos.ui.profile.ProfileScreen(
+                        onNavigateBack = { navController.popBackStack() },
+                        onSignOut = { navController.navigate("dashboard") { popUpTo("dashboard") { inclusive = true } } }
+                    )
                 }
 
                 composable(

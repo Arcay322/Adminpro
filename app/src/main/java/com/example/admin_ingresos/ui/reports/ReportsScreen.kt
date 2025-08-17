@@ -100,7 +100,6 @@ fun ReportsScreen() {
         } else {
             // user cancelled
             pendingDownloadSourceUri = null
-            isDownloadPending = false
             pendingDownloadMime = null
         }
     }

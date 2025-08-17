@@ -70,6 +70,8 @@ fun DashboardScreen(
 
     var userName by remember { mutableStateOf("Usuario") }
 
+    var showNotificationsDialog by remember { mutableStateOf(false) }
+
     var isVisible by remember { mutableStateOf(false) }
     val animatedBalance by animateFloatAsState(
         targetValue = if (isVisible) uiState.currentBalance.toFloat() else 0f,
@@ -83,6 +85,21 @@ fun DashboardScreen(
         }
     }
 
+    // Notifications dialog
+    if (showNotificationsDialog) {
+        AlertDialog(
+            onDismissRequest = { showNotificationsDialog = false },
+            title = { Text("Notificaciones") },
+            text = { Text("No hay notificaciones nuevas.") },
+            confirmButton = {
+                TextButton(onClick = { showNotificationsDialog = false }) { Text("Cerrar") }
+            }
+        )
+    }
+
+    // Profile now has its own screen (navigates to "profile").
+    // showProfileDialog removed in favor of navigation.
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -95,7 +112,7 @@ fun DashboardScreen(
         item {
             DashboardHeader(
                 userName = userName,
-                onNotificationClick = { /*TODO*/ },
+                onNotificationClick = { showNotificationsDialog = true },
                 onProfileClick = onNavigateToSettings
             )
         }
