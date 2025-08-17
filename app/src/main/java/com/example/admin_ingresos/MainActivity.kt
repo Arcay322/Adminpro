@@ -31,6 +31,8 @@ import com.example.admin_ingresos.ui.animations.getPopEnterTransition
 import com.example.admin_ingresos.ui.animations.getPopExitTransition
 import com.example.admin_ingresos.ui.animations.getTransitionForRoute
 import com.example.admin_ingresos.ui.navigation.BottomNavigationBar
+import com.example.admin_ingresos.ui.onboarding.OnboardingScreen
+import com.example.admin_ingresos.data.PreferencesManager
 import com.example.admin_ingresos.ui.theme.Admin_ingresosTheme
 import com.example.admin_ingresos.ui.dashboard.DashboardScreen
 import com.example.admin_ingresos.ui.budget.BudgetScreen
@@ -60,6 +62,9 @@ fun MainAppNavigation() {
     val navController = rememberNavController()
     var showAddTransactionModal by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val prefs = remember { PreferencesManager(context) }
+    // For production testing: always show onboarding regardless of stored preference
+    var showOnboarding by remember { mutableStateOf(true) }
     val database = remember { AppDatabaseProvider.getDatabase(context) }
     val categoryViewModel: CategoryViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
@@ -84,93 +89,110 @@ fun MainAppNavigation() {
                 )
             )
     ) {
-        Scaffold(
-            containerColor = Color.Transparent,
-            bottomBar = { BottomNavigationBar(navController) },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { showAddTransactionModal = true },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White,
-                    elevation = FloatingActionButtonDefaults.elevation(
-                        defaultElevation = 8.dp,
-                        pressedElevation = 12.dp
-                    )
+        // If onboarding hasn't been completed, show onboarding flow first
+        if (showOnboarding) {
+            OnboardingScreen(onFinish = {
+                prefs.isOnboardingCompleted = true
+                showOnboarding = false
+            }, onSkip = {
+                prefs.isOnboardingCompleted = true
+                showOnboarding = false
+            })
+        } else {
+            Scaffold(
+                containerColor = Color.Transparent,
+                bottomBar = { BottomNavigationBar(navController) },
+                floatingActionButton = {
+                    FloatingActionButton(
+                        onClick = { showAddTransactionModal = true },
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White,
+                        elevation = FloatingActionButtonDefaults.elevation(
+                            defaultElevation = 8.dp,
+                            pressedElevation = 12.dp
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Agregar transacción"
+                        )
+                    }
+                }
+            ) { paddingValues ->
+                NavHost(
+                    navController = navController,
+                    startDestination = "dashboard",
+                    modifier = Modifier.padding(paddingValues)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Agregar transacción"
-                    )
-                }
-            }
-        ) { paddingValues ->
-            NavHost(
-                navController = navController,
-                startDestination = "dashboard",
-                modifier = Modifier.padding(paddingValues)
-            ) {
-                composable("dashboard") {
-                    DashboardScreen(
-                        onNavigateToTransactions = { navController.navigate("history") },
-                        onNavigateToAddTransaction = { showAddTransactionModal = true },
-                        onNavigateToReports = { navController.navigate("reports") },
-                        onNavigateToSettings = { navController.navigate("profile") }
-                    )
-                }
-                composable("budget") {
-                    BudgetScreen()
-                }
-                composable("categories") {
-                    CategoryScreen(
-                        viewModel = categoryViewModel,
-                        onNavigateToCategoryDetail = { categoryId ->
-                            navController.navigate("category_detail/$categoryId")
-                        }
-                    )
-                }
-                composable("history") {
-                    TransactionHistoryScreen()
-                }
-                composable("reports") {
-                    ReportsScreen()
-                }
-
-                composable("profile") {
-                    com.example.admin_ingresos.ui.profile.ProfileScreen(
-                        onNavigateBack = { navController.popBackStack() },
-                        onSignOut = { navController.navigate("dashboard") { popUpTo("dashboard") { inclusive = true } } }
-                    )
-                }
-
-                composable(
-                    route = "category_detail/{categoryId}",
-                    arguments = listOf(navArgument("categoryId") { type = NavType.IntType })
-                ) { backStackEntry ->
-                    val categoryId = backStackEntry.arguments?.getInt("categoryId")
-                    val categoryDetailViewModel: CategoryDetailViewModel = viewModel(
-                        factory = object : ViewModelProvider.Factory {
-                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                @Suppress("UNCHECKED_CAST")
-                                return CategoryDetailViewModel(
-                                    transactionDao = database.transactionDao(),
-                                    categoryDao = database.categoryDao(),
-                                    budgetDao = database.budgetDao(),
-                                    categoryId = categoryId
-                                ) as T
+                    composable("dashboard") {
+                        DashboardScreen(
+                            onNavigateToTransactions = { navController.navigate("history") },
+                            onNavigateToAddTransaction = { showAddTransactionModal = true },
+                            onNavigateToReports = { navController.navigate("reports") },
+                            onNavigateToSettings = { navController.navigate("profile") }
+                        )
+                    }
+                    composable("budget") {
+                        BudgetScreen()
+                    }
+                    composable("categories") {
+                        CategoryScreen(
+                            viewModel = categoryViewModel,
+                            onNavigateToCategoryDetail = { categoryId ->
+                                navController.navigate("category_detail/$categoryId")
                             }
-                        }
-                    )
-                    CategoryDetailScreen(
-                        viewModel = categoryDetailViewModel,
-                        onNavigateBack = { navController.popBackStack() }
-                    )
+                        )
+                    }
+                    composable("history") {
+                        TransactionHistoryScreen()
+                    }
+                    composable("reports") {
+                        ReportsScreen()
+                    }
+
+                    composable("profile") {
+                        com.example.admin_ingresos.ui.profile.ProfileScreen(
+                            onNavigateBack = { navController.popBackStack() },
+                            onSignOut = {
+                                navController.navigate("dashboard") {
+                                    popUpTo("dashboard") {
+                                        inclusive = true
+                                    }
+                                }
+                            }
+                        )
+                    }
+
+                    composable(
+                        route = "category_detail/{categoryId}",
+                        arguments = listOf(navArgument("categoryId") { type = NavType.IntType })
+                    ) { backStackEntry ->
+                        val categoryId = backStackEntry.arguments?.getInt("categoryId")
+                        val categoryDetailViewModel: CategoryDetailViewModel = viewModel(
+                            factory = object : ViewModelProvider.Factory {
+                                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                    @Suppress("UNCHECKED_CAST")
+                                    return CategoryDetailViewModel(
+                                        transactionDao = database.transactionDao(),
+                                        categoryDao = database.categoryDao(),
+                                        budgetDao = database.budgetDao(),
+                                        categoryId = categoryId
+                                    ) as T
+                                }
+                            }
+                        )
+                        CategoryDetailScreen(
+                            viewModel = categoryDetailViewModel,
+                            onNavigateBack = { navController.popBackStack() }
+                        )
+                    }
                 }
+                AddTransactionModal(
+                    show = showAddTransactionModal,
+                    onDismiss = { showAddTransactionModal = false },
+                    onTransactionAdded = { /* TODO: Recargar datos si es necesario */ }
+                )
             }
-            AddTransactionModal(
-                show = showAddTransactionModal,
-                onDismiss = { showAddTransactionModal = false },
-                onTransactionAdded = { /* TODO: Recargar datos si es necesario */ }
-            )
         }
     }
 }
