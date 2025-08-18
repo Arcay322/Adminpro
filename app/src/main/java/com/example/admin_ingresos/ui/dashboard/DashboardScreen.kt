@@ -563,7 +563,7 @@ private fun QuickActionButton(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.clickable(onClick = onClick)
     ) {
-        Box(
+            Box(
             modifier = Modifier
                 .size(56.dp)
                 .background(
@@ -575,7 +575,7 @@ private fun QuickActionButton(
             Icon(
                 imageVector = icon,
                 contentDescription = title,
-                    tint = Color.White,
+                tint = gradient.firstOrNull() ?: MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(24.dp)
             )
         }

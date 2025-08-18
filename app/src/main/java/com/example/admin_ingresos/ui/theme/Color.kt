@@ -35,8 +35,8 @@ var GlassBorderSubtle by mutableStateOf(Color(0x1AFFFFFF)) // Borde sutil 10%
 
 // Texto sobre Vidrio
 // Texto principal y secundario (aumentamos contraste para mayor claridad)
-var TextPrimary by mutableStateOf(Color(0xFFFFFFFF)) // Blanco puro para máxima legibilidad
-var TextSecondary by mutableStateOf(Color(0xFFBFC7CC)) // Gris claro más brillante para subtítulos
+var TextPrimary by mutableStateOf(Color(0xFF000000)) // Negro por defecto para modo claro
+var TextSecondary by mutableStateOf(Color(0xFF6B7280)) // Gris medio para subtítulos en modo claro
 var TextOnAccent by mutableStateOf(Color(0xFF000000)) // Negro para texto sobre acentos vibrantes
 
 // Categorías con Colores Vibrantes Armónicos

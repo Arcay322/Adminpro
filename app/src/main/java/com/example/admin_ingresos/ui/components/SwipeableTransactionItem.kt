@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -161,10 +162,11 @@ fun SwipeActionButton(
             .background(backgroundColor),
         contentAlignment = Alignment.Center
     ) {
+        val contentTint = MaterialTheme.colorScheme.run { if (backgroundColor.luminance() < 0.5f) onPrimary else onSurface }
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            tint = Color.White,
+            tint = contentTint,
             modifier = Modifier.size(24.dp)
         )
     }
@@ -241,7 +243,7 @@ fun TransactionItemContent(
             Text(
                 text = dateFormat.format(Date(transaction.date)),
                 style = MaterialTheme.typography.bodySmall,
-                color = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.White.copy(alpha = 0.85f) else Color.Black.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
         }
         

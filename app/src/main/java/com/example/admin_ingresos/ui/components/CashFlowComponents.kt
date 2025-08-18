@@ -217,7 +217,7 @@ fun GlassmorphismBalanceCard(
                     Text(
                         text = it,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.8f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                     )
                 }
             }
@@ -1511,7 +1511,7 @@ fun TransactionSuccessDialog(
                         containerColor = if (transactionType == "Ingreso") Color(0xFF4CAF50) else Color(0xFFE57373)
                     )
                 ) {
-                    Text("Continuar", color = Color.White)
+                    Text("Continuar", color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
         )

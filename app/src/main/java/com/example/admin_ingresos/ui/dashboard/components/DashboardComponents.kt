@@ -28,7 +28,7 @@ fun DashboardHeader(
     label: String,
     color: Color
 ) {
-    val headerTextColor = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.9f) else Color.Black.copy(alpha = 0.87f)
+    val headerTextColor = com.example.admin_ingresos.ui.theme.TextPrimary
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -109,7 +109,7 @@ fun BalanceCard(
                     Text(
                         text = "${if (balanceChange > 0) "+" else ""}${formatter.format(balanceChange)}",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.9f)
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
                     )
                 }
             }
@@ -223,8 +223,8 @@ private fun QuickStatCard(
     color: Color,
     modifier: Modifier = Modifier
 ) {
-    val textPrimaryColor = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.9f) else Color.Black.copy(alpha = 0.87f)
-    val textSecondaryColor = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.7f) else Color.Black.copy(alpha = 0.6f)
+    val textPrimaryColor = com.example.admin_ingresos.ui.theme.TextPrimary
+    val textSecondaryColor = com.example.admin_ingresos.ui.theme.TextSecondary
 
     Card(
         modifier = modifier,
@@ -585,7 +585,7 @@ private fun QuickActionButton(
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    tint = com.example.admin_ingresos.ui.theme.TextOnAccent,
+                    tint = color,
                     modifier = Modifier.size(24.dp)
                 )
             }

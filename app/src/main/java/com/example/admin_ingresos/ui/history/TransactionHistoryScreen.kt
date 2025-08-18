@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -413,7 +414,7 @@ fun ModernTransactionItem(
                     text = SimpleDateFormat("dd MMM, HH:mm", Locale("es", "ES"))
                         .format(Date(transaction.date)),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.85f) else Color.Black.copy(alpha = 0.7f)
+                    color = com.example.admin_ingresos.ui.theme.TextSecondary
                 )
                 
                 // Monto con estilo mejorado
@@ -1103,7 +1104,7 @@ fun ModernDateHeader(
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.SemiBold
             ),
-            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
+            color = com.example.admin_ingresos.ui.theme.TextPrimary
         )
         
         Spacer(modifier = Modifier.width(8.dp))
@@ -1111,7 +1112,7 @@ fun ModernDateHeader(
         Text(
             text = "($transactionCount)",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f)
+            color = com.example.admin_ingresos.ui.theme.TextSecondary
         )
         
         Spacer(modifier = Modifier.width(12.dp))

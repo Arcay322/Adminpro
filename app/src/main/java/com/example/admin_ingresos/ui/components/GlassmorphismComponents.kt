@@ -269,7 +269,7 @@ fun AdvancedMetricCard(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = TextOnAccent,
+                    tint = color,
                     modifier = Modifier.size(24.dp)
                 )
             }

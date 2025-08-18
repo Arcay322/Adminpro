@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -91,7 +92,7 @@ fun QuickActionWidget(
                 QuickActionButton(
                     icon = Icons.Default.Add,
                     label = "Ingreso",
-                    color = AccentVibrantStart,
+                    color = IncomeGreen,
                     onClick = onAddIncome,
                     modifier = Modifier.weight(1f)
                 )
@@ -148,14 +149,14 @@ fun QuickActionButton(
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Brush.linearGradient(listOf(color, color.copy(alpha = 0.9f)))),
+                .clip(CircleShape)
+                .background(color.copy(alpha = 0.18f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = Color.White,
+                tint = color,
                 modifier = Modifier.size(24.dp)
             )
         }

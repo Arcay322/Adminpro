@@ -193,7 +193,7 @@ fun ReportsScreen() {
                                     text = "Reportes",
                                     style = MaterialTheme.typography.headlineLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = TextPrimary
                                 )
                             }
                         }
@@ -472,6 +472,8 @@ fun FinancialSummary(reportData: ReportData) {
 
 @Composable
 fun BalanceCardLarge(title: String, amount: String, subtitle: String? = null, modifier: Modifier = Modifier) {
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
     GlassCard(modifier = modifier) {
         Column(modifier = Modifier.padding(18.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
@@ -481,7 +483,7 @@ fun BalanceCardLarge(title: String, amount: String, subtitle: String? = null, mo
                     Text(text = amount, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 34.sp)
                 }
                 // subtle ghost circle for visual accent (like sample)
-                Box(modifier = Modifier.size(36.dp).background(Color.White.copy(alpha = 0.03f), shape = CircleShape))
+                Box(modifier = Modifier.size(36.dp).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f), shape = CircleShape))
             }
             if (!subtitle.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
@@ -728,14 +730,14 @@ fun IncomeVsExpenseTrendChart(reportData: ReportData) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(modifier = Modifier.size(18.dp).clip(CircleShape).background(IncomeGreen), contentAlignment = Alignment.Center) {
-                        Icon(LucideIconMapper.getTransactionTypeIcon("ingreso"), contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
+                        Icon(LucideIconMapper.getTransactionTypeIcon("ingreso"), contentDescription = null, tint = IncomeGreen, modifier = Modifier.size(12.dp))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Ingresos", color = TextSecondary, fontSize = 12.sp)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(modifier = Modifier.size(18.dp).clip(CircleShape).background(ExpenseRed), contentAlignment = Alignment.Center) {
-                        Icon(LucideIconMapper.getTransactionTypeIcon("gasto"), contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
+                        Icon(LucideIconMapper.getTransactionTypeIcon("gasto"), contentDescription = null, tint = ExpenseRed, modifier = Modifier.size(12.dp))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Gastos", color = TextSecondary, fontSize = 12.sp)
@@ -760,6 +762,8 @@ fun IncomeVsExpenseTrendChart(reportData: ReportData) {
 
 @Composable
 fun LineChart(data: List<TrendDataPoint>, modifier: Modifier = Modifier) {
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
     val lastTapX = remember { mutableStateOf<Float?>(null) }
     val selectedIndex = remember { mutableStateOf(-1) }
     val canvasWidth = remember { mutableStateOf(0f) }
@@ -790,7 +794,7 @@ fun LineChart(data: List<TrendDataPoint>, modifier: Modifier = Modifier) {
             }
         ) {
             // draw subtle horizontal grid lines
-            val gridColor = Color.White.copy(alpha = 0.06f)
+            val gridColor = onSurfaceVariant
             val gridLines = 4
             for (i in 0..gridLines) {
                 val y = size.height * (i.toFloat() / gridLines.toFloat())
@@ -851,12 +855,12 @@ fun LineChart(data: List<TrendDataPoint>, modifier: Modifier = Modifier) {
                 val sPoint = data[sel]
                 val x = if (data.size > 1) size.width * (sel.toFloat() / (data.size - 1).toFloat()) else size.width / 2f
                 // vertical guide
-                drawLine(color = Color.White.copy(alpha = 0.18f), start = Offset(x, 0f), end = Offset(x, size.height), strokeWidth = 1.dp.toPx())
+                drawLine(color = onSurface.copy(alpha = 0.18f), start = Offset(x, 0f), end = Offset(x, size.height), strokeWidth = 1.dp.toPx())
                 // larger circles to highlight
                 val yi = size.height * (1f - (sPoint.income.toFloat() / maxAmount))
                 val ye = size.height * (1f - (sPoint.expense.toFloat() / maxAmount))
-                drawCircle(Color.White, radius = 6.dp.toPx(), center = Offset(x, yi))
-                drawCircle(Color.White, radius = 6.dp.toPx(), center = Offset(x, ye))
+                drawCircle(onSurface, radius = 6.dp.toPx(), center = Offset(x, yi))
+                drawCircle(onSurface, radius = 6.dp.toPx(), center = Offset(x, ye))
             }
         }
 
@@ -872,9 +876,9 @@ fun LineChart(data: List<TrendDataPoint>, modifier: Modifier = Modifier) {
                 .offset { IntOffset((tooltipX - 60f).toInt().coerceIn(0, w.toInt() - 120), -70) }
                 .wrapContentSize()
             ) {
-                Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF222222)), modifier = Modifier.padding(4.dp)) {
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), modifier = Modifier.padding(4.dp)) {
                     Column(modifier = Modifier.padding(8.dp)) {
-                        Text(text = sdf.format(Date(point.timestamp)), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(text = sdf.format(Date(point.timestamp)), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(text = "Ingresos: ${formatter.format(point.income)}", color = IncomeGreen, fontSize = 12.sp)
                         Text(text = "Gastos: ${formatter.format(point.expense)}", color = ExpenseRed, fontSize = 12.sp)

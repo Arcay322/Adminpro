@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -198,20 +199,20 @@ private fun CategoryDetailHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .background(categoryColor.copy(alpha = 0.85f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = iconVector,
-                        contentDescription = category.name,
-                        tint = TextPrimary,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(CircleShape)
+                                    .background(categoryColor.copy(alpha = 0.12f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = iconVector,
+                                    contentDescription = category.name,
+                                    tint = categoryColor,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
                 Column {
                     Text(
                         text = "Total ${category.type.name.lowercase()}",
@@ -341,7 +342,7 @@ private fun DateHeader(date: String) {
         text = date,
         style = MaterialTheme.typography.titleSmall,
         fontWeight = FontWeight.SemiBold,
-        color = TextSecondary,
+        color = TextPrimary,
         modifier = Modifier
             .fillMaxWidth()
             .background(BackgroundEnd.copy(alpha = 0.8f))
@@ -373,7 +374,7 @@ private fun TransactionListItem(transaction: Transaction) {
             Text(
                 text = dateFormat.format(Date(transaction.date)),
                 style = MaterialTheme.typography.bodySmall,
-                color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.85f) else Color.Black.copy(alpha = 0.7f)
+                color = TextSecondary
             )
         }
         Text(
