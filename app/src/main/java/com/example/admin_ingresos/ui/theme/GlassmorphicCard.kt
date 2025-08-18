@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
@@ -31,7 +32,7 @@ fun GlassmorphicCard(
             .clip(RoundedCornerShape(22.dp))
             .border(
                 width = 1.5.dp,
-                color = Color.White.copy(alpha = 0.22f),
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.22f),
                 shape = RoundedCornerShape(22.dp)
             ),
         shape = RoundedCornerShape(22.dp),
@@ -42,19 +43,19 @@ fun GlassmorphicCard(
     ) {
         // Use a parent Box to stack the decorative blurred background behind the content
         Box(modifier = Modifier.fillMaxWidth()) {
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .clip(RoundedCornerShape(22.dp))
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.18f),
-                            Color.White.copy(alpha = 0.10f)
+                Box(modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.18f),
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.10f)
+                            )
                         )
                     )
+                    .blur(18.dp)
                 )
-                .blur(18.dp)
-            )
 
             Column(
                 modifier = Modifier.fillMaxWidth(),

@@ -87,7 +87,7 @@ fun InteractiveExpensePieChart(
                         AndroidColor.rgb(158, 158, 158), // Grey
                         AndroidColor.rgb(255, 87, 34)    // Deep Orange
                     )
-                    valueTextColor = AndroidColor.BLACK
+                    valueTextColor = AndroidColor.WHITE
                     valueTextSize = 12f
                     sliceSpace = 2f
                     selectionShift = 8f

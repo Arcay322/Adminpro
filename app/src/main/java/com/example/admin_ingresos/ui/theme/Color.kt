@@ -15,25 +15,26 @@ val AccentVibrantEnd = Color(0xFF03E1FF) // Cian brillante
 val AccentVibrantMid = Color(0xFF00C8D4) // Punto medio del degradado
 
 // Colores Semánticos Modernos
-val IncomeGreen = Color(0xFF20BF55) // Verde brillante y positivo
-val ExpenseRed = Color(0xFFF45B69) // Rosa enérgico pero no alarmante
+// Valores solicitados para montos (se aplican independientemente del tema)
+val IncomeGreen = Color(0xFF6BFF6B) // Verde para valores positivos (ingresos)
+val ExpenseRed = Color(0xFFFF5B5B) // Rojo para valores negativos (gastos)
 val WarningAmber = Color(0xFFFFB300) // Naranja/amarillo intenso
 
 // Glassmorphism - Superficies de Vidrio (blanco translúcido, preserve glass effect)
-val GlassWhite = Color(0x26FFFFFF) // Blanco 15% opacidad
-val GlassWhiteSubtle = Color(0x1AFFFFFF) // Blanco 10% opacidad
-val GlassWhiteStrong = Color(0x33FFFFFF) // Blanco 20% opacidad
-val GlassBlur = Color(0x0DFFFFFF) // Para efectos de blur
+var GlassWhite = Color(0x26FFFFFF) // Blanco 15% opacidad
+var GlassWhiteSubtle = Color(0x1AFFFFFF) // Blanco 10% opacidad
+var GlassWhiteStrong = Color(0x33FFFFFF) // Blanco 20% opacidad
+var GlassBlur = Color(0x0DFFFFFF) // Para efectos de blur
 
 // Bordes de Vidrio
-val GlassBorder = Color(0x33FFFFFF) // Borde translúcido 20%
-val GlassBorderSubtle = Color(0x1AFFFFFF) // Borde sutil 10%
+var GlassBorder = Color(0x33FFFFFF) // Borde translúcido 20%
+var GlassBorderSubtle = Color(0x1AFFFFFF) // Borde sutil 10%
 
 // Texto sobre Vidrio
 // Texto principal y secundario (aumentamos contraste para mayor claridad)
-val TextPrimary = Color(0xFFFFFFFF) // Blanco puro para máxima legibilidad
-val TextSecondary = Color(0xFFBFC7CC) // Gris claro más brillante para subtítulos
-val TextOnAccent = Color(0xFF000000) // Negro para texto sobre acentos vibrantes
+var TextPrimary = Color(0xFFFFFFFF) // Blanco puro para máxima legibilidad
+var TextSecondary = Color(0xFFBFC7CC) // Gris claro más brillante para subtítulos
+var TextOnAccent = Color(0xFF000000) // Negro para texto sobre acentos vibrantes
 
 // Categorías con Colores Vibrantes Armónicos
 val CategoryFood = Color(0xFFFF6B6B) // Rojo coral
@@ -52,12 +53,12 @@ val PressedEffect = Color(0x33FFFFFF) // Para estados pressed
 val SelectedEffect = Color(0x26FFFFFF) // Para elementos seleccionados
 
 // Superficies y Fondos
-val SurfaceGlass = Color(0x26FFFFFF) // Superficie principal de vidrio
-val SurfaceVariant = Color(0x1AFFFFFF) // Superficie secundaria
-val Background = BackgroundStart // Fondo principal
-val OnSurface = TextPrimary // Texto sobre superficie
-val OnSurfaceVariant = TextSecondary // Texto secundario
-val OnBackground = TextPrimary // Texto sobre fondo
+var SurfaceGlass = Color(0x26FFFFFF) // Superficie principal de vidrio
+var SurfaceVariant = Color(0x1AFFFFFF) // Superficie secundaria
+var Background = BackgroundStart // Fondo principal
+var OnSurface = TextPrimary // Texto sobre superficie
+var OnSurfaceVariant = TextSecondary // Texto secundario
+var OnBackground = TextPrimary // Texto sobre fondo
 
 // Esquema de colores para Material Theme
 val Primary = AccentVibrantStart

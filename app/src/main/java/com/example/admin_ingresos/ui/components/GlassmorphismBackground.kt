@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
 import com.example.admin_ingresos.ui.theme.*
+import androidx.compose.material3.MaterialTheme
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -53,10 +54,10 @@ fun GlassmorphismBackground(
         )
     )
 
-    // Simple, uniform black background for all screens using GlassmorphismScreen
+    // Use the Material theme background so personalization applies app-wide
     Box(modifier = modifier
         .fillMaxSize()
-        .background(Color.Black)) {
+        .background(MaterialTheme.colorScheme.background)) {
         content()
     }
 }

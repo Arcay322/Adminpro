@@ -44,8 +44,8 @@ fun GlassCard(
     modifier: Modifier = Modifier,
     cornerRadius: androidx.compose.ui.unit.Dp = 20.dp,
     blurRadius: androidx.compose.ui.unit.Dp = 12.dp,
-    backgroundColor: Color = GlassWhite,
-    borderColor: Color = GlassBorder,
+    backgroundColor: Color? = null,
+    borderColor: Color? = null,
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
@@ -53,13 +53,17 @@ fun GlassCard(
         Modifier.clickable { onClick() }
     } else Modifier
 
+    // derive sensible defaults from current theme
+    val derivedBg = backgroundColor ?: MaterialTheme.colorScheme.surface.copy(alpha = 0.08f)
+    val derivedBorder = borderColor ?: MaterialTheme.colorScheme.outline
+
     Box(
         modifier = modifier
             .then(clickableModifier)
             .glassmorphism(
                 blurRadius = blurRadius,
-                backgroundColor = backgroundColor,
-                borderColor = borderColor,
+                backgroundColor = derivedBg,
+                borderColor = derivedBorder,
                 cornerRadius = cornerRadius
             )
             .padding(20.dp)

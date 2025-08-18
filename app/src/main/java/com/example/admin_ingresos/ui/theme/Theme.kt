@@ -10,10 +10,13 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import com.example.admin_ingresos.ui.theme.AppThemeManager
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -49,31 +52,94 @@ private val GlassmorphismColorScheme = darkColorScheme(
     inversePrimary = AccentVibrantEnd
 )
 
+// Light mode color scheme requested by user
+private val CashFlowLightColorScheme = lightColorScheme(
+    primary = Color(0xFF00BFA5),
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFCCF3E6),
+    onPrimaryContainer = Color(0xFF004D3F),
+    secondary = Color(0xFF4DB6AC),
+    onSecondary = Color.White,
+    tertiary = Color(0xFFFF8A65),
+    onTertiary = Color.White,
+    background = Color(0xFFF0F2F5),
+    onBackground = Color(0xFF1F1F1F),
+    surface = Color.White,
+    onSurface = Color(0xFF1F1F1F),
+    surfaceVariant = Color(0xFFE0E0E0),
+    onSurfaceVariant = Color(0xFF616161),
+    outline = Color(0xFFBDBDBD),
+    error = Color(0xFFB00020),
+    onError = Color.White
+)
+
 
 
 @Composable
 fun CashFlowTheme(
+    isDarkTheme: Boolean = true,
     backgroundColor: Color? = null,
-    darkTheme: Boolean = true, // Forzamos dark theme para glassmorphism
-    dynamicColor: Boolean = false, // Deshabilitamos colores dinámicos
     content: @Composable () -> Unit
 ) {
-    // Use the glassmorphism base scheme but override the background if provided
-    val base = GlassmorphismColorScheme
-    val colorScheme = if (backgroundColor != null) base.copy(background = backgroundColor, onBackground = TextPrimary) else base
+    // Select color scheme based on explicit isDarkTheme flag
+    val colorScheme = if (isDarkTheme) {
+        // Use the glassmorphism base scheme but override the background if provided
+        val base = GlassmorphismColorScheme
+        val bg = backgroundColor ?: BackgroundStart
+        base.copy(
+            background = bg,
+            onBackground = OnBackground,
+            surface = SurfaceGlass,
+            onSurface = OnSurface,
+            primary = Primary,
+            onPrimary = OnPrimary,
+            outline = Outline
+        )
+    } else {
+        // Light scheme - ignore glassmorphism tokens
+        val base = CashFlowLightColorScheme
+        // If a custom backgroundColor is provided, use it, otherwise use the light background
+        val bg = backgroundColor ?: base.background
+        base.copy(
+            background = bg,
+            onBackground = base.onBackground
+        )
+    }
+
+    // Update global legacy tokens so existing UI that references them updates immediately
+    // Glass and text tokens map to values from the active color scheme
+    GlassWhite = colorScheme.surface.copy(alpha = 0.18f)
+    GlassWhiteSubtle = colorScheme.surface.copy(alpha = 0.10f)
+    GlassWhiteStrong = colorScheme.surface.copy(alpha = 0.22f)
+    GlassBlur = colorScheme.surface.copy(alpha = 0.06f)
+
+    GlassBorder = colorScheme.outline
+    GlassBorderSubtle = colorScheme.outline.copy(alpha = 0.6f)
+
+    TextPrimary = colorScheme.onBackground
+    TextSecondary = colorScheme.onSurfaceVariant
+    TextOnAccent = colorScheme.onPrimary
+
+    SurfaceGlass = colorScheme.surface
+    SurfaceVariant = colorScheme.surfaceVariant
+    Background = colorScheme.background
+    OnSurface = colorScheme.onSurface
+    OnSurfaceVariant = colorScheme.onSurfaceVariant
+    OnBackground = colorScheme.onBackground
 
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
             // Use provided background color for status & navigation bars when available
-            val bg = (backgroundColor ?: BackgroundStart).toArgb()
+            val bg = (backgroundColor ?: colorScheme.background).toArgb()
             window.statusBarColor = bg
             window.navigationBarColor = bg
             val insetsController = WindowCompat.getInsetsController(window, view)
-            insetsController.isAppearanceLightStatusBars = false
+            // For light theme we want dark status bar icons
+            insetsController.isAppearanceLightStatusBars = !isDarkTheme
             try {
-                insetsController.isAppearanceLightNavigationBars = false
+                insetsController.isAppearanceLightNavigationBars = !isDarkTheme
             } catch (_: Exception) {
                 // ignore
             }
@@ -91,15 +157,13 @@ fun CashFlowTheme(
 // Alias para compatibilidad - siempre usa glassmorphism
 @Composable
 fun Admin_ingresosTheme(
+    isDarkTheme: Boolean = true,
     backgroundColor: Color? = null,
-    darkTheme: Boolean = true,
-    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     CashFlowTheme(
+        isDarkTheme = isDarkTheme,
         backgroundColor = backgroundColor,
-        darkTheme = true,
-        dynamicColor = false,
         content = content
     )
 }

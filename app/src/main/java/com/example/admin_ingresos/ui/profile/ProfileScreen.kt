@@ -39,6 +39,8 @@ import com.example.admin_ingresos.ui.components.GlassCard
 import com.example.admin_ingresos.ui.components.GlassmorphismScreen
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.luminance
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,6 +64,7 @@ fun ProfileScreen(
     val backgroundColorInt by profileVm.backgroundColor.collectAsState()
     // Helper to convert ARGB int to Compose Color
     val backgroundColorCompose = remember(backgroundColorInt) { androidx.compose.ui.graphics.Color(backgroundColorInt) }
+    val forceLightMode by profileVm.forceLight.collectAsState()
 
     var editName by remember { mutableStateOf(name) }
     var editEmail by remember { mutableStateOf(email) }
@@ -105,29 +108,29 @@ fun ProfileScreen(
             // Header
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = TextPrimary)
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = MaterialTheme.colorScheme.onBackground)
                 }
-                Text(text = "Perfil", style = MaterialTheme.typography.headlineLarge, color = TextPrimary, fontWeight = FontWeight.Bold)
+                Text(text = "Perfil", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.width(48.dp))
             }
 
             // Avatar & basic info
             GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhiteStrong, cornerRadius = 20.dp) {
                 Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(88.dp).clip(CircleShape).background(Brush.linearGradient(listOf(AccentVibrantStart, AccentVibrantEnd))), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.size(88.dp).clip(CircleShape).background(Brush.linearGradient(listOf(AccentVibrantStart, AccentVibrantEnd))), contentAlignment = Alignment.Center) {
                         if (pickedAvatarUri != null) {
                             Image(painter = rememberAsyncImagePainter(pickedAvatarUri), contentDescription = null, modifier = Modifier.size(80.dp).clip(CircleShape), contentScale = ContentScale.Crop)
                         } else {
-                            Icon(LucideIconMapper.Navigation.profile, contentDescription = null, tint = Color.White)
+                Icon(LucideIconMapper.Navigation.profile, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
                         }
                     }
 
                     Spacer(modifier = Modifier.width(16.dp))
 
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(text = if (editName.isNotBlank()) editName else "Usuario", style = MaterialTheme.typography.titleLarge, color = TextPrimary, fontWeight = FontWeight.Bold)
+                        Text(text = if (editName.isNotBlank()) editName else "Usuario", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = if (editEmail.isNotBlank()) editEmail else "—", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                        Text(text = if (editEmail.isNotBlank()) editEmail else "—", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(onClick = { imagePicker.launch("image/*") }, colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart)) { Text("Cambiar avatar") }
@@ -140,7 +143,7 @@ fun ProfileScreen(
             // Account details
             GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhite, cornerRadius = 16.dp) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(text = "Cuenta", style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+                    Text(text = "Cuenta", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
                     OutlinedTextField(
                         value = editName,
                         onValueChange = { editName = it },
@@ -174,9 +177,9 @@ fun ProfileScreen(
                     Text(text = "Preferencias", style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.SemiBold)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Column {
-                            Text(text = "Moneda: $editCurrency", color = TextPrimary)
+                            Text(text = "Moneda: $editCurrency", color = MaterialTheme.colorScheme.onBackground)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text(text = "Idioma: $editLanguage", color = TextPrimary)
+                            Text(text = "Idioma: $editLanguage", color = MaterialTheme.colorScheme.onBackground)
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             DropdownMenuDemo(options = listOf("PEN", "USD", "EUR"), selected = editCurrency, onSelected = { editCurrency = it })
@@ -185,11 +188,11 @@ fun ProfileScreen(
                         }
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "Modo oscuro", color = TextPrimary)
+                        Text(text = "Modo oscuro", color = MaterialTheme.colorScheme.onBackground)
                         Switch(checked = editDarkMode, onCheckedChange = { editDarkMode = it }, colors = SwitchDefaults.colors(checkedThumbColor = AccentVibrantStart))
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "Notificaciones", color = TextPrimary)
+                        Text(text = "Notificaciones", color = MaterialTheme.colorScheme.onBackground)
                         Switch(checked = editNotificationsEnabled, onCheckedChange = { editNotificationsEnabled = it })
                     }
                     OutlinedTextField(
@@ -206,8 +209,8 @@ fun ProfileScreen(
             // Personalización - Color de fondo
             GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhite, cornerRadius = 16.dp) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(text = "Personalización", style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.SemiBold)
-                    Text(text = "Color de fondo", color = TextPrimary)
+                    Text(text = "Personalización", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
+                    Text(text = "Color de fondo", color = MaterialTheme.colorScheme.onBackground)
                     Spacer(modifier = Modifier.height(8.dp))
                     val swatches = listOf(
                         androidx.compose.ui.graphics.Color(0xFF000000), // Negro
@@ -225,6 +228,7 @@ fun ProfileScreen(
                         swatches.forEach { swatch ->
                             val swatchInt = swatch.copy(alpha = 1f).toArgb()
                             val selected = swatchInt == backgroundColorInt
+                            val checkTint = if (swatch.luminance() > 0.5f) androidx.compose.ui.graphics.Color.Black else androidx.compose.ui.graphics.Color.White
                             Box(modifier = Modifier
                                 .size(if (selected) 48.dp else 40.dp)
                                 .clip(CircleShape)
@@ -236,10 +240,15 @@ fun ProfileScreen(
                                 }
                             ) {
                                 if (selected) {
-                                    Icon(LucideIconMapper.Navigation.check, contentDescription = null, tint = Color.White, modifier = Modifier.align(Alignment.Center))
+                                    Icon(LucideIconMapper.Navigation.check, contentDescription = null, tint = checkTint, modifier = Modifier.align(Alignment.Center))
                                 }
                             }
                         }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = "Forzar modo claro", color = MaterialTheme.colorScheme.onBackground)
+                        Switch(checked = forceLightMode, onCheckedChange = { profileVm.setForceLightMode(it) })
                     }
                 }
             }

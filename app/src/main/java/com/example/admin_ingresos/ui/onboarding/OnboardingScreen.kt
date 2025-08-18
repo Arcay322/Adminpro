@@ -54,7 +54,7 @@ fun OnboardingScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                brush = Brush.linearGradient(listOf(BackgroundGradientStart, BackgroundGradientEnd))
+                brush = Brush.linearGradient(listOf(MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.background))
             )
             .padding(20.dp)
             .pointerInput(Unit) {

@@ -437,7 +437,7 @@ private fun DialogScrim(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.6f))
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.6f))
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,

@@ -1135,7 +1135,7 @@ fun ModernAnalyticsModal(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f))
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.5f))
             .clickable { onClose() },
         contentAlignment = Alignment.Center
     ) {

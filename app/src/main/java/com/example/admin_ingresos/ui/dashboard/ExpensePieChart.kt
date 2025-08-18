@@ -41,7 +41,7 @@ fun ExpensePieChart(
                 AndroidColor.rgb(33, 150, 243), // azul
                 AndroidColor.rgb(156, 39, 176) // morado
             )
-            dataSet.valueTextColor = AndroidColor.BLACK
+            dataSet.valueTextColor = AndroidColor.WHITE
             dataSet.valueTextSize = 14f
             val pieData = PieData(dataSet)
             chart.data = pieData

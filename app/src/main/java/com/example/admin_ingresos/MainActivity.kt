@@ -51,15 +51,26 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     enableEdgeToEdge()
-        setContent {
-            // Obtain ProfileViewModel to read persisted background color preference
-            val profileVm: com.example.admin_ingresos.ui.profile.ProfileViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-                factory = object : androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory(application) {}
-            )
-            val bgInt by profileVm.backgroundColor.collectAsState()
-            val bgColor = androidx.compose.ui.graphics.Color(bgInt)
+        // Seed AppThemeManager with persisted preference so theme immediately reflects saved color
+        try {
+            val prefs = PreferencesManager(this)
+            // if a custom background stored in profile prefs, it will also be in ProfileViewModel prefs; fallback uses PreferencesManager themeMode ignored
+            // Attempt to read profile prefs file directly
+            val profilePrefs = getSharedPreferences("profile_prefs", MODE_PRIVATE)
+            if (profilePrefs.contains("background_color")) {
+                val saved = profilePrefs.getInt("background_color", -1)
+                if (saved != -1) com.example.admin_ingresos.ui.theme.AppThemeManager.setBackgroundColor(saved)
+            }
+        } catch (_: Exception) {}
 
-            Admin_ingresosTheme(backgroundColor = bgColor) {
+        setContent {
+            // Observe the global AppThemeManager so changes apply immediately
+            val bgInt by com.example.admin_ingresos.ui.theme.AppThemeManager.backgroundColor.collectAsState()
+            val forceLight by com.example.admin_ingresos.ui.theme.AppThemeManager.forceLight.collectAsState()
+            val bgColor = androidx.compose.ui.graphics.Color(bgInt)
+            val isDarkTheme = !forceLight
+
+            Admin_ingresosTheme(isDarkTheme = isDarkTheme, backgroundColor = bgColor) {
                 MainAppNavigation()
             }
         }

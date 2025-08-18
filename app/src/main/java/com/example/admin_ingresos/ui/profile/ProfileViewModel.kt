@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import com.example.admin_ingresos.ui.profile.SecurityUtils
 import com.example.admin_ingresos.ui.theme.BackgroundStart
 import androidx.compose.ui.graphics.toArgb
+import com.example.admin_ingresos.ui.theme.AppThemeManager
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs = application.getSharedPreferences("profile_prefs", Context.MODE_PRIVATE)
@@ -50,6 +51,9 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     // Background color preference (stored as ARGB int)
     private val _backgroundColor = MutableStateFlow(prefs.getInt("background_color", BackgroundStart.toArgb()))
     val backgroundColor: StateFlow<Int> = _backgroundColor
+
+    private val _forceLight = MutableStateFlow(prefs.getBoolean("force_light_mode", false))
+    val forceLight: StateFlow<Boolean> = _forceLight
 
     private val PIN_ALIAS = "adminpro_pin_alias"
 
@@ -97,6 +101,14 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     fun setBackgroundColor(colorInt: Int) {
         prefs.edit().putInt("background_color", colorInt).apply()
         _backgroundColor.value = colorInt
+    // Push immediately to the global theme manager so UI updates without restart
+    AppThemeManager.setBackgroundColor(colorInt)
+    }
+
+    fun setForceLightMode(value: Boolean) {
+        prefs.edit().putBoolean("force_light_mode", value).apply()
+        _forceLight.value = value
+        AppThemeManager.setForceLight(value)
     }
 
     fun signOut() {
