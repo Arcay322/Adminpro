@@ -172,7 +172,7 @@ fun GlassmorphismBalanceCard(
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             border = BorderStroke(
                 width = 1.dp,
-                color = Color.White.copy(alpha = 0.2f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
             )
         ) {
             Column(
@@ -189,7 +189,7 @@ fun GlassmorphismBalanceCard(
                         imageVector = Icons.Default.AccountBalanceWallet,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
-                        tint = Color.White.copy(alpha = 0.9f)
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
@@ -197,7 +197,7 @@ fun GlassmorphismBalanceCard(
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Medium
                         ),
-                        color = Color.White.copy(alpha = 0.9f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
                     )
                 }
                 
@@ -209,7 +209,7 @@ fun GlassmorphismBalanceCard(
                         fontWeight = FontWeight.Bold,
                         fontSize = 32.sp
                     ),
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 
                 subtitle?.let {
@@ -240,7 +240,7 @@ fun GlassmorphismMetricCard(
             .height(120.dp)
     ) {
         // Gradient Background
-        Card(
+            Card(
             modifier = Modifier
                 .fillMaxSize(),
             shape = RoundedCornerShape(20.dp),
@@ -264,17 +264,17 @@ fun GlassmorphismMetricCard(
         }
         
         // Glass Overlay
-        Card(
+            Card(
             modifier = Modifier
                 .fillMaxSize(),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White.copy(alpha = 0.2f)
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.18f)
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             border = BorderStroke(
                 width = 1.dp,
-                color = Color.White.copy(alpha = 0.3f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.28f)
             )
         ) {
             Column(
@@ -288,7 +288,7 @@ fun GlassmorphismMetricCard(
                     imageVector = icon,
                     contentDescription = null,
                     modifier = Modifier.size(32.dp),
-                    tint = Color.White
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -298,7 +298,7 @@ fun GlassmorphismMetricCard(
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Medium
                     ),
-                    color = Color.White.copy(alpha = 0.9f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
                 )
                 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -308,7 +308,7 @@ fun GlassmorphismMetricCard(
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
             }

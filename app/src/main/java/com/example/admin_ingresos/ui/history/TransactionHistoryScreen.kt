@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
@@ -195,14 +196,14 @@ fun DeleteConfirmationDialog(
         title = {
             Text(
                 text = "Confirmar Eliminación",
-                color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold
             )
         },
         text = {
             Text(
                 text = "¿Estás seguro de que deseas eliminar la transacción '${transaction.description}'?\n\nEsta acción no se puede deshacer.",
-                color = Color.White.copy(alpha = 0.9f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
             )
         },
         confirmButton = {
@@ -218,14 +219,14 @@ fun DeleteConfirmationDialog(
             TextButton(onClick = onDismiss) {
                 Text(
                     text = "Cancelar",
-                    color = Color.White.copy(alpha = 0.7f)
+                    color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f)
                 )
             }
         },
-        containerColor = Color(0xFF1a1a2e).copy(alpha = 0.95f),
-        iconContentColor = Color.White,
-        titleContentColor = Color.White,
-        textContentColor = Color.White
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+        iconContentColor = com.example.admin_ingresos.ui.theme.TextPrimary,
+        titleContentColor = com.example.admin_ingresos.ui.theme.TextPrimary,
+        textContentColor = com.example.admin_ingresos.ui.theme.TextPrimary
     )
 }
 
@@ -245,7 +246,7 @@ fun EditTransactionDialog(
         title = {
             Text(
                 text = "Editar Transacción",
-                color = Color.White,
+                color = com.example.admin_ingresos.ui.theme.TextPrimary,
                 fontWeight = FontWeight.Bold
             )
         },
@@ -256,13 +257,13 @@ fun EditTransactionDialog(
                 OutlinedTextField(
                     value = editDescription,
                     onValueChange = { editDescription = it },
-                    label = { Text("Descripción", color = Color.White.copy(alpha = 0.7f)) },
+                    label = { Text("Descripción", color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f)) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
+                        focusedTextColor = com.example.admin_ingresos.ui.theme.TextPrimary,
+                        unfocusedTextColor = com.example.admin_ingresos.ui.theme.TextPrimary,
                         focusedBorderColor = CashFlowPrimary,
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                        unfocusedBorderColor = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.3f),
                         cursorColor = CashFlowPrimary
                     ),
                     singleLine = true
@@ -275,20 +276,20 @@ fun EditTransactionDialog(
                             editAmount = newValue
                         }
                     },
-                    label = { Text("Monto", color = Color.White.copy(alpha = 0.7f)) },
+                    label = { Text("Monto", color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f)) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
+                        focusedTextColor = com.example.admin_ingresos.ui.theme.TextPrimary,
+                        unfocusedTextColor = com.example.admin_ingresos.ui.theme.TextPrimary,
                         focusedBorderColor = CashFlowPrimary,
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                        unfocusedBorderColor = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.3f),
                         cursorColor = CashFlowPrimary
                     ),
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal),
                     singleLine = true
                 )
 
-                Text("Tipo de transacción", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodyMedium)
+                Text("Tipo de transacción", color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f), style = MaterialTheme.typography.bodyMedium)
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("Ingreso", "Gasto").forEach { type ->
@@ -298,9 +299,9 @@ fun EditTransactionDialog(
                             label = { Text(type, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = CashFlowPrimary,
-                                selectedLabelColor = Color.White,
-                                containerColor = Color.White.copy(alpha = 0.1f),
-                                labelColor = Color.White.copy(alpha = 0.8f)
+                                selectedLabelColor = com.example.admin_ingresos.ui.theme.TextOnAccent,
+                                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.1f),
+                                labelColor = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.8f)
                             )
                         )
                     }
@@ -323,15 +324,18 @@ fun EditTransactionDialog(
                 },
                 enabled = isEnabled
             ) {
-                Text("Guardar", color = if (isEnabled) CashFlowPrimary else Color.White.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
+                Text("Guardar", color = if (isEnabled) CashFlowPrimary else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = Color.White.copy(alpha = 0.7f))
+                Text(
+                    text = "Cancelar",
+                    color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f)
+                )
             }
         },
-        containerColor = Color(0xFF1a1a2e).copy(alpha = 0.95f)
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
     )
 }
 
@@ -375,13 +379,15 @@ fun ModernTransactionItem(
                     ),
                 contentAlignment = Alignment.Center
             ) {
+                // Use a contrasting tint for icons placed over colored circles
+                val iconTint = if (transactionColor.luminance() > 0.5f) com.example.admin_ingresos.ui.theme.TextOnAccent else com.example.admin_ingresos.ui.theme.TextPrimary
                 Icon(
                     imageVector = if (isIncome) 
                         LucideIconMapper.getTransactionTypeIcon("Ingreso")
                     else 
                         LucideIconMapper.getTransactionTypeIcon("Gasto"),
                     contentDescription = transaction.type,
-                    tint = transactionColor,
+                    tint = iconTint,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -424,12 +430,12 @@ fun ModernTransactionItem(
             Column {
                 Row {
                     IconButton(onClick = onEdit) {
-                        Icon(
-                            imageVector = LucideIconMapper.getNavigationIcon("Edit"),
-                            contentDescription = "Editar",
-                            tint = Color.White.copy(alpha = 0.7f),
-                            modifier = Modifier.size(20.dp)
-                        )
+                            Icon(
+                                imageVector = LucideIconMapper.getNavigationIcon("Edit"),
+                                contentDescription = "Editar",
+                                tint = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f),
+                                modifier = Modifier.size(20.dp)
+                            )
                     }
                     IconButton(onClick = onDelete) {
                         Icon(
@@ -470,12 +476,12 @@ fun ModernHistoryHeader() {
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    color = Color.White
+                    color = com.example.admin_ingresos.ui.theme.TextPrimary
                 )
                 Text(
                     text = "Visualiza y gestiona todas tus transacciones",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.7f),
+                    color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f),
                     modifier = Modifier.padding(top = 4.dp)
                 )
             }
@@ -515,12 +521,12 @@ fun ModernTransactionStats(
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold
                         ),
-                        color = Color.White
+                        color = com.example.admin_ingresos.ui.theme.TextPrimary
                     )
                     Text(
                         text = "Balance actual de tus transacciones",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.7f),
+                        color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f),
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }
@@ -528,7 +534,7 @@ fun ModernTransactionStats(
                     Icon(
                         imageVector = LucideIconMapper.getNavigationIcon("Close"),
                         contentDescription = "Cerrar",
-                        tint = Color.White.copy(alpha = 0.7f)
+                        tint = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f)
                     )
                 }
             }
@@ -590,7 +596,7 @@ fun ModernTransactionStats(
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Medium
                             ),
-                            color = Color.White.copy(alpha = 0.9f)
+                            color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.9f)
                         )
                         Text(
                             text = currencyFormat.format(netAmount),
@@ -650,7 +656,7 @@ fun ImprovedStatsCard(
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.Medium
                 ),
-                color = Color.White.copy(alpha = 0.8f),
+                color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.8f),
                 textAlign = TextAlign.Center
             )
             
@@ -669,7 +675,7 @@ fun ImprovedStatsCard(
             Text(
                 text = "$count transacciones",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.6f),
+                color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center
             )
         }
@@ -703,7 +709,7 @@ fun StatsCard(
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.8f),
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
                 textAlign = TextAlign.Center
             )
             
@@ -729,17 +735,17 @@ fun DetailedStatItem(
     value: String
 ) {
     Column {
-        Text(
+            Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = Color.White.copy(alpha = 0.7f)
+            color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f)
         )
         Text(
             text = value,
             style = MaterialTheme.typography.titleSmall.copy(
                 fontWeight = FontWeight.Medium
             ),
-            color = Color.White
+            color = com.example.admin_ingresos.ui.theme.TextPrimary
         )
     }
 }
@@ -772,7 +778,7 @@ fun ModernSearchAndFilters(
                 Icon(
                     imageVector = LucideIconMapper.getNavigationIcon("Search"),
                     contentDescription = "Buscar",
-                    tint = Color.White.copy(alpha = 0.7f),
+                    tint = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f),
                     modifier = Modifier.size(20.dp)
                 )
                 
@@ -782,15 +788,15 @@ fun ModernSearchAndFilters(
                     placeholder = {
                         Text(
                             text = "Buscar transacciones...",
-                            color = Color.White.copy(alpha = 0.5f)
+                            color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.5f)
                         )
                     },
                     modifier = Modifier.weight(1f),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = Color.White.copy(alpha = 0.3f),
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+                        focusedTextColor = com.example.admin_ingresos.ui.theme.TextPrimary,
+                        unfocusedTextColor = com.example.admin_ingresos.ui.theme.TextPrimary,
+                        focusedBorderColor = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.3f),
+                        unfocusedBorderColor = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.2f),
                         cursorColor = CashFlowPrimary
                     ),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
@@ -807,7 +813,7 @@ fun ModernSearchAndFilters(
                         imageVector = LucideIconMapper.getNavigationIcon("Filter"),
                         contentDescription = "Filtros",
                         tint = if (selectedType != "Todos" || sortOption != SortOption.DATE_DESC) 
-                            CashFlowPrimary else Color.White.copy(alpha = 0.7f),
+                            CashFlowPrimary else com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -833,7 +839,7 @@ fun ModernSearchAndFilters(
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Medium
                         ),
-                        color = Color.White
+                        color = com.example.admin_ingresos.ui.theme.TextPrimary
                     )
                     
                     LazyRow(
@@ -868,9 +874,9 @@ fun ModernSearchAndFilters(
                                 },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = CashFlowPrimary,
-                                    selectedLabelColor = Color.White,
-                                    containerColor = Color.White.copy(alpha = 0.1f),
-                                    labelColor = Color.White.copy(alpha = 0.8f)
+                                    selectedLabelColor = com.example.admin_ingresos.ui.theme.TextOnAccent,
+                                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.1f),
+                                    labelColor = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.8f)
                                 )
                             )
                         }
@@ -882,7 +888,7 @@ fun ModernSearchAndFilters(
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Medium
                         ),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                     
                     LazyRow(
@@ -920,9 +926,9 @@ fun ModernSearchAndFilters(
                                 },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = CashFlowPrimary,
-                                    selectedLabelColor = Color.White,
-                                    containerColor = Color.White.copy(alpha = 0.1f),
-                                    labelColor = Color.White.copy(alpha = 0.8f)
+                                    selectedLabelColor = com.example.admin_ingresos.ui.theme.TextOnAccent,
+                                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.1f),
+                                    labelColor = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.8f)
                                 )
                             )
                         }
@@ -959,7 +965,7 @@ fun ModernResultsIndicator(
                 Text(
                     text = "$totalResults ${if (totalResults == 1) "transacción" else "transacciones"}",
                     style = MaterialTheme.typography.titleMedium,
-                    color = Color.White,
+                    color = com.example.admin_ingresos.ui.theme.TextPrimary,
                     fontWeight = FontWeight.Bold
                 )
                 if (hasFilters) {
@@ -976,7 +982,7 @@ fun ModernResultsIndicator(
                 modifier = Modifier
                     .size(40.dp)
                     .background(
-                        Color.White.copy(alpha = 0.1f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.08f),
                         CircleShape
                     ),
                 contentAlignment = Alignment.Center
@@ -984,7 +990,7 @@ fun ModernResultsIndicator(
                 Icon(
                     imageVector = LucideIconMapper.getNavigationIcon("Download"),
                     contentDescription = "Exportar",
-                    tint = Color(0xFF667eea),
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -1043,7 +1049,7 @@ fun ModernEmptyHistoryState(
             Text(
                 text = if (hasSearch) "Sin resultados" else "No hay transacciones",
                 style = MaterialTheme.typography.headlineSmall,
-                color = Color.White,
+                color = com.example.admin_ingresos.ui.theme.TextPrimary,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
@@ -1054,7 +1060,7 @@ fun ModernEmptyHistoryState(
                 else 
                     "Aún no tienes transacciones registradas. ¡Comienza añadiendo tu primera transacción!",
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color.White.copy(alpha = 0.7f),
+                color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,
                 lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
             )
@@ -1063,9 +1069,9 @@ fun ModernEmptyHistoryState(
                 OutlinedButton(
                     onClick = onClearSearch,
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color.White
+                        contentColor = com.example.admin_ingresos.ui.theme.TextPrimary
                     ),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
+                    border = BorderStroke(1.dp, com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.3f))
                 ) {
                     Icon(
                         imageVector = LucideIconMapper.getNavigationIcon("Close"),
@@ -1096,7 +1102,7 @@ fun ModernDateHeader(
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.SemiBold
             ),
-            color = Color.White.copy(alpha = 0.9f)
+            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
         )
         
         Spacer(modifier = Modifier.width(8.dp))
@@ -1104,7 +1110,7 @@ fun ModernDateHeader(
         Text(
             text = "($transactionCount)",
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.White.copy(alpha = 0.6f)
+            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f)
         )
         
         Spacer(modifier = Modifier.width(12.dp))
@@ -1116,7 +1122,7 @@ fun ModernDateHeader(
                 .background(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.3f),
+                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
                             Color.Transparent
                         )
                     )
@@ -1159,14 +1165,14 @@ fun ModernAnalyticsModal(
                         style = MaterialTheme.typography.headlineSmall.copy(
                             fontWeight = FontWeight.Bold
                         ),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                     
                     IconButton(onClick = onClose) {
                         Icon(
                             imageVector = LucideIconMapper.getNavigationIcon("Close"),
                             contentDescription = "Cerrar",
-                            tint = Color.White.copy(alpha = 0.7f)
+                            tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
                         )
                     }
                 }
@@ -1176,7 +1182,7 @@ fun ModernAnalyticsModal(
                 Text(
                     text = "Próximamente: Analytics detallado con gráficos y estadísticas avanzadas",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White.copy(alpha = 0.8f),
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )

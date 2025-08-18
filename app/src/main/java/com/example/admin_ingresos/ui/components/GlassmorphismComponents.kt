@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.composed
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -27,14 +28,19 @@ import com.example.admin_ingresos.ui.theme.*
  */
 fun Modifier.glassmorphism(
     blurRadius: androidx.compose.ui.unit.Dp = 12.dp,
-    backgroundColor: Color = GlassWhite,
-    borderColor: Color = GlassBorder,
+    backgroundColor: Color? = null,
+    borderColor: Color? = null,
     cornerRadius: androidx.compose.ui.unit.Dp = 16.dp,
     borderWidth: androidx.compose.ui.unit.Dp = 1.dp
-): Modifier = this
-    .clip(RoundedCornerShape(cornerRadius))
-    .background(backgroundColor)
-    .border(borderWidth, borderColor, RoundedCornerShape(cornerRadius))
+): Modifier = composed {
+    val bg = backgroundColor ?: MaterialTheme.colorScheme.surface.copy(alpha = 0.08f)
+    val border = borderColor ?: MaterialTheme.colorScheme.outline
+
+    this
+        .clip(RoundedCornerShape(cornerRadius))
+        .background(bg)
+        .border(borderWidth, border, RoundedCornerShape(cornerRadius))
+}
 
 /**
  * Tarjeta de vidrio base siguiendo el patrón Glassmorphism
@@ -96,7 +102,7 @@ fun AdvancedBalanceCard(
             .scale(scale)
             .fillMaxWidth(),
         cornerRadius = 24.dp,
-        backgroundColor = GlassWhiteStrong,
+        backgroundColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.12f),
         onClick = {
             isPressed = !isPressed
             onClick?.invoke()
@@ -172,7 +178,7 @@ fun AdvancedBalanceCard(
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.2f),
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
                             Color.Transparent
                         ),
                         radius = 60f
@@ -197,7 +203,7 @@ fun AdvancedMetricCard(
 ) {
     var isHovered by remember { mutableStateOf(false) }
     val borderColor by animateColorAsState(
-        targetValue = if (isHovered) color.copy(alpha = 0.6f) else GlassBorder,
+        targetValue = if (isHovered) color.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outline,
         animationSpec = tween(300)
     )
 
@@ -261,7 +267,7 @@ fun AdvancedMetricCard(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = color,
+                    tint = TextOnAccent,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -310,7 +316,7 @@ fun VibrantFAB(
                 )
                 .border(
                     width = 1.dp,
-                    color = Color.White.copy(alpha = 0.3f),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                     shape = FloatingActionButtonDefaults.largeShape
                 ),
             contentAlignment = Alignment.Center

@@ -111,6 +111,17 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         AppThemeManager.setForceLight(value)
     }
 
+    fun setDarkMode(value: Boolean) {
+        // value == true -> dark mode
+        prefs.edit().putBoolean("dark_mode", value).apply()
+        _darkMode.value = value
+        // forceLight should be the inverse of dark mode
+        val forceLight = !value
+        prefs.edit().putBoolean("force_light_mode", forceLight).apply()
+        _forceLight.value = forceLight
+        AppThemeManager.setForceLight(forceLight)
+    }
+
     fun signOut() {
         // Clear local profile data (keep as simple sign-out)
         prefs.edit().clear().apply()

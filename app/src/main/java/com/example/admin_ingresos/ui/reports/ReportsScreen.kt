@@ -161,12 +161,12 @@ fun ReportsScreen() {
         if (showLoadingOverlay) {
             Box(modifier = Modifier
                 .fillMaxSize()
-                .background(color = androidx.compose.ui.graphics.Color(0x88000000))
+                .background(color = MaterialTheme.colorScheme.background.copy(alpha = 0.53f))
             ) {
                 Column(modifier = Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Exportando...", color = Color.White)
+                    Text("Exportando...", color = com.example.admin_ingresos.ui.theme.TextPrimary)
                 }
             }
         }
@@ -199,7 +199,7 @@ fun ReportsScreen() {
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(onClick = { showExportDialog = true }) {
-                                Icon(Icons.Default.Share, contentDescription = "Exportar", tint = Color.White)
+                                Icon(Icons.Default.Share, contentDescription = "Exportar", tint = com.example.admin_ingresos.ui.theme.TextPrimary)
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                             IconButton(onClick = {
@@ -208,7 +208,7 @@ fun ReportsScreen() {
                                     snackbarHostState.showSnackbar("Abriendo diálogo de descargas...")
                                 }
                             }) {
-                                Icon(LucideIconMapper.Navigation.download, contentDescription = "Descargar", tint = Color.White)
+                                Icon(LucideIconMapper.Navigation.download, contentDescription = "Descargar", tint = com.example.admin_ingresos.ui.theme.TextPrimary)
                             }
                         }
                     }

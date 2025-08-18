@@ -87,17 +87,17 @@ fun BalanceCard(
             Text(
                 text = "Balance Total",
                 style = MaterialTheme.typography.titleMedium,
-                color = Color.White.copy(alpha = 0.9f)
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
+                Text(
                 text = formatter.format(balance),
                 style = MaterialTheme.typography.displayMedium.copy(
                     fontWeight = FontWeight.Bold
                 ),
-                color = Color.White
+                color = MaterialTheme.colorScheme.onPrimary
             )
 
             if (balanceChange != 0.0) {
@@ -588,7 +588,7 @@ private fun QuickActionButton(
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    tint = Color.White,
+                    tint = com.example.admin_ingresos.ui.theme.TextOnAccent,
                     modifier = Modifier.size(24.dp)
                 )
             }

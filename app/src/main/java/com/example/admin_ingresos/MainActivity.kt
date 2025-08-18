@@ -61,6 +61,10 @@ class MainActivity : ComponentActivity() {
                 val saved = profilePrefs.getInt("background_color", -1)
                 if (saved != -1) com.example.admin_ingresos.ui.theme.AppThemeManager.setBackgroundColor(saved)
             }
+            if (profilePrefs.contains("force_light_mode")) {
+                val force = profilePrefs.getBoolean("force_light_mode", false)
+                com.example.admin_ingresos.ui.theme.AppThemeManager.setForceLight(force)
+            }
         } catch (_: Exception) {}
 
         setContent {

@@ -189,7 +189,7 @@ fun ProfileScreen(
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Text(text = "Modo oscuro", color = MaterialTheme.colorScheme.onBackground)
-                        Switch(checked = editDarkMode, onCheckedChange = { editDarkMode = it }, colors = SwitchDefaults.colors(checkedThumbColor = AccentVibrantStart))
+                        Switch(checked = darkMode, onCheckedChange = { profileVm.setDarkMode(it) }, colors = SwitchDefaults.colors(checkedThumbColor = AccentVibrantStart))
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Text(text = "Notificaciones", color = MaterialTheme.colorScheme.onBackground)
@@ -246,10 +246,7 @@ fun ProfileScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "Forzar modo claro", color = MaterialTheme.colorScheme.onBackground)
-                        Switch(checked = forceLightMode, onCheckedChange = { profileVm.setForceLightMode(it) })
-                    }
+                    // single theme switch above controls global mode; force-light removed to avoid confusion
                 }
             }
 
