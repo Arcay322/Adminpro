@@ -140,14 +140,16 @@ fun TransactionHistoryScreen(navController: NavController) {
                         ModernDateHeader(date = date, transactionCount = dayTransactions.size)
                     }
 
-                    items(dayTransactions) {
-                        ModernTransactionItem(
-                            transaction = it,
-                            onEdit = { viewModel.showEditDialog(it) },
-                            onDelete = { viewModel.showDeleteDialog(it) },
-                            onClick = { navController.navigate("transaction_detail/${it.id}") }
-                        )
-                    }
+                            items(dayTransactions) { tx ->
+                                val category = uiState.categories.find { c -> c.id == tx.categoryId } ?: com.example.admin_ingresos.data.Category.uncategorized()
+                                ModernTransactionItem(
+                                    transaction = tx,
+                                    category = category,
+                                    onEdit = { viewModel.showEditDialog(tx) },
+                                    onDelete = { viewModel.showDeleteDialog(tx) },
+                                    onClick = { navController.navigate("transaction_detail/${tx.id}") }
+                                )
+                            }
                 }
             } else {
                 item {
@@ -345,12 +347,20 @@ fun EditTransactionDialog(
 @Composable
 fun ModernTransactionItem(
     transaction: Transaction,
+    category: com.example.admin_ingresos.data.Category,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onClick: () -> Unit = {}
 ) {
     val isIncome = transaction.type == "Ingreso"
-    val transactionColor = if (isIncome) Color(0xFF4CAF50) else Color(0xFFE57373)
+    // derive category color from hex string; fallback to neutral
+    val categoryColor = try {
+        Color(android.graphics.Color.parseColor(category.color))
+    } catch (e: Exception) {
+        Color(0xFF85C1E9)
+    }
+    // amount color stays green for income and red for expense
+    val amountColor = if (isIncome) Color(0xFF4CAF50) else Color(0xFFE57373)
     val currencyFormat = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
     
     GlassCard(
@@ -365,15 +375,15 @@ fun ModernTransactionItem(
                 .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icono de transacción con glassmorphism
+            // Icono de categoría con glassmorphism
             Box(
                 modifier = Modifier
                     .size(56.dp)
                     .background(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                transactionColor.copy(alpha = 0.2f),
-                                transactionColor.copy(alpha = 0.05f)
+                                categoryColor.copy(alpha = 0.2f),
+                                categoryColor.copy(alpha = 0.05f)
                             ),
                             radius = 60f
                         ),
@@ -382,14 +392,11 @@ fun ModernTransactionItem(
                 contentAlignment = Alignment.Center
             ) {
                 // Use a contrasting tint for icons placed over colored circles
-                val iconTint = if (transactionColor.luminance() > 0.5f) com.example.admin_ingresos.ui.theme.TextOnAccent else com.example.admin_ingresos.ui.theme.TextPrimary
+                val catIcon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getCategoryIcon(category)
                 Icon(
-                    imageVector = if (isIncome) 
-                        LucideIconMapper.getTransactionTypeIcon("Ingreso")
-                    else 
-                        LucideIconMapper.getTransactionTypeIcon("Gasto"),
-                    contentDescription = transaction.type,
-                    tint = iconTint,
+                    imageVector = catIcon,
+                    contentDescription = category.name,
+                    tint = categoryColor,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -423,7 +430,7 @@ fun ModernTransactionItem(
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    color = transactionColor,
+                    color = amountColor,
                     modifier = Modifier.padding(top = 4.dp)
                 )
             }

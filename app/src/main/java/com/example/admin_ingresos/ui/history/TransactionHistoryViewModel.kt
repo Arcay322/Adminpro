@@ -16,6 +16,7 @@ import java.util.*
 data class TransactionHistoryUiState(
     val isLoading: Boolean = false,
     val transactions: List<Transaction> = emptyList(),
+    val categories: List<com.example.admin_ingresos.data.Category> = emptyList(),
     val searchQuery: String = "",
     val sortOption: SortOption = SortOption.DATE_DESC,
     val showFilters: Boolean = false,
@@ -64,7 +65,8 @@ class TransactionHistoryViewModel(private val db: AppDatabase) : ViewModel() {
     val uiState: StateFlow<TransactionHistoryUiState> = _uiState.asStateFlow()
 
     init {
-        loadTransactions()
+    loadTransactions()
+    loadCategories()
     }
 
     private fun loadTransactions() {
@@ -75,6 +77,17 @@ class TransactionHistoryViewModel(private val db: AppDatabase) : ViewModel() {
                 _uiState.update { it.copy(transactions = transactions, isLoading = false) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = "Error al cargar transacciones", isLoading = false) }
+            }
+        }
+    }
+
+    private fun loadCategories() {
+        viewModelScope.launch {
+            try {
+                val categories = categoryDao.getCategoriesList()
+                _uiState.update { it.copy(categories = categories) }
+            } catch (e: Exception) {
+                // categories are optional for the UI; ignore failures
             }
         }
     }
