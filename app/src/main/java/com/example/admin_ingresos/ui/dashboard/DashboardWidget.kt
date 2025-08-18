@@ -153,10 +153,15 @@ fun QuickActionButton(
                 .background(color.copy(alpha = 0.18f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
+            val iconTint = when {
+                color == IncomeGreen || color == Success -> IncomeGreen
+                color == ExpenseRed || color == MaterialTheme.colorScheme.error -> ExpenseRed
+                else -> Color.White
+            }
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = color,
+                tint = iconTint,
                 modifier = Modifier.size(24.dp)
             )
         }

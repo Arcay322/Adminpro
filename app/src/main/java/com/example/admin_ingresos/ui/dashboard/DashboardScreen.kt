@@ -575,7 +575,7 @@ private fun QuickActionButton(
             Icon(
                 imageVector = icon,
                 contentDescription = title,
-                tint = gradient.firstOrNull() ?: MaterialTheme.colorScheme.onSurface,
+                tint = Color.White,
                 modifier = Modifier.size(24.dp)
             )
         }
