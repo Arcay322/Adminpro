@@ -1,5 +1,8 @@
 package com.example.admin_ingresos.ui.theme
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 
 // === SISTEMA DE COLORES GLASSMORPHISM AVANZADO ===
@@ -21,20 +24,20 @@ val ExpenseRed = Color(0xFFFF5B5B) // Rojo para valores negativos (gastos)
 val WarningAmber = Color(0xFFFFB300) // Naranja/amarillo intenso
 
 // Glassmorphism - Superficies de Vidrio (blanco translúcido, preserve glass effect)
-var GlassWhite = Color(0x26FFFFFF) // Blanco 15% opacidad
-var GlassWhiteSubtle = Color(0x1AFFFFFF) // Blanco 10% opacidad
-var GlassWhiteStrong = Color(0x33FFFFFF) // Blanco 20% opacidad
-var GlassBlur = Color(0x0DFFFFFF) // Para efectos de blur
+var GlassWhite by mutableStateOf(Color(0x26FFFFFF)) // Blanco 15% opacidad
+var GlassWhiteSubtle by mutableStateOf(Color(0x1AFFFFFF)) // Blanco 10% opacidad
+var GlassWhiteStrong by mutableStateOf(Color(0x33FFFFFF)) // Blanco 20% opacidad
+var GlassBlur by mutableStateOf(Color(0x0DFFFFFF)) // Para efectos de blur
 
 // Bordes de Vidrio
-var GlassBorder = Color(0x33FFFFFF) // Borde translúcido 20%
-var GlassBorderSubtle = Color(0x1AFFFFFF) // Borde sutil 10%
+var GlassBorder by mutableStateOf(Color(0x33FFFFFF)) // Borde translúcido 20%
+var GlassBorderSubtle by mutableStateOf(Color(0x1AFFFFFF)) // Borde sutil 10%
 
 // Texto sobre Vidrio
 // Texto principal y secundario (aumentamos contraste para mayor claridad)
-var TextPrimary = Color(0xFFFFFFFF) // Blanco puro para máxima legibilidad
-var TextSecondary = Color(0xFFBFC7CC) // Gris claro más brillante para subtítulos
-var TextOnAccent = Color(0xFF000000) // Negro para texto sobre acentos vibrantes
+var TextPrimary by mutableStateOf(Color(0xFFFFFFFF)) // Blanco puro para máxima legibilidad
+var TextSecondary by mutableStateOf(Color(0xFFBFC7CC)) // Gris claro más brillante para subtítulos
+var TextOnAccent by mutableStateOf(Color(0xFF000000)) // Negro para texto sobre acentos vibrantes
 
 // Categorías con Colores Vibrantes Armónicos
 val CategoryFood = Color(0xFFFF6B6B) // Rojo coral
@@ -53,26 +56,26 @@ val PressedEffect = Color(0x33FFFFFF) // Para estados pressed
 val SelectedEffect = Color(0x26FFFFFF) // Para elementos seleccionados
 
 // Superficies y Fondos
-var SurfaceGlass = Color(0x26FFFFFF) // Superficie principal de vidrio
-var SurfaceVariant = Color(0x1AFFFFFF) // Superficie secundaria
-var Background = BackgroundStart // Fondo principal
-var OnSurface = TextPrimary // Texto sobre superficie
-var OnSurfaceVariant = TextSecondary // Texto secundario
-var OnBackground = TextPrimary // Texto sobre fondo
+var SurfaceGlass by mutableStateOf(Color(0x26FFFFFF)) // Superficie principal de vidrio
+var SurfaceVariant by mutableStateOf(Color(0x1AFFFFFF)) // Superficie secundaria
+var Background by mutableStateOf(BackgroundStart) // Fondo principal
+var OnSurface by mutableStateOf(TextPrimary) // Texto sobre superficie
+var OnSurfaceVariant by mutableStateOf(TextSecondary) // Texto secundario
+var OnBackground by mutableStateOf(TextPrimary) // Texto sobre fondo
 
 // Esquema de colores para Material Theme
 val Primary = AccentVibrantStart
 val PrimaryContainer = GlassWhiteStrong  
-val OnPrimary = TextOnAccent
-val OnPrimaryContainer = TextPrimary
+val OnPrimary: Color get() = TextOnAccent
+val OnPrimaryContainer: Color get() = TextPrimary
 
 val Secondary = AccentVibrantEnd
 val SecondaryContainer = GlassWhite
-val OnSecondary = TextOnAccent
-val OnSecondaryContainer = TextPrimary
+val OnSecondary: Color get() = TextOnAccent
+val OnSecondaryContainer: Color get() = TextPrimary
 
 val Error = ExpenseRed
-val OnError = TextPrimary
+val OnError: Color get() = TextPrimary
 val ErrorContainer = Color(0x33F45B69)
 val OnErrorContainer = TextPrimary
 
@@ -83,17 +86,17 @@ val OutlineVariant = GlassBorder
 val Success = IncomeGreen
 val SuccessGlass = Color(0x3320BF55)
 val SuccessContainer = Color(0x3320BF55)
-val OnSuccessContainer = TextPrimary
+val OnSuccessContainer: Color get() = TextPrimary
 
 val Warning = WarningAmber
 val WarningGlass = Color(0x33FFB300)
 val WarningContainer = Color(0x33FFB300)
-val OnWarningContainer = TextPrimary
+val OnWarningContainer: Color get() = TextPrimary
 
 val Info = Color(0xFF03E1FF)
 val InfoGlass = Color(0x3303E1FF)
 val InfoContainer = Color(0x3303E1FF)
-val OnInfoContainer = TextPrimary
+val OnInfoContainer: Color get() = TextPrimary
 
 // Colores adicionales para compatibilidad
 val Gray900 = Color(0xFF0D1117)

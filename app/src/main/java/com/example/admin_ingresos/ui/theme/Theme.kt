@@ -22,7 +22,9 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 // Glassmorphism Avanzado - Esquema de Colores Principal
-private val GlassmorphismColorScheme = darkColorScheme(
+// Build the dark color scheme on-demand so it reads the current dynamic
+// legacy tokens (TextPrimary, OnBackground, SurfaceGlass, etc.) at runtime.
+private fun buildGlassmorphismColorScheme() = darkColorScheme(
     primary = Primary,
     onPrimary = OnPrimary,
     primaryContainer = PrimaryContainer,
@@ -83,17 +85,38 @@ fun CashFlowTheme(
 ) {
     // Select color scheme based on explicit isDarkTheme flag
     val colorScheme = if (isDarkTheme) {
-        // Use the glassmorphism base scheme but override the background if provided
-        val base = GlassmorphismColorScheme
+        // Explicit dark scheme: avoid reading mutable legacy tokens here so
+        // MaterialTheme receives stable dark values. We'll remap legacy
+        // tokens below from this canonical scheme.
         val bg = backgroundColor ?: BackgroundStart
-        base.copy(
+        darkColorScheme(
+            primary = AccentVibrantStart,
+            onPrimary = Color(0xFF000000),
+            primaryContainer = Color(0x33FFFFFF),
+            onPrimaryContainer = Color(0xFFFFFFFF),
+            secondary = AccentVibrantEnd,
+            onSecondary = Color(0xFF000000),
+            secondaryContainer = Color(0x26FFFFFF),
+            onSecondaryContainer = Color(0xFFFFFFFF),
+            tertiary = AccentVibrantStart,
+            onTertiary = Color(0xFF000000),
+            tertiaryContainer = Color(0x33FFFFFF),
+            onTertiaryContainer = Color(0xFFFFFFFF),
+            error = ExpenseRed,
+            onError = Color(0xFFFFFFFF),
+            errorContainer = Color(0x33F45B69),
+            onErrorContainer = Color(0xFFFFFFFF),
             background = bg,
-            onBackground = OnBackground,
-            surface = SurfaceGlass,
-            onSurface = OnSurface,
-            primary = Primary,
-            onPrimary = OnPrimary,
-            outline = Outline
+            onBackground = Color(0xFFFFFFFF),
+            surface = Color(0x26FFFFFF),
+            onSurface = Color(0xFFFFFFFF),
+            surfaceVariant = Color(0x1AFFFFFF),
+            onSurfaceVariant = Color(0xFFBFC7CC),
+            outline = Color(0x33FFFFFF),
+            outlineVariant = Color(0x1AFFFFFF),
+            inverseSurface = Color(0xFFFFFFFF),
+            inverseOnSurface = bg,
+            inversePrimary = AccentVibrantEnd
         )
     } else {
         // Light scheme - ignore glassmorphism tokens

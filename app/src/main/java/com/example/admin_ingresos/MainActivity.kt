@@ -58,12 +58,17 @@ class MainActivity : ComponentActivity() {
             // Attempt to read profile prefs file directly
             val profilePrefs = getSharedPreferences("profile_prefs", MODE_PRIVATE)
             if (profilePrefs.contains("background_color")) {
-                val saved = profilePrefs.getInt("background_color", -1)
-                if (saved != -1) com.example.admin_ingresos.ui.theme.AppThemeManager.setBackgroundColor(saved)
+                // Accept any stored int (including 0xFFFFFFFF for white which is -1 as signed int)
+                val saved = profilePrefs.getInt("background_color", Int.MIN_VALUE)
+                com.example.admin_ingresos.ui.theme.AppThemeManager.setBackgroundColor(saved)
             }
             if (profilePrefs.contains("force_light_mode")) {
                 val force = profilePrefs.getBoolean("force_light_mode", false)
                 com.example.admin_ingresos.ui.theme.AppThemeManager.setForceLight(force)
+            } else if (profilePrefs.contains("dark_mode")) {
+                // Older installs might only have dark_mode saved; derive forceLight as the inverse
+                val dark = profilePrefs.getBoolean("dark_mode", false)
+                com.example.admin_ingresos.ui.theme.AppThemeManager.setForceLight(!dark)
             }
         } catch (_: Exception) {}
 

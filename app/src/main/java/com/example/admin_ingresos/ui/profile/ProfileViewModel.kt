@@ -70,20 +70,30 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         fingerprintEnabled: Boolean = _fingerprintEnabled.value,
         pinCode: String = _pinCode.value
     ) {
-        prefs.edit()
-            .putString("name", name)
-            .putString("email", email)
-            .putString("avatar_uri", avatarUri)
-            .putString("currency", currency)
-            .putBoolean("dark_mode", darkMode)
-            .putString("phone", phone)
-            .putString("bio", bio)
-            .putString("language", language)
-            .putBoolean("notifications_enabled", notificationsEnabled)
-            .putBoolean("fingerprint_enabled", fingerprintEnabled)
-            .putString("pin_code", SecurityUtils.encrypt(PIN_ALIAS, pinCode) ?: "")
-            .putInt("background_color", _backgroundColor.value)
-            .apply()
+        // Persist profile fields. Use the internal _darkMode value to avoid
+        // being overwritten by stale UI locals; also persist the derived
+        // force_light_mode so MainActivity can seed AppThemeManager on startup.
+        val darkVal = _darkMode.value
+        val forceLightVal = !darkVal
+
+    // Use commit for the theme/background keys to ensure they are written
+    // synchronously; other fields can be applied.
+    val editor = prefs.edit()
+    editor.putString("name", name)
+    editor.putString("email", email)
+    editor.putString("avatar_uri", avatarUri)
+    editor.putString("currency", currency)
+    editor.putBoolean("dark_mode", darkVal)
+    editor.putBoolean("force_light_mode", forceLightVal)
+    editor.putString("phone", phone)
+    editor.putString("bio", bio)
+    editor.putString("language", language)
+    editor.putBoolean("notifications_enabled", notificationsEnabled)
+    editor.putBoolean("fingerprint_enabled", fingerprintEnabled)
+    editor.putString("pin_code", SecurityUtils.encrypt(PIN_ALIAS, pinCode) ?: "")
+    editor.putInt("background_color", _backgroundColor.value)
+    // commit so theme prefs are persisted immediately
+    editor.commit()
 
         _name.value = name
         _email.value = email
@@ -96,30 +106,40 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         _notificationsEnabled.value = notificationsEnabled
         _fingerprintEnabled.value = fingerprintEnabled
     _pinCode.value = SecurityUtils.encrypt(PIN_ALIAS, pinCode) ?: ""
+    // Ensure global theme manager matches the stored preference
+    AppThemeManager.setForceLight(! _darkMode.value)
     }
 
     fun setBackgroundColor(colorInt: Int) {
-        prefs.edit().putInt("background_color", colorInt).apply()
-        _backgroundColor.value = colorInt
+    // write synchronously to avoid losing the value if the app is killed right after
+    val editor = prefs.edit()
+    editor.putInt("background_color", colorInt)
+    editor.commit()
+    _backgroundColor.value = colorInt
     // Push immediately to the global theme manager so UI updates without restart
     AppThemeManager.setBackgroundColor(colorInt)
     }
 
     fun setForceLightMode(value: Boolean) {
-        prefs.edit().putBoolean("force_light_mode", value).apply()
-        _forceLight.value = value
-        AppThemeManager.setForceLight(value)
+    val editor = prefs.edit()
+    editor.putBoolean("force_light_mode", value)
+    editor.commit()
+    _forceLight.value = value
+    AppThemeManager.setForceLight(value)
     }
 
     fun setDarkMode(value: Boolean) {
         // value == true -> dark mode
-        prefs.edit().putBoolean("dark_mode", value).apply()
-        _darkMode.value = value
-        // forceLight should be the inverse of dark mode
-        val forceLight = !value
-        prefs.edit().putBoolean("force_light_mode", forceLight).apply()
-        _forceLight.value = forceLight
-        AppThemeManager.setForceLight(forceLight)
+    val editor = prefs.edit()
+    editor.putBoolean("dark_mode", value)
+    // forceLight should be the inverse of dark mode
+    val forceLight = !value
+    editor.putBoolean("force_light_mode", forceLight)
+    // commit synchronously so preference survives app termination
+    editor.commit()
+    _darkMode.value = value
+    _forceLight.value = forceLight
+    AppThemeManager.setForceLight(forceLight)
     }
 
     fun signOut() {

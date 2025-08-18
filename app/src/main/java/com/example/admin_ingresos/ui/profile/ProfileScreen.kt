@@ -189,7 +189,11 @@ fun ProfileScreen(
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Text(text = "Modo oscuro", color = MaterialTheme.colorScheme.onBackground)
-                        Switch(checked = darkMode, onCheckedChange = { profileVm.setDarkMode(it) }, colors = SwitchDefaults.colors(checkedThumbColor = AccentVibrantStart))
+                        Switch(checked = darkMode, onCheckedChange = {
+                            // update ViewModel and persist immediately so preferences remain after app restart
+                            profileVm.setDarkMode(it)
+                            editDarkMode = it
+                        }, colors = SwitchDefaults.colors(checkedThumbColor = AccentVibrantStart))
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Text(text = "Notificaciones", color = MaterialTheme.colorScheme.onBackground)
