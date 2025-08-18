@@ -58,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
@@ -329,20 +330,25 @@ fun CategoryScreen(
                                                         .padding(12.dp),
                                                     horizontalAlignment = Alignment.CenterHorizontally
                                                 ) {
+                                                    // Use the category's stored color for background and derive an icon tint
+                                                    val bgColor = try { Color(android.graphics.Color.parseColor(category.color)) } catch (_: Exception) { com.example.admin_ingresos.ui.theme.getCategoryColor(category.name) }
+                                                    // match TransactionDetailScreen: derive icon tint as a slightly lighter variant of the background
+                                                    val iconTint = androidx.compose.ui.graphics.lerp(bgColor, Color.White, 0.18f)
+
                                                     Box(
                                                         Modifier
                                                             .size(42.dp)
                                                             .clip(CircleShape)
-                                                            .background(cardColor.copy(alpha = 0.85f)),
+                                                            .background(bgColor.copy(alpha = 0.18f)),
                                                         contentAlignment = Alignment.Center
                                                     ) {
-                                                        Icon(iconVector, null, tint = TextPrimary, modifier = Modifier.size(22.dp))
+                                                        Icon(iconVector, null, tint = iconTint, modifier = Modifier.size(22.dp))
                                                     }
                                                     Spacer(Modifier.height(8.dp))
                                                     Text(
                                                         text = category.name,
                                                         fontWeight = FontWeight.Bold,
-                                                        color = TextPrimary,
+                                                        color = com.example.admin_ingresos.ui.theme.TextPrimary,
                                                         style = MaterialTheme.typography.titleMedium,
                                                         maxLines = 1,
                                                         overflow = TextOverflow.Ellipsis,
@@ -356,7 +362,7 @@ fun CategoryScreen(
                                                     Text(
                                                         text = "${stats?.transactionCount ?: 0} transacciones",
                                                         style = MaterialTheme.typography.bodySmall,
-                                                        color = TextSecondary,
+                                                        color = com.example.admin_ingresos.ui.theme.TextSecondary,
                                                         maxLines = 1,
                                                         overflow = TextOverflow.Ellipsis
                                                     )

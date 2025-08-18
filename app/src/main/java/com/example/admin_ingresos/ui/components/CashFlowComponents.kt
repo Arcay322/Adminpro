@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.text.NumberFormat
 import java.util.*
+import java.io.File
 
 // Brand Header Component
 @Composable
@@ -92,6 +93,8 @@ fun CashFlowCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     glassLevel: Int = 2, // 1-4, más alto = más transparente
+    containerColor: Color? = null,
+    borderColor: Color? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val glassColor = when (glassLevel) {
@@ -107,13 +110,13 @@ fun CashFlowCard(
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier),
         colors = CardDefaults.cardColors(
-            containerColor = glassColor
+            containerColor = containerColor ?: glassColor
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         shape = RoundedCornerShape(20.dp),
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+            color = borderColor ?: MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
         )
     ) {
         Column(content = content)
@@ -1270,8 +1273,9 @@ fun ReceiptPhotoCard(
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Create temp file for camera
-            val tempFile = kotlin.io.createTempFile("photo", ".jpg", context.cacheDir)
+            // Create file in persistent app storage for camera (files/receipts)
+            val storageDir = File(context.filesDir, "receipts").apply { if (!exists()) mkdirs() }
+            val tempFile = kotlin.io.createTempFile("photo", ".jpg", storageDir)
             val uri = androidx.core.content.FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",

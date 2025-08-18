@@ -12,9 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.admin_ingresos.ui.theme.*
 
 enum class WidgetType {
     BALANCE,
@@ -89,14 +91,14 @@ fun QuickActionWidget(
                 QuickActionButton(
                     icon = Icons.Default.Add,
                     label = "Ingreso",
-                    color = MaterialTheme.colorScheme.secondary,
+                    color = AccentVibrantStart,
                     onClick = onAddIncome,
                     modifier = Modifier.weight(1f)
                 )
                 QuickActionButton(
                     icon = Icons.Default.Remove,
                     label = "Gasto",
-                    color = MaterialTheme.colorScheme.error,
+                    color = ExpenseRed,
                     onClick = onAddExpense,
                     modifier = Modifier.weight(1f)
                 )
@@ -111,14 +113,14 @@ fun QuickActionWidget(
                 QuickActionButton(
                     icon = Icons.Default.Assessment,
                     label = "Reportes",
-                    color = MaterialTheme.colorScheme.primary,
+                    color = Color(0xFFFF6B6B),
                     onClick = onViewReports,
                     modifier = Modifier.weight(1f)
                 )
                 QuickActionButton(
                     icon = Icons.Default.History,
                     label = "Historial",
-                    color = MaterialTheme.colorScheme.tertiary,
+                    color = Color(0xFF4ECDC4),
                     onClick = onViewHistory,
                     modifier = Modifier.weight(1f)
                 )
@@ -138,18 +140,26 @@ fun QuickActionButton(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(color.copy(alpha = 0.1f))
+            .background(color.copy(alpha = 0.06f))
             .clickable { onClick() }
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = color,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Brush.linearGradient(listOf(color, color.copy(alpha = 0.9f)))),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = Color.White,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
@@ -231,7 +241,7 @@ fun BudgetProgressItem(budget: BudgetSummary) {
         Spacer(modifier = Modifier.height(4.dp))
         
         LinearProgressIndicator(
-            progress = { (budget.spent / budget.limit).coerceIn(0.0, 1.0).toFloat() },
+            progress = ((budget.spent / budget.limit).coerceIn(0.0, 1.0).toFloat()),
             modifier = Modifier.fillMaxWidth(),
             color = when {
                 budget.spent / budget.limit > 1.0 -> MaterialTheme.colorScheme.error
@@ -296,7 +306,7 @@ fun SavingsGoalWidget(
             val progress = (currentAmount / goalAmount).coerceIn(0.0, 1.0)
             
             LinearProgressIndicator(
-                progress = { progress.toFloat() },
+                progress = progress.toFloat(),
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.secondary,
             )

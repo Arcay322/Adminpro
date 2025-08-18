@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.admin_ingresos.AppDatabaseProvider
 import com.example.admin_ingresos.data.Transaction
 import com.example.admin_ingresos.ui.components.*
@@ -43,7 +44,7 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TransactionHistoryScreen() {
+fun TransactionHistoryScreen(navController: NavController) {
     val context = LocalContext.current
     val viewModel: TransactionHistoryViewModel = viewModel(factory = object : ViewModelProvider.Factory {
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
@@ -140,7 +141,8 @@ fun TransactionHistoryScreen() {
                         ModernTransactionItem(
                             transaction = it,
                             onEdit = { viewModel.showEditDialog(it) },
-                            onDelete = { viewModel.showDeleteDialog(it) }
+                            onDelete = { viewModel.showDeleteDialog(it) },
+                            onClick = { navController.navigate("transaction_detail/${it.id}") }
                         )
                     }
                 }
@@ -338,7 +340,8 @@ fun EditTransactionDialog(
 fun ModernTransactionItem(
     transaction: Transaction,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onClick: () -> Unit = {}
 ) {
     val isIncome = transaction.type == "Ingreso"
     val transactionColor = if (isIncome) Color(0xFF4CAF50) else Color(0xFFE57373)
@@ -347,7 +350,8 @@ fun ModernTransactionItem(
     GlassCard(
         modifier = Modifier
             .fillMaxWidth()
-            .animateContentSize()
+            .animateContentSize(),
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier
@@ -391,7 +395,7 @@ fun ModernTransactionItem(
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold
                     ),
-                    color = Color.White,
+                    color = com.example.admin_ingresos.ui.theme.TextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -402,7 +406,7 @@ fun ModernTransactionItem(
                     text = SimpleDateFormat("dd MMM, HH:mm", Locale("es", "ES"))
                         .format(Date(transaction.date)),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.7f)
+                    color = com.example.admin_ingresos.ui.theme.TextSecondary
                 )
                 
                 // Monto con estilo mejorado

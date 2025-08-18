@@ -1,15 +1,15 @@
 package com.example.admin_ingresos.ui.dashboard.components
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -21,40 +21,58 @@ import java.util.*
 @Composable
 fun DashboardHeader(
     greeting: String,
-    currentTime: Int
+    currentTime: Int,
+    icon: ImageVector,
+    label: String,
+    color: Color
 ) {
     val timeGreeting = when (currentTime) {
         in 6..11 -> "Buenos días"
-        in 12..17 -> "Buenas tardes" 
+        in 12..17 -> "Buenas tardes"
         else -> "Buenas noches"
     }
-    
+
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(
-            text = timeGreeting,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = "CashFlow Dashboard",
-            style = MaterialTheme.typography.headlineMedium,
-            color = CashFlowPrimary,
-            fontWeight = FontWeight.Bold
-        )
+        Column(
+            modifier = Modifier,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(color.copy(alpha = 0.18f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = color,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = color,
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }
 
 @Composable
-fun BalanceOverviewCard(
+fun BalanceCard(
     balance: Double,
     monthlyIncome: Double,
     monthlyExpenses: Double,
     balanceChange: Double
 ) {
     val formatter = NumberFormat.getCurrencyInstance(Locale.US)
-    
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -71,9 +89,9 @@ fun BalanceOverviewCard(
                 style = MaterialTheme.typography.titleMedium,
                 color = Color.White.copy(alpha = 0.9f)
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
                 text = formatter.format(balance),
                 style = MaterialTheme.typography.displayMedium.copy(
@@ -81,7 +99,7 @@ fun BalanceOverviewCard(
                 ),
                 color = Color.White
             )
-            
+
             if (balanceChange != 0.0) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(
@@ -101,9 +119,9 @@ fun BalanceOverviewCard(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(20.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -135,7 +153,7 @@ fun BalanceOverviewCard(
                         color = Success
                     )
                 }
-                
+
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -188,7 +206,7 @@ fun QuickStatsRow(
         )
         QuickStatCard(
             title = "Promedio Diario",
-            value = "$${String.format("%.0f", averageDaily)}",
+            value = "$$${String.format("%.0f", averageDaily)}",
             icon = Icons.Default.CalendarToday,
             color = CashFlowSecondary,
             modifier = Modifier.weight(1f)
@@ -270,9 +288,9 @@ fun BudgetProgressSection(
                     Text("Ver todos")
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             budgets.forEach { budget ->
                 BudgetProgressItem(budget = budget)
                 Spacer(modifier = Modifier.height(8.dp))
@@ -289,7 +307,7 @@ private fun BudgetProgressItem(budget: BudgetProgress) {
         progress < 0.9f -> Warning
         else -> MaterialTheme.colorScheme.error
     }
-    
+
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -306,11 +324,11 @@ private fun BudgetProgressItem(budget: BudgetProgress) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        
+
         Spacer(modifier = Modifier.height(4.dp))
-        
+
         LinearProgressIndicator(
-            progress = { progress },
+            progress = progress,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(6.dp),
@@ -347,9 +365,9 @@ fun RecentTransactionsSection(
                     Text("Ver todas")
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             if (transactions.isNotEmpty()) {
                 transactions.take(5).forEach { transaction ->
                     TransactionItem(
@@ -383,7 +401,7 @@ private fun TransactionItem(
 ) {
     val isIncome = transaction.type == "Ingreso"
     val color = if (isIncome) Success else MaterialTheme.colorScheme.error
-    
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -402,9 +420,9 @@ private fun TransactionItem(
                 style = MaterialTheme.typography.titleMedium
             )
         }
-        
+
         Spacer(modifier = Modifier.width(12.dp))
-        
+
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = transaction.description,
@@ -417,7 +435,7 @@ private fun TransactionItem(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        
+
         Text(
             text = "${if (isIncome) "+" else "-"}$${String.format("%.2f", transaction.amount)}",
             style = MaterialTheme.typography.titleMedium,
@@ -458,9 +476,9 @@ fun FinancialInsightsSection(
                     fontWeight = FontWeight.SemiBold
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             insights.forEach { insight ->
                 Text(
                     text = "• $insight",
@@ -495,7 +513,7 @@ fun QuickActionsGrid(
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -515,12 +533,12 @@ fun QuickActionsGrid(
                     modifier = Modifier.weight(1f)
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)  
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 QuickActionButton(
                     icon = Icons.Default.Analytics,
@@ -552,7 +570,7 @@ private fun QuickActionButton(
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = color.copy(alpha = 0.1f)
+            containerColor = color.copy(alpha = 0.06f)
         ),
         onClick = onClick
     ) {
@@ -560,17 +578,25 @@ private fun QuickActionButton(
             modifier = Modifier.padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = color,
-                modifier = Modifier.size(28.dp)
-            )
-            Spacer(modifier = Modifier.height(4.dp))
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(color.copy(alpha = 0.18f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
-                color = color,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -586,9 +612,7 @@ fun EnhancedFAB(
     Column(
         horizontalAlignment = Alignment.End
     ) {
-        // Quick action buttons (shown when expanded)
         if (expanded) {
-            // Add Income
             SmallFloatingActionButton(
                 onClick = onMainClick,
                 containerColor = Success,
@@ -599,8 +623,7 @@ fun EnhancedFAB(
                     contentDescription = "Agregar Ingreso"
                 )
             }
-            
-            // Add Expense
+
             SmallFloatingActionButton(
                 onClick = onMainClick,
                 containerColor = MaterialTheme.colorScheme.error,
@@ -612,8 +635,7 @@ fun EnhancedFAB(
                 )
             }
         }
-        
-        // Main FAB
+
         ExtendedFloatingActionButton(
             onClick = if (expanded) onToggleExpanded else onMainClick,
             containerColor = MaterialTheme.colorScheme.primary,
@@ -632,6 +654,7 @@ fun EnhancedFAB(
 }
 
 // Data classes
+
 data class BudgetProgress(
     val categoryName: String,
     val spent: Double,

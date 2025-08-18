@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -24,6 +25,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.admin_ingresos.ui.animations.getEnterTransition
 import com.example.admin_ingresos.ui.animations.getExitTransition
@@ -48,7 +50,7 @@ import com.example.admin_ingresos.ui.reports.ReportsScreen
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+    enableEdgeToEdge()
         setContent {
             Admin_ingresosTheme {
                 MainAppNavigation()
@@ -63,8 +65,8 @@ fun MainAppNavigation() {
     var showAddTransactionModal by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val prefs = remember { PreferencesManager(context) }
-    // For production testing: always show onboarding regardless of stored preference
-    var showOnboarding by remember { mutableStateOf(true) }
+    // Show onboarding only when it hasn't been completed (read persisted preference)
+    var showOnboarding by remember { mutableStateOf(!prefs.isOnboardingCompleted) }
     val database = remember { AppDatabaseProvider.getDatabase(context) }
     val categoryViewModel: CategoryViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
@@ -98,24 +100,32 @@ fun MainAppNavigation() {
                 prefs.isOnboardingCompleted = true
                 showOnboarding = false
             })
-        } else {
+            } else {
+            // Determine whether to show FAB based on current route
+            val currentBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = currentBackStackEntry?.destination?.route ?: ""
+
+            val showFab = !currentRoute.startsWith("transaction_detail")
+
             Scaffold(
                 containerColor = Color.Transparent,
                 bottomBar = { BottomNavigationBar(navController) },
                 floatingActionButton = {
-                    FloatingActionButton(
-                        onClick = { showAddTransactionModal = true },
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = Color.White,
-                        elevation = FloatingActionButtonDefaults.elevation(
-                            defaultElevation = 8.dp,
-                            pressedElevation = 12.dp
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Agregar transacción"
-                        )
+                    if (showFab) {
+                        FloatingActionButton(
+                            onClick = { showAddTransactionModal = true },
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = Color.White,
+                            elevation = FloatingActionButtonDefaults.elevation(
+                                defaultElevation = 8.dp,
+                                pressedElevation = 12.dp
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Agregar transacción"
+                            )
+                        }
                     }
                 }
             ) { paddingValues ->
@@ -144,7 +154,7 @@ fun MainAppNavigation() {
                         )
                     }
                     composable("history") {
-                        TransactionHistoryScreen()
+                        com.example.admin_ingresos.ui.history.TransactionHistoryScreen(navController)
                     }
                     composable("reports") {
                         ReportsScreen()
@@ -186,6 +196,18 @@ fun MainAppNavigation() {
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }
+
+                        composable(
+                            route = "transaction_detail/{transactionId}",
+                            arguments = listOf(navArgument("transactionId") { type = NavType.IntType })
+                        ) { backStackEntry ->
+                            val txId = backStackEntry.arguments?.getInt("transactionId") ?: 0
+                            com.example.admin_ingresos.ui.transaction.TransactionDetailScreen(
+                                transactionId = txId,
+                                onNavigateBack = { navController.popBackStack() },
+                                onOpenTransaction = { id -> navController.navigate("transaction_detail/$id") }
+                            )
+                        }
                 }
                 AddTransactionModal(
                     show = showAddTransactionModal,

@@ -53,20 +53,11 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
     var receiptPhotoUri by remember { mutableStateOf<String?>(null) }
     var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Launcher para galería
-    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri != null) receiptPhotoUri = uri.toString()
-    }
-    // Launcher para cámara
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success: Boolean ->
-        if (success && cameraImageUri != null) receiptPhotoUri = cameraImageUri.toString()
-    }
-
-    // Función para crear archivo temporal en directorio privado
+    // Función para crear archivo en el directorio privado persistente de la app (/files/receipts)
     fun createImageFile(): Uri? {
         return try {
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-            val storageDir = context.cacheDir
+            val storageDir = File(context.filesDir, "receipts").apply { if (!exists()) mkdirs() }
             val file = File.createTempFile("recibo_${'$'}timeStamp", ".jpg", storageDir)
             androidx.core.content.FileProvider.getUriForFile(
                 context,
@@ -75,6 +66,39 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
             )
         } catch (e: Exception) { null }
     }
+
+    // Copia el contenido de una Uri (p. ej. de la galería) a un fichero en files/receipts y devuelve la Uri provista por FileProvider
+    fun saveUriToAppStorage(context: android.content.Context, srcUri: Uri): Uri? {
+        return try {
+            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+            val storageDir = File(context.filesDir, "receipts").apply { if (!exists()) mkdirs() }
+            val destFile = File(storageDir, "recibo_${'$'}timeStamp.jpg")
+            context.contentResolver.openInputStream(srcUri).use { input ->
+                if (input != null) {
+                    java.io.FileOutputStream(destFile).use { out ->
+                        input.copyTo(out)
+                    }
+                }
+            }
+            androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".fileprovider", destFile)
+        } catch (e: Exception) { null }
+    }
+
+    // Launcher para galería
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) {
+            // Copiar la imagen seleccionada a almacenamiento privado de la app para que la URI sea persistente
+            val saved = try {
+                saveUriToAppStorage(context, uri)
+            } catch (e: Exception) { null }
+            receiptPhotoUri = saved?.toString() ?: uri.toString()
+        }
+    }
+    // Launcher para cámara
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success: Boolean ->
+        if (success && cameraImageUri != null) receiptPhotoUri = cameraImageUri.toString()
+    }
+
     var showCategoryDialog by remember { mutableStateOf(false) }
     var newCategoryName by remember { mutableStateOf("") }
     var newCategoryError by remember { mutableStateOf<String?>(null) }
@@ -674,5 +698,5 @@ fun DescriptionInputCard(
             )
         }
     }
-    }
+}
 

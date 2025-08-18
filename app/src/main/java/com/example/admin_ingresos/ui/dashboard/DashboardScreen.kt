@@ -104,7 +104,7 @@ fun DashboardScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp)
-            .background(color = Background),
+            .background(color = Color.Black),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 16.dp)
     ) {
@@ -515,37 +515,37 @@ private fun QuickActionsSection(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                QuickActionButton(
-                    icon = LucideIconMapper.Navigation.add,
-                    title = "Agregar",
-                    subtitle = "Transacción",
-                    onClick = onAddTransaction,
-                    gradient = listOf(AccentVibrantStart, AccentVibrantEnd)
-                )
+                            QuickActionButton(
+                                icon = LucideIconMapper.Navigation.add,
+                                title = "Agregar",
+                                subtitle = "Transacción",
+                                onClick = onAddTransaction,
+                                gradient = listOf(AccentVibrantStart, AccentVibrantEnd)
+                            )
 
-                QuickActionButton(
-                    icon = LucideIconMapper.Navigation.transactions,
-                    title = "Ver",
-                    subtitle = "Historial",
-                    onClick = onViewTransactions,
-                    gradient = listOf(Color(0xFF667EEA), Color(0xFF764BA2))
-                )
+                            QuickActionButton(
+                                icon = LucideIconMapper.Navigation.transactions,
+                                title = "Ver",
+                                subtitle = "Historial",
+                                onClick = onViewTransactions,
+                                gradient = listOf(Color(0xFF667EEA), Color(0xFF764BA2))
+                            )
 
-                QuickActionButton(
-                    icon = LucideIconMapper.Navigation.reports,
-                    title = "Reportes",
-                    subtitle = "Análisis",
-                    onClick = onViewReports,
-                    gradient = listOf(Color(0xFFFF6B6B), Color(0xFFFFE66D))
-                )
+                            QuickActionButton(
+                                icon = LucideIconMapper.Navigation.reports,
+                                title = "Reportes",
+                                subtitle = "Análisis",
+                                onClick = onViewReports,
+                                gradient = listOf(Color(0xFFFF6B6B), Color(0xFFFFE66D))
+                            )
 
-                QuickActionButton(
-                    icon = LucideIconMapper.getNavigationIcon("DollarSign"),
-                    title = "Presupuesto",
-                    subtitle = "Metas",
-                    onClick = onViewBudget,
-                    gradient = listOf(Color(0xFF4ECDC4), Color(0xFF44A08D))
-                )
+                            QuickActionButton(
+                                icon = LucideIconMapper.getNavigationIcon("DollarSign"),
+                                title = "Presupuesto",
+                                subtitle = "Metas",
+                                onClick = onViewBudget,
+                                gradient = listOf(Color(0xFF4ECDC4), Color(0xFF44A08D))
+                            )
             }
         }
     }
@@ -575,7 +575,7 @@ private fun QuickActionButton(
             Icon(
                 imageVector = icon,
                 contentDescription = title,
-                tint = Color.White,
+                tint = gradient.firstOrNull() ?: Color.White,
                 modifier = Modifier.size(24.dp)
             )
         }

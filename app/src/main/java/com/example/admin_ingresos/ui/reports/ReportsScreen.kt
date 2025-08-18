@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
@@ -971,7 +972,9 @@ fun BudgetComparisonItem(item: BudgetComparison) {
                         .background(cardColor.copy(alpha = 0.85f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(LucideIconMapper.getCategoryIcon(item.category), null, tint = TextPrimary, modifier = Modifier.size(18.dp))
+                    val bg = try { Color(android.graphics.Color.parseColor(item.category.color)) } catch (_: Exception) { TextPrimary }
+                    val iconTint = androidx.compose.ui.graphics.lerp(bg, Color.White, 0.18f)
+                    Icon(LucideIconMapper.getCategoryIcon(item.category), null, tint = iconTint, modifier = Modifier.size(18.dp))
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 if (item.progress > 1f) {

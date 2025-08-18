@@ -53,53 +53,10 @@ fun GlassmorphismBackground(
         )
     )
 
-    Box(modifier = modifier.fillMaxSize()) {
-        // Fondo base con degradado principal
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            BackgroundStart,
-                            BackgroundMid,
-                            BackgroundEnd
-                        ),
-                        start = Offset(0f, 0f),
-                        end = Offset.Infinite
-                    )
-                )
-        )
-        
-        // Formas abstractas animadas
-        Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-                .blur(60.dp)
-        ) {
-            drawAnimatedShapes(
-                animatedOffset1,
-                animatedOffset2,
-                animatedOffset3,
-                size
-            )
-        }
-        
-        // Overlay sutil para suavizar
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Black.copy(alpha = 0.1f),
-                            Color.Transparent,
-                            Color.Black.copy(alpha = 0.2f)
-                        )
-                    )
-                )
-        )
-        
+    // Simple, uniform black background for all screens using GlassmorphismScreen
+    Box(modifier = modifier
+        .fillMaxSize()
+        .background(Color.Black)) {
         content()
     }
 }

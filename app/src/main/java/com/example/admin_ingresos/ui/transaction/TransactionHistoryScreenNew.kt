@@ -30,10 +30,11 @@ import java.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.first
+import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TransactionHistoryScreenNew() {
+fun TransactionHistoryScreenNew(navController: NavController) {
     val context = LocalContext.current
     val db = remember { com.example.admin_ingresos.AppDatabaseProvider.getDatabase(context) }
     // ViewModel eliminado: lógica local
@@ -152,7 +153,7 @@ fun TransactionHistoryScreenNew() {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(
+            items(
                         items = filteredTransactions.sortedByDescending { it.date },
                         key = { it.id }
                     ) { transaction ->
@@ -160,8 +161,9 @@ fun TransactionHistoryScreenNew() {
                             transaction = transaction,
                             category = categories.find { it.id == transaction.categoryId },
                             paymentMethod = paymentMethods.find { it.id == transaction.paymentMethodId },
-                            onEdit = { /* TODO: Implement edit */ },
-                            onDelete = { /* TODO: Implement delete */ }
+                onEdit = { /* TODO: Implement edit */ },
+                onDelete = { /* TODO: Implement delete */ },
+                onClick = { navController.navigate("transaction_detail/${transaction.id}") }
                         )
                     }
                 }
@@ -380,12 +382,13 @@ private fun EnhancedTransactionItem(
     category: Category?,
     paymentMethod: PaymentMethod?,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onClick: () -> Unit = {}
 ) {
     var showMenu by remember { mutableStateOf(false) }
     
     CashFlowCard(
-        onClick = { /* TODO: Show details */ }
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),

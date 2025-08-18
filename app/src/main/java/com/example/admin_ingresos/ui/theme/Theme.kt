@@ -61,9 +61,18 @@ fun CashFlowTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            // Usar color de fondo nocturno para la barra de estado
+            // Usar color de fondo nocturno para la barra de estado y la barra de navegación
             window.statusBarColor = BackgroundStart.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+            // Ensure navigation bar matches app background so we don't see a black strip
+            window.navigationBarColor = BackgroundStart.toArgb()
+            val insetsController = WindowCompat.getInsetsController(window, view)
+            insetsController.isAppearanceLightStatusBars = false
+            // Keep navigation bar icons suitable for dark background
+            try {
+                insetsController.isAppearanceLightNavigationBars = false
+            } catch (_: Exception) {
+                // Some platform versions may not support this property; ignore if absent
+            }
         }
     }
 

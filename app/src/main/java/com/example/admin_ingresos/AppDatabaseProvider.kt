@@ -19,14 +19,9 @@ object AppDatabaseProvider {
                 AppDatabase::class.java,
                 "admin_ingresos_db"
             )
-            .addMigrations(
-                AppDatabase.MIGRATION_1_2,
-                AppDatabase.MIGRATION_2_3,
-                AppDatabase.MIGRATION_3_4,
-                AppDatabase.MIGRATION_5_6,
-                AppDatabase.MIGRATION_6_7
-            )
-            .fallbackToDestructiveMigration()
+            // Register all migrations declared in AppDatabase to ensure no migration is missed.
+            .addMigrations(*AppDatabase.ALL_MIGRATIONS)
+            // NOTE: fallbackToDestructiveMigration() removed to avoid accidental data loss.
             .build()
 
             INSTANCE = instance

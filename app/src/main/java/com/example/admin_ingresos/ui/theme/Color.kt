@@ -4,10 +4,10 @@ import androidx.compose.ui.graphics.Color
 
 // === SISTEMA DE COLORES GLASSMORPHISM AVANZADO ===
 
-// Background Principal - Degradado Nocturno Profundo
-val BackgroundStart = Color(0xFF0D1117) // Azul noche profundo
-val BackgroundEnd = Color(0xFF1D1335) // Morado oscuro
-val BackgroundMid = Color(0xFF141627) // Punto medio del degradado
+// Background Principal - Unico fondo negro para toda la app
+val BackgroundStart = Color(0xFF000000) // Negro puro
+val BackgroundEnd = Color(0xFF000000) // Negro puro
+val BackgroundMid = Color(0xFF000000) // Negro puro
 
 // Colores de Acento Vibrantes para CTAs
 val AccentVibrantStart = Color(0xFF00FFA3) // Verde lima brillante
@@ -19,9 +19,9 @@ val IncomeGreen = Color(0xFF20BF55) // Verde brillante y positivo
 val ExpenseRed = Color(0xFFF45B69) // Rosa enérgico pero no alarmante
 val WarningAmber = Color(0xFFFFB300) // Naranja/amarillo intenso
 
-// Glassmorphism - Superficies de Vidrio
+// Glassmorphism - Superficies de Vidrio (blanco translúcido, preserve glass effect)
 val GlassWhite = Color(0x26FFFFFF) // Blanco 15% opacidad
-val GlassWhiteSubtle = Color(0x1AFFFFFF) // Blanco 10% opacidad 
+val GlassWhiteSubtle = Color(0x1AFFFFFF) // Blanco 10% opacidad
 val GlassWhiteStrong = Color(0x33FFFFFF) // Blanco 20% opacidad
 val GlassBlur = Color(0x0DFFFFFF) // Para efectos de blur
 
@@ -30,8 +30,9 @@ val GlassBorder = Color(0x33FFFFFF) // Borde translúcido 20%
 val GlassBorderSubtle = Color(0x1AFFFFFF) // Borde sutil 10%
 
 // Texto sobre Vidrio
-val TextPrimary = Color(0xFFF0F0F0) // Blanco casi puro
-val TextSecondary = Color(0xFFA8A8A8) // Gris claro para subtítulos
+// Texto principal y secundario (aumentamos contraste para mayor claridad)
+val TextPrimary = Color(0xFFFFFFFF) // Blanco puro para máxima legibilidad
+val TextSecondary = Color(0xFFBFC7CC) // Gris claro más brillante para subtítulos
 val TextOnAccent = Color(0xFF000000) // Negro para texto sobre acentos vibrantes
 
 // Categorías con Colores Vibrantes Armónicos
@@ -133,3 +134,20 @@ val GlassSurface4 = GlassBlur
 // Colores para alertas y estados
 val InfoBlue = Color(0xFF3B82F6)
 val SuccessGreen = IncomeGreen
+
+// Simple helper para mapear nombres de categoría a colores definidos arriba
+fun getCategoryColor(categoryName: String?): Color {
+	val n = categoryName?.lowercase()?.trim() ?: ""
+	return when {
+		n.contains("comida") || n.contains("aliment") || n.contains("restaur") || n.contains("supermerc") -> CategoryFood
+		n.contains("transporte") || n.contains("taxi") || n.contains("uber") || n.contains("gasolina") -> CategoryTransport
+		n.contains("entretenimiento") || n.contains("ocio") || n.contains("cine") -> CategoryEntertainment
+		n.contains("salud") || n.contains("farmacia") || n.contains("médic") -> CategoryHealth
+		n.contains("compra") || n.contains("compras") || n.contains("ropa") || n.contains("shopping") -> CategoryShopping
+		n.contains("hogar") || n.contains("servicios") || n.contains("luz") || n.contains("agua") -> CategoryUtilities
+		n.contains("educacion") || n.contains("estudi") || n.contains("curso") -> CategoryEducation
+		n.contains("viaje") || n.contains("vacacion") || n.contains("turismo") -> CategoryTravel
+		n.isBlank() -> CategoryOther
+		else -> CategoryOther
+	}
+}
