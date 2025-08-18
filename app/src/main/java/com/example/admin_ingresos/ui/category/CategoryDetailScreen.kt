@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -372,7 +373,7 @@ private fun TransactionListItem(transaction: Transaction) {
             Text(
                 text = dateFormat.format(Date(transaction.date)),
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
+                color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.85f) else Color.Black.copy(alpha = 0.7f)
             )
         }
         Text(

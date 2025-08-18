@@ -969,11 +969,12 @@ fun BudgetComparisonItem(item: BudgetComparison) {
                     Modifier
                         .size(34.dp)
                         .clip(CircleShape)
-                        .background(cardColor.copy(alpha = 0.85f)),
+                        .background(cardColor.copy(alpha = 0.18f)),
                     contentAlignment = Alignment.Center
                 ) {
                     val bg = try { Color(android.graphics.Color.parseColor(item.category.color)) } catch (_: Exception) { TextPrimary }
-                    val iconTint = androidx.compose.ui.graphics.lerp(bg, Color.White, 0.18f)
+                    // Use full category color for the icon and a light circle background to match CategoryScreen
+                    val iconTint = bg
                     Icon(LucideIconMapper.getCategoryIcon(item.category), null, tint = iconTint, modifier = Modifier.size(18.dp))
                 }
                 Spacer(modifier = Modifier.width(8.dp))

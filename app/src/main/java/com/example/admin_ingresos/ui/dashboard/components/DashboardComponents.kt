@@ -1,6 +1,7 @@
 package com.example.admin_ingresos.ui.dashboard.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -13,6 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.admin_ingresos.ui.theme.*
 import java.text.NumberFormat
@@ -26,41 +28,33 @@ fun DashboardHeader(
     label: String,
     color: Color
 ) {
-    val timeGreeting = when (currentTime) {
-        in 6..11 -> "Buenos días"
-        in 12..17 -> "Buenas tardes"
-        else -> "Buenas noches"
-    }
+    val headerTextColor = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.9f) else Color.Black.copy(alpha = 0.87f)
 
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier,
-            horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(color.copy(alpha = 0.18f)),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(color.copy(alpha = 0.18f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    tint = color,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium,
-                color = color,
-                fontWeight = FontWeight.Medium
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = color,
+                modifier = Modifier.size(24.dp)
             )
         }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = headerTextColor,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 
@@ -92,7 +86,7 @@ fun BalanceCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
+            Text(
                 text = formatter.format(balance),
                 style = MaterialTheme.typography.displayMedium.copy(
                     fontWeight = FontWeight.Bold
@@ -229,6 +223,9 @@ private fun QuickStatCard(
     color: Color,
     modifier: Modifier = Modifier
 ) {
+    val textPrimaryColor = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.9f) else Color.Black.copy(alpha = 0.87f)
+    val textSecondaryColor = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.7f) else Color.Black.copy(alpha = 0.6f)
+
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
@@ -250,13 +247,13 @@ private fun QuickStatCard(
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = textPrimaryColor,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = textSecondaryColor
             )
         }
     }
@@ -437,7 +434,7 @@ private fun TransactionItem(
         }
 
         Text(
-            text = "${if (isIncome) "+" else "-"}$${String.format("%.2f", transaction.amount)}",
+            text = "${if (isIncome) "+" else "-"}${String.format("%.2f", transaction.amount)}",
             style = MaterialTheme.typography.titleMedium,
             color = color,
             fontWeight = FontWeight.Bold
@@ -655,7 +652,7 @@ fun EnhancedFAB(
 
 // Data classes
 
-data class BudgetProgress(
+ data class BudgetProgress(
     val categoryName: String,
     val spent: Double,
     val total: Double

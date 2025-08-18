@@ -275,6 +275,8 @@ fun CategoryScreen(
                                             mutableStateOf(vector)
                                         }
 
+                                        // Make the category card border slightly thicker and brighter
+                                        val brightBorder = androidx.compose.ui.graphics.lerp(cardColor.copy(alpha = 0.34f), Color.White, 0.12f)
                                         GlassCard(
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -287,7 +289,8 @@ fun CategoryScreen(
                                                 .clickable { onNavigateToCategoryDetail(category.id) },
                                             cornerRadius = 20.dp,
                                             backgroundColor = cardColor.copy(alpha = 0.10f),
-                                            borderColor = cardColor.copy(alpha = 0.20f),
+                                            borderColor = brightBorder,
+                                            borderWidth = 1.5.dp,
                                         ) {
                                             Box(modifier = Modifier.fillMaxSize()) {
 
@@ -332,8 +335,8 @@ fun CategoryScreen(
                                                 ) {
                                                     // Use the category's stored color for background and derive an icon tint
                                                     val bgColor = try { Color(android.graphics.Color.parseColor(category.color)) } catch (_: Exception) { com.example.admin_ingresos.ui.theme.getCategoryColor(category.name) }
-                                                    // match TransactionDetailScreen: derive icon tint as a slightly lighter variant of the background
-                                                    val iconTint = androidx.compose.ui.graphics.lerp(bgColor, Color.White, 0.18f)
+                                                    // Use full category color for the icon to match dashboard intensity
+                                                    val iconTint = bgColor
 
                                                     Box(
                                                         Modifier

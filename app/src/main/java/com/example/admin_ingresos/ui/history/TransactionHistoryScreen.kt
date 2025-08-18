@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -412,7 +413,7 @@ fun ModernTransactionItem(
                     text = SimpleDateFormat("dd MMM, HH:mm", Locale("es", "ES"))
                         .format(Date(transaction.date)),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = com.example.admin_ingresos.ui.theme.TextSecondary
+                    color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.85f) else Color.Black.copy(alpha = 0.7f)
                 )
                 
                 // Monto con estilo mejorado

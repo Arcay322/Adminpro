@@ -241,7 +241,7 @@ fun TransactionItemContent(
             Text(
                 text = dateFormat.format(Date(transaction.date)),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                color = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.White.copy(alpha = 0.85f) else Color.Black.copy(alpha = 0.7f)
             )
         }
         

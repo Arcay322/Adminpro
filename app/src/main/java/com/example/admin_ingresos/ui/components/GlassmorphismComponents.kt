@@ -52,6 +52,7 @@ fun GlassCard(
     blurRadius: androidx.compose.ui.unit.Dp = 12.dp,
     backgroundColor: Color? = null,
     borderColor: Color? = null,
+    borderWidth: androidx.compose.ui.unit.Dp = 1.dp,
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
@@ -70,7 +71,8 @@ fun GlassCard(
                 blurRadius = blurRadius,
                 backgroundColor = derivedBg,
                 borderColor = derivedBorder,
-                cornerRadius = cornerRadius
+                cornerRadius = cornerRadius,
+                borderWidth = borderWidth
             )
             .padding(20.dp)
     ) {
