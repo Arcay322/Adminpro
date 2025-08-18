@@ -141,7 +141,7 @@ fun TransactionDetailScreen(
             TopAppBar(
                 title = { Text("Detalle", style = MaterialTheme.typography.titleLarge) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás") }
+                        IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás") }
                 },
                 actions = {
                     // Use Lucide icons for edit/delete with requested tints
