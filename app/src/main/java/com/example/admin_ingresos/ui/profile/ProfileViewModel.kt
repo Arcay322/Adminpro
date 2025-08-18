@@ -70,11 +70,12 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         fingerprintEnabled: Boolean = _fingerprintEnabled.value,
         pinCode: String = _pinCode.value
     ) {
-        // Persist profile fields. Use the internal _darkMode value to avoid
-        // being overwritten by stale UI locals; also persist the derived
-        // force_light_mode so MainActivity can seed AppThemeManager on startup.
-        val darkVal = _darkMode.value
-        val forceLightVal = !darkVal
+    // Persist profile fields. Use the provided darkMode parameter (the
+    // user's current selection) so Save doesn't accidentally store a
+    // stale internal value. Also persist the derived force_light_mode so
+    // MainActivity can seed AppThemeManager on startup.
+    val darkVal = darkMode
+    val forceLightVal = !darkVal
 
     // Use commit for the theme/background keys to ensure they are written
     // synchronously; other fields can be applied.
@@ -99,15 +100,17 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         _email.value = email
         _avatarUri.value = avatarUri
         _currency.value = currency
-        _darkMode.value = darkMode
+        // update internal state to match the value we just saved
+        _darkMode.value = darkVal
+        _forceLight.value = forceLightVal
         _phone.value = phone
         _bio.value = bio
         _language.value = language
         _notificationsEnabled.value = notificationsEnabled
         _fingerprintEnabled.value = fingerprintEnabled
-    _pinCode.value = SecurityUtils.encrypt(PIN_ALIAS, pinCode) ?: ""
-    // Ensure global theme manager matches the stored preference
-    AppThemeManager.setForceLight(! _darkMode.value)
+        _pinCode.value = SecurityUtils.encrypt(PIN_ALIAS, pinCode) ?: ""
+        // Ensure global theme manager matches the stored preference
+        AppThemeManager.setForceLight(forceLightVal)
     }
 
     fun setBackgroundColor(colorInt: Int) {

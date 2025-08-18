@@ -11,6 +11,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
@@ -83,8 +84,14 @@ fun CashFlowTheme(
     backgroundColor: Color? = null,
     content: @Composable () -> Unit
 ) {
-    // Select color scheme based on explicit isDarkTheme flag
-    val colorScheme = if (isDarkTheme) {
+    // Use the centralized AppThemeManager as the single source of truth so
+    // all compositions observe the same light/dark flag and avoid hybrid
+    // states where parts render with different schemes.
+    val forceLight by AppThemeManager.forceLight.collectAsState()
+    val resolvedIsDark = !forceLight
+
+    // Select color scheme based on resolvedIsDark
+    val colorScheme = if (resolvedIsDark) {
         // Explicit dark scheme: avoid reading mutable legacy tokens here so
         // MaterialTheme receives stable dark values. We'll remap legacy
         // tokens below from this canonical scheme.
@@ -160,9 +167,9 @@ fun CashFlowTheme(
             window.navigationBarColor = bg
             val insetsController = WindowCompat.getInsetsController(window, view)
             // For light theme we want dark status bar icons
-            insetsController.isAppearanceLightStatusBars = !isDarkTheme
+            insetsController.isAppearanceLightStatusBars = !resolvedIsDark
             try {
-                insetsController.isAppearanceLightNavigationBars = !isDarkTheme
+                insetsController.isAppearanceLightNavigationBars = !resolvedIsDark
             } catch (_: Exception) {
                 // ignore
             }

@@ -79,6 +79,8 @@ class MainActivity : ComponentActivity() {
             val bgColor = androidx.compose.ui.graphics.Color(bgInt)
             val isDarkTheme = !forceLight
 
+            // Apply theme without remounting the navigation graph so the
+            // user remains on the current screen when toggling theme/colors.
             Admin_ingresosTheme(isDarkTheme = isDarkTheme, backgroundColor = bgColor) {
                 MainAppNavigation()
             }
