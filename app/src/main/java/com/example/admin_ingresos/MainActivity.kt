@@ -52,7 +52,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
     enableEdgeToEdge()
         setContent {
-            Admin_ingresosTheme {
+            // Obtain ProfileViewModel to read persisted background color preference
+            val profileVm: com.example.admin_ingresos.ui.profile.ProfileViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+                factory = object : androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory(application) {}
+            )
+            val bgInt by profileVm.backgroundColor.collectAsState()
+            val bgColor = androidx.compose.ui.graphics.Color(bgInt)
+
+            Admin_ingresosTheme(backgroundColor = bgColor) {
                 MainAppNavigation()
             }
         }
@@ -85,8 +92,8 @@ fun MainAppNavigation() {
             .background(
                 brush = androidx.compose.ui.graphics.Brush.linearGradient(
                     colors = listOf(
-                        com.example.admin_ingresos.ui.theme.BackgroundGradientStart,
-                        com.example.admin_ingresos.ui.theme.BackgroundGradientEnd
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.background
                     )
                 )
             )

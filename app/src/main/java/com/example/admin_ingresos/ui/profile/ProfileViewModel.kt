@@ -6,6 +6,8 @@ import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import com.example.admin_ingresos.ui.profile.SecurityUtils
+import com.example.admin_ingresos.ui.theme.BackgroundStart
+import androidx.compose.ui.graphics.toArgb
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs = application.getSharedPreferences("profile_prefs", Context.MODE_PRIVATE)
@@ -45,6 +47,10 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     // stored encrypted; expose decrypted when needed via function
     val pinCode: StateFlow<String> = _pinCode
 
+    // Background color preference (stored as ARGB int)
+    private val _backgroundColor = MutableStateFlow(prefs.getInt("background_color", BackgroundStart.toArgb()))
+    val backgroundColor: StateFlow<Int> = _backgroundColor
+
     private val PIN_ALIAS = "adminpro_pin_alias"
 
     fun saveProfile(
@@ -72,6 +78,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             .putBoolean("notifications_enabled", notificationsEnabled)
             .putBoolean("fingerprint_enabled", fingerprintEnabled)
             .putString("pin_code", SecurityUtils.encrypt(PIN_ALIAS, pinCode) ?: "")
+            .putInt("background_color", _backgroundColor.value)
             .apply()
 
         _name.value = name
@@ -85,6 +92,11 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         _notificationsEnabled.value = notificationsEnabled
         _fingerprintEnabled.value = fingerprintEnabled
     _pinCode.value = SecurityUtils.encrypt(PIN_ALIAS, pinCode) ?: ""
+    }
+
+    fun setBackgroundColor(colorInt: Int) {
+        prefs.edit().putInt("background_color", colorInt).apply()
+        _backgroundColor.value = colorInt
     }
 
     fun signOut() {
@@ -101,5 +113,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     _notificationsEnabled.value = true
     _fingerprintEnabled.value = false
     _pinCode.value = ""
+    _backgroundColor.value = BackgroundStart.toArgb()
     }
 }

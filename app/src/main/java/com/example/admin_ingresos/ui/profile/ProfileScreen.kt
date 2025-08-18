@@ -21,6 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
@@ -56,6 +59,9 @@ fun ProfileScreen(
     val language by profileVm.language.collectAsState()
     val notificationsEnabled by profileVm.notificationsEnabled.collectAsState()
     val fingerprintEnabledState by profileVm.fingerprintEnabled.collectAsState()
+    val backgroundColorInt by profileVm.backgroundColor.collectAsState()
+    // Helper to convert ARGB int to Compose Color
+    val backgroundColorCompose = remember(backgroundColorInt) { androidx.compose.ui.graphics.Color(backgroundColorInt) }
 
     var editName by remember { mutableStateOf(name) }
     var editEmail by remember { mutableStateOf(email) }
@@ -197,6 +203,47 @@ fun ProfileScreen(
                 }
             }
 
+            // Personalización - Color de fondo
+            GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhite, cornerRadius = 16.dp) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(text = "Personalización", style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+                    Text(text = "Color de fondo", color = TextPrimary)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    val swatches = listOf(
+                        androidx.compose.ui.graphics.Color(0xFF000000), // Negro
+                        androidx.compose.ui.graphics.Color(0xFF111111),
+                        androidx.compose.ui.graphics.Color(0xFF1F2937), // Gris oscuro
+                        androidx.compose.ui.graphics.Color(0xFF374151),
+                        androidx.compose.ui.graphics.Color(0xFF4B5563),
+                        androidx.compose.ui.graphics.Color(0xFF6B7280), // Gris medio
+                        androidx.compose.ui.graphics.Color(0xFFD1D5DB), // Gris claro
+                        androidx.compose.ui.graphics.Color(0xFFF3F4F6),
+                        androidx.compose.ui.graphics.Color(0xFFFFFFFF) // Blanco
+                    )
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        swatches.forEach { swatch ->
+                            val swatchInt = swatch.copy(alpha = 1f).toArgb()
+                            val selected = swatchInt == backgroundColorInt
+                            Box(modifier = Modifier
+                                .size(if (selected) 48.dp else 40.dp)
+                                .clip(CircleShape)
+                                .background(swatch)
+                                .padding(2.dp)
+                                .then(if (selected) Modifier.border(width = 2.dp, color = AccentVibrantStart, shape = CircleShape) else Modifier)
+                                .clickable {
+                                    profileVm.setBackgroundColor(swatchInt)
+                                }
+                            ) {
+                                if (selected) {
+                                    Icon(LucideIconMapper.Navigation.check, contentDescription = null, tint = Color.White, modifier = Modifier.align(Alignment.Center))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // Security
             GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhite, cornerRadius = 16.dp) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -234,6 +281,8 @@ fun ProfileScreen(
             // Actions
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Button(onClick = {
+                    // Persist selected background color as part of profile save
+                    profileVm.setBackgroundColor(backgroundColorInt)
                     profileVm.saveProfile(editName, editEmail, pickedAvatarUri?.toString(), editCurrency, editDarkMode, editPhone, editBio, editLanguage, editNotificationsEnabled, editFingerprintEnabled, pinInput)
                     coroutineScope.launch { snackbarHostState.showSnackbar("Perfil guardado") }
                 }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart)) {

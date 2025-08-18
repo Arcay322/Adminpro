@@ -10,6 +10,9 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -50,28 +53,29 @@ private val GlassmorphismColorScheme = darkColorScheme(
 
 @Composable
 fun CashFlowTheme(
+    backgroundColor: Color? = null,
     darkTheme: Boolean = true, // Forzamos dark theme para glassmorphism
     dynamicColor: Boolean = false, // Deshabilitamos colores dinámicos
     content: @Composable () -> Unit
 ) {
-    // Siempre usamos el esquema glassmorphism
-    val colorScheme = GlassmorphismColorScheme
-    
+    // Use the glassmorphism base scheme but override the background if provided
+    val base = GlassmorphismColorScheme
+    val colorScheme = if (backgroundColor != null) base.copy(background = backgroundColor, onBackground = TextPrimary) else base
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            // Usar color de fondo nocturno para la barra de estado y la barra de navegación
-            window.statusBarColor = BackgroundStart.toArgb()
-            // Ensure navigation bar matches app background so we don't see a black strip
-            window.navigationBarColor = BackgroundStart.toArgb()
+            // Use provided background color for status & navigation bars when available
+            val bg = (backgroundColor ?: BackgroundStart).toArgb()
+            window.statusBarColor = bg
+            window.navigationBarColor = bg
             val insetsController = WindowCompat.getInsetsController(window, view)
             insetsController.isAppearanceLightStatusBars = false
-            // Keep navigation bar icons suitable for dark background
             try {
                 insetsController.isAppearanceLightNavigationBars = false
             } catch (_: Exception) {
-                // Some platform versions may not support this property; ignore if absent
+                // ignore
             }
         }
     }
@@ -87,11 +91,13 @@ fun CashFlowTheme(
 // Alias para compatibilidad - siempre usa glassmorphism
 @Composable
 fun Admin_ingresosTheme(
+    backgroundColor: Color? = null,
     darkTheme: Boolean = true,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     CashFlowTheme(
+        backgroundColor = backgroundColor,
         darkTheme = true,
         dynamicColor = false,
         content = content
