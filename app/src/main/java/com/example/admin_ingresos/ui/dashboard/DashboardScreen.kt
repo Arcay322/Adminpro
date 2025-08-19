@@ -758,102 +758,38 @@ private fun TrendsAndInsights(
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
-            // Top small cards
+            // Top small cards using InsightCard structure (header icon+title, big value, subtitle)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                // Ingresos (mostrar solo porcentaje)
-                GlassCard(modifier = Modifier.weight(1f), backgroundColor = GlassWhiteSubtle, cornerRadius = 16.dp) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(modifier = Modifier.size(28.dp).background(IncomeGreen.copy(alpha = 0.12f), CircleShape), contentAlignment = Alignment.Center) {
-                                Icon(imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon("ingreso"), contentDescription = null, tint = IncomeGreen, modifier = Modifier.size(14.dp))
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(text = "Ingresos", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = if (incomeChangePercent >= 0) "+${incomeChangePercent.toInt()}%" else "${incomeChangePercent.toInt()}%",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (incomeChangePercent >= 0) IncomeGreen else ExpenseRed,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = "vs. mes pasado", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-                            // kept small metadata slot
-                            Box {}
-                        }
-                    }
-                }
+                InsightCard(
+                    title = "Ingresos",
+                    value = if (incomeChangePercent >= 0) "+${incomeChangePercent.toInt()}%" else "${incomeChangePercent.toInt()}%",
+                    subtitle = "vs. mes pasado",
+                    icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon("ingreso"),
+                    color = IncomeGreen,
+                    modifier = Modifier.weight(1f)
+                )
 
-                // Gastos (mostrar solo porcentaje)
-                GlassCard(modifier = Modifier.weight(1f), backgroundColor = GlassWhiteSubtle, cornerRadius = 16.dp) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(modifier = Modifier.size(28.dp).background(ExpenseRed.copy(alpha = 0.12f), CircleShape), contentAlignment = Alignment.Center) {
-                                Icon(imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon("gasto"), contentDescription = null, tint = ExpenseRed, modifier = Modifier.size(14.dp))
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(text = "Gastos", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = if (expenseChangePercent >= 0) "+${expenseChangePercent.toInt()}%" else "${expenseChangePercent.toInt()}%",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (expenseChangePercent > 0) ExpenseRed else IncomeGreen,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = "vs. mes pasado", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-                            Box {}
-                        }
-                    }
-                }
+                InsightCard(
+                    title = "Gastos",
+                    value = if (expenseChangePercent >= 0) "+${expenseChangePercent.toInt()}%" else "${expenseChangePercent.toInt()}%",
+                    subtitle = "vs. mes pasado",
+                    icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon("gasto"),
+                    color = ExpenseRed,
+                    modifier = Modifier.weight(1f)
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Large savings card
-            GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhiteSubtle, cornerRadius = 16.dp) {
-                Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier = Modifier.size(40.dp).background(Color(0xFF42A5F5).copy(alpha = 0.12f), CircleShape), contentAlignment = Alignment.Center) {
-                            Icon(imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromCategoryName("ahorros"), contentDescription = null, tint = Color(0xFF42A5F5), modifier = Modifier.size(20.dp))
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(text = "Ahorro actual", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = if (savingsDelta >= 0) "+${savingsDelta.toInt()}%" else "${savingsDelta.toInt()}%",
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = if (savingsDelta >= 0) IncomeGreen else ExpenseRed,
-                                maxLines = 1,
-                                softWrap = false,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(text = if (savingsDelta >= 0) "+${savingsDelta.toInt()}%" else "${savingsDelta.toInt()}%", fontWeight = FontWeight.Bold, color = if (savingsDelta >= 0) IncomeGreen else ExpenseRed)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = "vs. mes pasado", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-                    }
-                }
-            }
+            // Large savings card using InsightCard structure
+            InsightCard(
+                title = "Ahorro actual",
+                value = if (savingsDelta >= 0) "+${savingsDelta.toInt()}%" else "${savingsDelta.toInt()}%",
+                subtitle = "vs. mes pasado",
+                icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromCategoryName("ahorros"),
+                color = Color(0xFF42A5F5),
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
