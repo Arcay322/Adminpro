@@ -387,7 +387,7 @@ private fun MainBalanceCards(
             title = "Balance Total",
             amount = formatter.format(currentBalance),
             subtitle = "Actualizado ahora",
-            icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromCategoryName("ahorros"),
+            icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getNavigationIcon("DollarSign"),
             onClick = onViewDetails,
             modifier = Modifier.fillMaxWidth()
         )
@@ -766,6 +766,7 @@ private fun TrendsAndInsights(
                     subtitle = "vs. mes pasado",
                     icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon("ingreso"),
                     color = IncomeGreen,
+                    valueColor = if (incomeChangePercent >= 0) IncomeGreen else ExpenseRed,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -775,6 +776,7 @@ private fun TrendsAndInsights(
                     subtitle = "vs. mes pasado",
                     icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon("gasto"),
                     color = ExpenseRed,
+                    valueColor = if (expenseChangePercent > 0) ExpenseRed else IncomeGreen,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -788,6 +790,7 @@ private fun TrendsAndInsights(
                 subtitle = "vs. mes pasado",
                 icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromCategoryName("ahorros"),
                 color = Color(0xFF42A5F5),
+                valueColor = if (savingsDelta >= 0) IncomeGreen else ExpenseRed,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -801,6 +804,7 @@ private fun InsightCard(
     subtitle: String,
     icon: ImageVector,
     color: Color,
+    valueColor: Color? = null,
     modifier: Modifier = Modifier
 ) {
     GlassCard(
@@ -828,12 +832,12 @@ private fun InsightCard(
                 )
             }
 
-            // big value
+            // big value (allow overriding color)
             Text(
                 text = value,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary,
+                color = valueColor ?: TextPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 softWrap = false
