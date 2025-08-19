@@ -168,13 +168,13 @@ fun DashboardScreen(
                     visible = !uiState.isLoading,
                     enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
                 ) {
-                        MainBalanceCards(
-                            currentBalance = animatedBalance.toDouble(),
-                            monthlyIncome = uiState.monthlyIncome,
-                            monthlyExpenses = uiState.monthlyExpenses,
-                            monthlyTransfers = uiState.monthlyTransfers,
-                            onViewDetails = { onNavigateToReports() }
-                        )
+                                MainBalanceCards(
+                                    currentBalance = animatedBalance.toDouble(),
+                                    monthlyIncome = uiState.monthlyIncome,
+                                    monthlyExpenses = uiState.monthlyExpenses,
+                                    monthlyTransfers = uiState.monthlyTransfers,
+                                    onViewDetails = { onNavigateToReports() }
+                                )
                 }
             }
 
@@ -274,83 +274,6 @@ fun DashboardScreen(
                                 Icon(imageVector = Icons.Default.Add, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text("Agregar Transacción")
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Metas de ahorro
-            item {
-                AnimatedVisibility(
-                    visible = !uiState.isLoading,
-                    enter = slideInVertically(initialOffsetY = { it / 7 }) + fadeIn()
-                ) {
-                    SavingsGoalsSection(savingsGoalViewModel)
-                }
-            }
-
-            // Flujo de efectivo semanal
-            item {
-                AnimatedVisibility(
-                    visible = !uiState.isLoading,
-                    enter = slideInVertically(initialOffsetY = { it / 8 }) + fadeIn()
-                ) {
-                    GlassCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        backgroundColor = GlassWhite,
-                        cornerRadius = 20.dp
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Flujo de efectivo semanal",
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = TextPrimary
-                                )
-
-                                TextButton(onClick = { /* TODO: ver detalles semanal */ }) {
-                                    Text(
-                                        text = "Ver",
-                                        color = AccentVibrantStart,
-                                        fontSize = 12.sp
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            if (weeklyData.isEmpty()) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 16.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "Sin datos para esta semana",
-                                        color = TextSecondary
-                                    )
-                                }
-                            } else {
-                                val maxValue = (weeklyData.maxOfOrNull { maxOf(it.income, it.expense) } ?: 1.0)
-
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 8.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.Bottom
-                                ) {
-                                    weeklyData.forEach { day ->
-                                        WeeklyBarChart(day = day, maxValue = maxValue)
-                                    }
-                                }
                             }
                         }
                     }
