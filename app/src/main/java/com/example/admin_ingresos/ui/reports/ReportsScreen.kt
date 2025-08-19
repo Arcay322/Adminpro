@@ -446,7 +446,7 @@ fun FinancialSummary(reportData: ReportData) {
         // Large balance card first (like the design samples)
         BalanceCardLarge(
             title = "Balance Total",
-            amount = formatter.format(reportData.netSavings),
+            amount = formatter.format(reportData.netSavings).replace(" ", "\u00A0"),
             subtitle = "Actualizado ahora",
             modifier = Modifier.fillMaxWidth()
         )
@@ -455,21 +455,21 @@ fun FinancialSummary(reportData: ReportData) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 MiniSummaryCard(
                     title = "Ingresos",
-                    amount = formatter.format(reportData.totalIncome),
+                    amount = formatter.format(reportData.totalIncome).replace(" ", "\u00A0"),
                     color = IncomeGreen,
                     modifier = Modifier.weight(1f)
                 )
 
                 MiniSummaryCard(
                     title = "Gastos",
-                    amount = formatter.format(reportData.totalExpenses),
+                    amount = formatter.format(reportData.totalExpenses).replace(" ", "\u00A0"),
                     color = ExpenseRed,
                     modifier = Modifier.weight(1f)
                 )
 
                 MiniSummaryCard(
                     title = "Ahorro",
-                    amount = formatter.format(reportData.totalTransfers),
+                    amount = formatter.format(reportData.totalTransfers).replace(" ", "\u00A0"),
                     color = Color(0xFF42A5F5),
                     modifier = Modifier.weight(1f)
                 )
@@ -887,13 +887,142 @@ fun LineChart(data: List<TrendDataPoint>, modifier: Modifier = Modifier) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         Text(text = sdf.format(Date(point.timestamp)), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = "Ingresos: ${formatter.format(point.income)}", color = IncomeGreen, fontSize = 12.sp)
-                        Text(text = "Gastos: ${formatter.format(point.expense)}", color = ExpenseRed, fontSize = 12.sp)
+                        Text(text = "Ingresos: ${formatter.format(point.income).replace(" ", "\u00A0")}", color = IncomeGreen, fontSize = 12.sp, maxLines = 1)
+                        Text(text = "Gastos: ${formatter.format(point.expense).replace(" ", "\u00A0")}", color = ExpenseRed, fontSize = 12.sp, maxLines = 1)
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+fun TendenciasInsights(reportData: ReportData) {
+    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+
+    Column {
+        // compute simple deltas from the trend (last vs previous point). Falls back to 0.
+        val incomeDelta = computeDeltaFromTrend(reportData.incomeVsExpenseTrend) { it.income }
+        val expenseDelta = computeDeltaFromTrend(reportData.incomeVsExpenseTrend) { it.expense }
+        // approximate savings delta from net (income - expense) trend
+        val savingsDelta = computeDeltaFromTrend(reportData.incomeVsExpenseTrend) { it.income - it.expense }
+
+        // Top row: two small cards (Ingresos, Gastos)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            InsightSmallCard(
+                title = "Ingresos",
+                value = formatter.format(reportData.totalIncome).replace(" ", "\u00A0"),
+                percentText = calcDeltaText(incomeDelta),
+                percentColor = if (incomeDelta >= 0) IncomeGreen else ExpenseRed,
+                iconColor = IncomeGreen,
+                modifier = Modifier.weight(1f)
+            )
+
+            InsightSmallCard(
+                title = "Gastos",
+                value = formatter.format(reportData.totalExpenses).replace(" ", "\u00A0"),
+                percentText = calcDeltaText(expenseDelta),
+                percentColor = if (expenseDelta >= 0) ExpenseRed else IncomeGreen,
+                iconColor = ExpenseRed,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Large wide card: Ahorro actual
+        InsightLargeCard(
+            title = "Ahorro actual",
+            value = formatter.format(reportData.totalTransfers).replace(" ", "\u00A0"),
+            percentText = calcDeltaText(savingsDelta),
+            percentColor = if (savingsDelta >= 0) IncomeGreen else ExpenseRed,
+            iconColor = Color(0xFF42A5F5),
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+private fun InsightSmallCard(
+    title: String,
+    value: String,
+    percentText: String,
+    percentColor: Color,
+    iconColor: Color,
+    modifier: Modifier = Modifier
+) {
+    GlassCard(modifier = modifier) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.size(34.dp).clip(CircleShape).background(iconColor.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
+                    // small glyph
+                    Canvas(modifier = Modifier.size(18.dp)) {
+                        drawCircle(color = iconColor.copy(alpha = 0.9f), radius = size.minDimension / 2f)
+                    }
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Column {
+                    Text(text = title, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(text = value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(text = percentText, color = percentColor, fontWeight = FontWeight.Bold)
+                Text(text = "vs. mes pasado", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+            }
+        }
+    }
+}
+
+@Composable
+private fun InsightLargeCard(
+    title: String,
+    value: String,
+    percentText: String,
+    percentColor: Color,
+    iconColor: Color,
+    modifier: Modifier = Modifier
+) {
+    GlassCard(modifier = modifier) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(iconColor.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
+                    Canvas(modifier = Modifier.size(20.dp)) {
+                        drawCircle(color = iconColor.copy(alpha = 0.95f), radius = size.minDimension / 2f)
+                    }
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = title, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(text = value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
+                }
+                // small percent on the right
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(text = percentText, color = percentColor, fontWeight = FontWeight.Bold)
+                    Text(text = "vs. mes pasado", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                }
+            }
+        }
+    }
+}
+
+private fun calcDeltaText(delta: Double): String {
+    if (delta.isNaN()) return ""
+    val sign = if (delta >= 0) "+" else ""
+    val pct = kotlin.math.abs(delta)
+    val formatted = if (pct == kotlin.math.floor(pct)) "%d%%".format(pct.toInt()) else "%.1f%%".format(pct)
+    return "$sign$formatted"
+}
+
+private fun computeDeltaFromTrend(data: List<TrendDataPoint>, selector: (TrendDataPoint) -> Double): Double {
+    if (data.size < 2) return Double.NaN
+    val last = selector(data.last())
+    val prev = selector(data[data.size - 2])
+    if (prev == 0.0) return Double.NaN
+    return ((last - prev) / kotlin.math.abs(prev)) * 100.0
 }
 
 @Composable
@@ -1032,10 +1161,10 @@ fun BudgetComparisonItem(item: BudgetComparison) {
         Spacer(modifier = Modifier.height(6.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Column {
-                Text(text = "Gastado: ${formatter.format(item.actualAmount)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-                Text(text = "Presupuesto (ajust.): ${formatter.format(item.proratedAmount)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                Text(text = "Gastado: ${formatter.format(item.actualAmount).replace(" ", "\u00A0")}", style = MaterialTheme.typography.bodySmall, color = TextSecondary, maxLines = 1)
+                Text(text = "Presupuesto (ajust.): ${formatter.format(item.proratedAmount).replace(" ", "\u00A0")}", style = MaterialTheme.typography.bodySmall, color = TextSecondary, maxLines = 1)
                 if (item.proratedAmount != item.budget.amount) {
-                    Text(text = "Original: ${formatter.format(item.budget.amount)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                    Text(text = "Original: ${formatter.format(item.budget.amount).replace(" ", "\u00A0")}", style = MaterialTheme.typography.bodySmall, color = TextSecondary, maxLines = 1)
                 }
             }
             // show absolute over/remaining amounts relative to the prorated budget for the selected range
@@ -1045,9 +1174,9 @@ fun BudgetComparisonItem(item: BudgetComparison) {
             } else {
                 val overAmount = item.actualAmount - item.proratedAmount
                 if (overAmount > 0.0) {
-                    Text(text = "Sobre: ${formatter.format(overAmount)}", color = ExpenseRed, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
+                    Text(text = "Sobre: ${formatter.format(overAmount).replace(" ", "\u00A0")}", color = ExpenseRed, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic, maxLines = 1)
                 } else {
-                    Text(text = "Libre: ${formatter.format(-overAmount)}", color = IncomeGreen, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
+                    Text(text = "Libre: ${formatter.format(-overAmount).replace(" ", "\u00A0")}", color = IncomeGreen, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic, maxLines = 1)
                 }
             }
         }

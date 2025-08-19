@@ -464,40 +464,46 @@ private fun MainBalanceCards(
             title = "Balance Total",
             amount = formatter.format(currentBalance),
             subtitle = "Actualizado ahora",
+            icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromCategoryName("ahorros"),
             onClick = onViewDetails,
             modifier = Modifier.fillMaxWidth()
         )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            AdvancedMetricCard(
-                title = "Ingresos",
-                value = formatter.format(monthlyIncome),
-                subtitle = "Este mes",
-                icon = Icons.AutoMirrored.Filled.TrendingUp,
-                color = IncomeGreen,
-                modifier = Modifier.weight(1f)
-            )
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                InsightCard(
+                    title = "Ingresos",
+                    value = formatter.format(monthlyIncome).replace(" ", "\u00A0"),
+                    subtitle = "Este mes",
+                    icon = Icons.AutoMirrored.Filled.TrendingUp,
+                    color = IncomeGreen,
+                    modifier = Modifier.weight(1f)
+                )
 
-            AdvancedMetricCard(
-                title = "Gastos",
-                value = formatter.format(monthlyExpenses),
-                subtitle = "Este mes",
-                icon = Icons.AutoMirrored.Filled.TrendingDown,
-                color = ExpenseRed,
-                modifier = Modifier.weight(1f)
-            )
+                InsightCard(
+                    title = "Gastos",
+                    value = formatter.format(monthlyExpenses).replace(" ", "\u00A0"),
+                    subtitle = "Este mes",
+                    icon = Icons.AutoMirrored.Filled.TrendingDown,
+                    color = ExpenseRed,
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-            AdvancedMetricCard(
-                title = "Ahorro",
-                value = formatter.format(monthlyTransfers),
-                subtitle = "Este mes",
-                icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromCategoryName("ahorros"),
-                color = Color(0xFF42A5F5), // blue for transfers
-                modifier = Modifier.weight(1f)
-            )
+            // Ahorro card on its own row below
+            Row(modifier = Modifier.fillMaxWidth()) {
+                InsightCard(
+                    title = "Ahorro",
+                    value = formatter.format(monthlyTransfers).replace(" ", "\u00A0"),
+                    subtitle = "Este mes",
+                    icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromCategoryName("ahorros"),
+                    color = Color(0xFF42A5F5),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }
@@ -807,8 +813,13 @@ private fun TrendsAndInsights(
     expenseChangePercent: Double = 0.0,
     categoryExpenses: List<CategoryExpense> = emptyList()
 ) {
-    val savingsRate = if (monthlyIncome > 0) ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 else 0.0
     val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+    // compute simple savings rate and delta using provided change percents
+    val savingsRate = if (monthlyIncome > 0) ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 else 0.0
+    val prevIncome = if (incomeChangePercent != 0.0) monthlyIncome / (1 + (incomeChangePercent / 100.0)) else monthlyIncome
+    val prevExpenses = if (expenseChangePercent != 0.0) monthlyExpenses / (1 + (expenseChangePercent / 100.0)) else monthlyExpenses
+    val prevSavingsRate = if (prevIncome > 0) ((prevIncome - prevExpenses) / prevIncome) * 100 else 0.0
+    val savingsDelta = savingsRate - prevSavingsRate
 
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
@@ -821,118 +832,68 @@ private fun TrendsAndInsights(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 12.dp)
             )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Income trend card: simplified — show title + percent only
-                Box(modifier = Modifier.weight(1f)) {
-                    GlassCard(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        backgroundColor = GlassWhiteSubtle,
-                        cornerRadius = 16.dp
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.Start
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .background(IncomeGreen.copy(alpha = 0.12f), CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon("ingreso"),
-                                        contentDescription = "Ingresos",
-                                        tint = IncomeGreen,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(8.dp))
+            // Top small cards
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                // Ingresos (mostrar solo porcentaje)
+                GlassCard(modifier = Modifier.weight(1f), backgroundColor = GlassWhiteSubtle, cornerRadius = 16.dp) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.size(28.dp).background(IncomeGreen.copy(alpha = 0.12f), CircleShape), contentAlignment = Alignment.Center) {
+                                Icon(imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon("ingreso"), contentDescription = null, tint = IncomeGreen, modifier = Modifier.size(14.dp))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(text = "Ingresos", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                                Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = "Ingresos",
-                                    fontSize = 12.sp,
-                                    color = TextSecondary
+                                    text = if (incomeChangePercent >= 0) "+${incomeChangePercent.toInt()}%" else "${incomeChangePercent.toInt()}%",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (incomeChangePercent >= 0) IncomeGreen else ExpenseRed,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
-
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = if (incomeChangePercent >= 0) "+${incomeChangePercent.toInt()}%" else "${incomeChangePercent.toInt()}%",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (incomeChangePercent >= 0) IncomeGreen else ExpenseRed
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "vs. mes pasado",
-                                fontSize = 12.sp,
-                                color = TextSecondary
-                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = "vs. mes pasado", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                            // kept small metadata slot
+                            Box {}
                         }
                     }
                 }
 
-                // Expense trend card: simplified — show title + percent only
-                Box(modifier = Modifier.weight(1f)) {
-                    GlassCard(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        backgroundColor = GlassWhiteSubtle,
-                        cornerRadius = 16.dp
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.Start
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .background(ExpenseRed.copy(alpha = 0.12f), CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon("gasto"),
-                                        contentDescription = "Gastos",
-                                        tint = ExpenseRed,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(8.dp))
+                // Gastos (mostrar solo porcentaje)
+                GlassCard(modifier = Modifier.weight(1f), backgroundColor = GlassWhiteSubtle, cornerRadius = 16.dp) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.size(28.dp).background(ExpenseRed.copy(alpha = 0.12f), CircleShape), contentAlignment = Alignment.Center) {
+                                Icon(imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon("gasto"), contentDescription = null, tint = ExpenseRed, modifier = Modifier.size(14.dp))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(text = "Gastos", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                                Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = "Gastos",
-                                    fontSize = 12.sp,
-                                    color = TextSecondary
+                                    text = if (expenseChangePercent >= 0) "+${expenseChangePercent.toInt()}%" else "${expenseChangePercent.toInt()}%",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (expenseChangePercent > 0) ExpenseRed else IncomeGreen,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
-
-                            Spacer(modifier = Modifier.height(6.dp))
-                            val expenseColor = if (expenseChangePercent > 0) ExpenseRed else IncomeGreen
-                            Text(
-                                text = if (expenseChangePercent > 0) "+${expenseChangePercent.toInt()}%" else "${expenseChangePercent.toInt()}%",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = expenseColor
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "vs. mes pasado",
-                                fontSize = 12.sp,
-                                color = TextSecondary
-                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = "vs. mes pasado", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                            Box {}
                         }
                     }
                 }
@@ -940,184 +901,33 @@ private fun TrendsAndInsights(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Sección de ahorro: mostrar % de ahorro actual y comparación con mes pasado
-            val prevIncome = run {
-                try {
-                    if (incomeChangePercent != 0.0) monthlyIncome / (1 + (incomeChangePercent / 100.0)) else monthlyIncome
-                } catch (e: Exception) { monthlyIncome }
-            }
-            val prevExpenses = run {
-                try {
-                    if (expenseChangePercent != 0.0) monthlyExpenses / (1 + (expenseChangePercent / 100.0)) else monthlyExpenses
-                } catch (e: Exception) { monthlyExpenses }
-            }
-            val prevSavingsRate = if (prevIncome > 0) ((prevIncome - prevExpenses) / prevIncome) * 100 else 0.0
-            val savingsDelta = savingsRate - prevSavingsRate
-            val savingsDeltaColor = if (savingsDelta >= 0) IncomeGreen else ExpenseRed
-
-            GlassCard(
-                modifier = Modifier.fillMaxWidth(),
-                backgroundColor = GlassWhiteSubtle,
-                cornerRadius = 16.dp
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+            // Large savings card
+            GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhiteSubtle, cornerRadius = 16.dp) {
+                Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(IncomeGreen.copy(alpha = 0.12f), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromCategoryName("ahorros"),
-                                contentDescription = "Ahorro",
-                                tint = IncomeGreen,
-                                modifier = Modifier.size(20.dp)
-                            )
+                        Box(modifier = Modifier.size(40.dp).background(Color(0xFF42A5F5).copy(alpha = 0.12f), CircleShape), contentAlignment = Alignment.Center) {
+                            Icon(imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromCategoryName("ahorros"), contentDescription = null, tint = Color(0xFF42A5F5), modifier = Modifier.size(20.dp))
                         }
-
                         Spacer(modifier = Modifier.width(12.dp))
-
                         Column {
-                            Text(
-                                text = "Ahorro actual",
-                                fontSize = 12.sp,
-                                color = TextSecondary
-                            )
+                            Text(text = "Ahorro actual", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "${savingsRate.toInt()}%",
-                                fontSize = 16.sp,
+                                text = if (savingsDelta >= 0) "+${savingsDelta.toInt()}%" else "${savingsDelta.toInt()}%",
+                                style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = if (savingsRate >= 0) IncomeGreen else ExpenseRed
+                                color = if (savingsDelta >= 0) IncomeGreen else ExpenseRed,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
 
                     Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = if (savingsDelta >= 0) "+${savingsDelta.toInt()}%" else "${savingsDelta.toInt()}%",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = savingsDeltaColor
-                        )
+                        Text(text = if (savingsDelta >= 0) "+${savingsDelta.toInt()}%" else "${savingsDelta.toInt()}%", fontWeight = FontWeight.Bold, color = if (savingsDelta >= 0) IncomeGreen else ExpenseRed)
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "vs. mes pasado",
-                            fontSize = 12.sp,
-                            color = TextSecondary
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Insight Clave: show top spending category this month when available
-            val top = categoryExpenses.maxByOrNull { it.amount }
-
-            GlassCard(
-                modifier = Modifier.fillMaxWidth(),
-                backgroundColor = GlassWhiteSubtle,
-                cornerRadius = 16.dp
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(
-                        text = "Insight Clave",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextPrimary
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    if (top != null) {
-                        val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .background(top.color.copy(alpha = 0.2f), CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getCategoryIcon(
-                                            com.example.admin_ingresos.data.Category(0, top.name, "", "")
-                                        ),
-                                        contentDescription = top.name,
-                                        tint = top.color,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                Column {
-                                    Text(
-                                        text = top.name,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = TextPrimary
-                                    )
-                                    Text(
-                                        text = formatter.format(top.amount),
-                                        fontSize = 13.sp,
-                                        color = TextSecondary
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = "Representa ${top.percentage.toInt()}% de tus gastos este mes",
-                                        fontSize = 12.sp,
-                                        color = TextSecondary
-                                    )
-                                }
-                            }
-
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.TrendingDown,
-                                contentDescription = null,
-                                tint = ExpenseRed,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-                    } else {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(
-                                    text = "Tu mayor gasto fue en...",
-                                    fontSize = 13.sp,
-                                    color = TextSecondary
-                                )
-                                Text(
-                                    text = "--",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = TextPrimary
-                                )
-                            }
-
-                            Icon(
-                                imageVector = Icons.Default.Error,
-                                contentDescription = null,
-                                tint = TextSecondary,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
+                        Text(text = "vs. mes pasado", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                     }
                 }
             }
@@ -1139,42 +949,43 @@ private fun InsightCard(
         backgroundColor = GlassWhiteSubtle,
         cornerRadius = 16.dp
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(color.copy(alpha = 0.2f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = title,
-                    tint = color,
-                    modifier = Modifier.size(20.dp)
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            // header: small icon + title
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.size(20.dp), contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = title,
+                        tint = color,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = TextSecondary
                 )
             }
 
-            Column {
-                Text(
-                    text = value,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-                Text(
-                    text = title,
-                    fontSize = 12.sp,
-                    color = TextSecondary
-                )
-                Text(
-                    text = subtitle,
-                    fontSize = 10.sp,
-                    color = TextSecondary
-                )
-            }
+            // big value
+            Text(
+                text = value,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                softWrap = false
+            )
+
+            // subtitle
+            Text(
+                text = subtitle,
+                fontSize = 12.sp,
+                color = TextSecondary
+            )
         }
     }
 }
@@ -1271,14 +1082,17 @@ private fun DashboardTransactionItemCard(transaction: DashboardTransaction) {
         }
 
         Text(
-            text = "${if (transaction.isIncome) "+" else "-"}${formatter.format(transaction.amount)}",
+            text = "${if (transaction.isIncome) "+" else "-"}${formatter.format(transaction.amount).replace(" ", "\u00A0")}",
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
             color = when {
                 transaction.isIncome -> IncomeGreen
                 transaction.isTransfer -> Color(0xFF42A5F5)
                 else -> ExpenseRed
-            }
+            },
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            softWrap = false
         )
     }
 }

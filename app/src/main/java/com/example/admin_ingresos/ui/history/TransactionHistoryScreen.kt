@@ -428,14 +428,16 @@ fun ModernTransactionItem(
                     color = com.example.admin_ingresos.ui.theme.TextSecondary
                 )
                 
-                // Monto con estilo mejorado
+                // Monto con estilo mejorado (no-wrap)
                 Text(
-                    text = "${if (isIncome) "+" else "-"}${currencyFormat.format(transaction.amount)}",
+                    text = "${if (isIncome) "+" else "-"}${currencyFormat.format(transaction.amount).replace(" ", "\u00A0")}",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold
                     ),
                     color = amountColor,
-                    modifier = Modifier.padding(top = 4.dp)
+                    modifier = Modifier.padding(top = 4.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             
@@ -559,9 +561,9 @@ fun ModernTransactionStats(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // Ingresos
-                ImprovedStatsCard(
-                    title = "Ingresos",
-                    value = currencyFormat.format(totalIncome),
+                    ImprovedStatsCard(
+                        title = "Ingresos",
+                        value = currencyFormat.format(totalIncome).replace(" ", "\u00A0"),
                     count = transactions.count { it.type == "Ingreso" },
                     color = Color(0xFF4CAF50),
                     modifier = Modifier.weight(1f)
@@ -570,7 +572,7 @@ fun ModernTransactionStats(
                 // Gastos
                 ImprovedStatsCard(
                     title = "Gastos", 
-                    value = currencyFormat.format(totalExpenses),
+                    value = currencyFormat.format(totalExpenses).replace(" ", "\u00A0"),
                     count = transactions.count { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE },
                     color = Color(0xFFE57373),
                     modifier = Modifier.weight(1f)
@@ -579,7 +581,7 @@ fun ModernTransactionStats(
                 // Ahorros (Transfers)
                 ImprovedStatsCard(
                     title = "Ahorros",
-                    value = currencyFormat.format(totalTransfers),
+                    value = currencyFormat.format(totalTransfers).replace(" ", "\u00A0"),
                     count = transactions.count { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER },
                     color = Color(0xFF42A5F5),
                     modifier = Modifier.weight(1f)

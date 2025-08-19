@@ -21,6 +21,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import com.example.admin_ingresos.ui.theme.*
 
 /**
@@ -128,36 +130,43 @@ fun AdvancedBalanceCard(
                 .padding(4.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Header con icono
+            // Header with compact title + icon placed side-by-side
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = TextSecondary
-                )
-                
+                // small icon next to title (same visual weight as text)
                 icon?.let {
                     Icon(
                         imageVector = it,
                         contentDescription = null,
                         tint = AccentVibrantStart,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(16.dp)
                     )
+
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
+
+                Text(
+                    text = title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = TextSecondary
+                )
             }
             
-            // Monto principal
+            // Monto principal (no-wrap / usar NBSP para evitar quiebre en pantallas pequeñas)
             Text(
-                text = amount,
+                text = amount.replace(" ", "\u00A0"),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Black,
                 color = TextPrimary,
-                lineHeight = 36.sp
+                lineHeight = 36.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                softWrap = false,
+                textAlign = TextAlign.Start
             )
             
             // Subtítulo
@@ -174,16 +183,16 @@ fun AdvancedBalanceCard(
         // Efecto de brillo en la esquina
         Box(
             modifier = Modifier
-                .size(60.dp)
+                .size(36.dp)
                 .align(Alignment.TopEnd)
-                .offset(x = 20.dp, y = (-20).dp)
+                .offset(x = 8.dp, y = (-8).dp)
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
                             Color.Transparent
                         ),
-                        radius = 60f
+                        radius = 36f
                     )
                 )
         )
@@ -218,15 +227,21 @@ fun AdvancedMetricCard(
             onClick?.invoke()
         }
     ) {
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
+            // Header: small icon + title
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.size(20.dp), contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = title,
                     fontSize = 14.sp,
@@ -235,42 +250,30 @@ fun AdvancedMetricCard(
                     maxLines = 1,
                     softWrap = false
                 )
-                
-                Text(
-                    text = value,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
-                    maxLines = 1,
-                    softWrap = false
-                )
-                
-                subtitle?.let {
-                    Text(
-                        text = it,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextSecondary,
-                        maxLines = 1,
-                        softWrap = false
-                    )
-                }
             }
-            
-            // Icono con fondo glassmorphism - tamaño fijo para simetría
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(color.copy(alpha = 0.2f))
-                    .border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = color,
-                    modifier = Modifier.size(24.dp)
+
+            // Large value
+            Text(
+                text = value.replace(" ", "\u00A0"),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                softWrap = false,
+                textAlign = TextAlign.Start
+            )
+
+            // Subtitle
+            subtitle?.let {
+                Text(
+                    text = it,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    softWrap = false
                 )
             }
         }
