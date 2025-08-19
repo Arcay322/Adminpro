@@ -33,6 +33,17 @@ interface SavingsGoalDao {
     
     @Query("UPDATE savings_goals SET currentAmount = currentAmount + :amount WHERE id = :id")
     suspend fun addProgress(id: Long, amount: Double)
+
+    // Allow inserting a transaction directly from this DAO to enable atomic operations
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTransaction(transaction: com.example.admin_ingresos.data.Transaction): Long
+
+    // Atomic operation: add progress to savings goal and insert a corresponding transaction
+    @androidx.room.Transaction
+    suspend fun addProgressWithTransaction(id: Long, amount: Double, transaction: com.example.admin_ingresos.data.Transaction) {
+        addProgress(id, amount)
+        insertTransaction(transaction)
+    }
     
     @Query("SELECT COUNT(*) FROM savings_goals WHERE isActive = 1")
     suspend fun getActiveCount(): Int

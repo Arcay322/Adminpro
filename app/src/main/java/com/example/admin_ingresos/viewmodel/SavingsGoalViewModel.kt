@@ -75,8 +75,41 @@ class SavingsGoalViewModel(private val database: AppDatabase) : ViewModel() {
     fun addProgress(goalId: Long, amount: Double) {
         viewModelScope.launch {
             try {
+                // Update the savings goal stored amount
                 savingsGoalDao.addProgress(goalId, amount)
-                _uiState.value = _uiState.value.copy(message = "Progreso añadido exitosamente")
+
+                // Prepare atomic insertion: ensure category exists and perform both operations inside DAO transaction
+                try {
+                    val categoryDao = database.categoryDao()
+                    val existing = categoryDao.getCategoriesList().find { it.name.equals("Ahorro", ignoreCase = true) }
+                    val savingsCategoryId: Int = if (existing != null) {
+                        existing.id
+                    } else {
+                        val newCat = com.example.admin_ingresos.data.Category(
+                            name = "Ahorro",
+                            icon = "PiggyBank",
+                            color = "#10B981",
+                            isFavorite = false
+                        )
+                        categoryDao.insert(newCat).toInt()
+                    }
+
+                    val tx = com.example.admin_ingresos.data.Transaction(
+                        amount = amount,
+                        type = "Gasto",
+                        categoryId = savingsCategoryId,
+                        description = "Aporte a meta de ahorro (goalId=$goalId)",
+                        date = java.util.Date().time,
+                        paymentMethodId = null,
+                        goalId = goalId
+                    )
+
+                    // Use DAO @Transaction to perform both operations atomically
+                    savingsGoalDao.addProgressWithTransaction(goalId, amount, tx)
+                    _uiState.value = _uiState.value.copy(message = "Progreso añadido exitosamente")
+                } catch (inner: Exception) {
+                    _uiState.value = _uiState.value.copy(error = "Error al añadir progreso (transacción): ${inner.message}")
+                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = "Error al añadir progreso: ${e.message}")
             }

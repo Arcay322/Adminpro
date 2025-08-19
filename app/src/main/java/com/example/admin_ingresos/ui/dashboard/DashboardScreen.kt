@@ -214,7 +214,8 @@ fun DashboardScreen(
                             monthlyIncome = uiState.monthlyIncome,
                             monthlyExpenses = uiState.monthlyExpenses,
                             incomeChangePercent = uiState.incomeChangePercent,
-                            expenseChangePercent = uiState.expenseChangePercent
+                            expenseChangePercent = uiState.expenseChangePercent,
+                            categoryExpenses = uiState.categoryExpenses
                         )
                 }
             }
@@ -792,7 +793,8 @@ private fun TrendsAndInsights(
     monthlyIncome: Double,
     monthlyExpenses: Double,
     incomeChangePercent: Double = 0.0,
-    expenseChangePercent: Double = 0.0
+    expenseChangePercent: Double = 0.0,
+    categoryExpenses: List<CategoryExpense> = emptyList()
 ) {
     val savingsRate = if (monthlyIncome > 0) ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 else 0.0
     val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
@@ -815,84 +817,298 @@ private fun TrendsAndInsights(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // Income trend card: simplified — show title + percent only
                 Box(modifier = Modifier.weight(1f)) {
-                    InsightCard(
-                        title = "Ingresos",
-                        value = formatter.format(monthlyIncome),
-                        subtitle = "Este mes",
-                        icon = Icons.AutoMirrored.Filled.TrendingUp,
-                        color = IncomeGreen,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    // percent badge
-                    Text(
-                        text = "${incomeChangePercent.toInt()}%",
-                        fontSize = 12.sp,
-                        color = if (incomeChangePercent >= 0) IncomeGreen else ExpenseRed,
+                    GlassCard(
                         modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(end = 8.dp, top = 8.dp)
-                    )
-                }
+                            .fillMaxWidth(),
+                        backgroundColor = GlassWhiteSubtle,
+                        cornerRadius = 16.dp
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.Start
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .background(IncomeGreen.copy(alpha = 0.12f), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon("ingreso"),
+                                        contentDescription = "Ingresos",
+                                        tint = IncomeGreen,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Ingresos",
+                                    fontSize = 12.sp,
+                                    color = TextSecondary
+                                )
+                            }
 
-                Box(modifier = Modifier.weight(1f)) {
-                    InsightCard(
-                        title = "Gastos",
-                        value = formatter.format(monthlyExpenses),
-                        subtitle = "Este mes",
-                        icon = Icons.AutoMirrored.Filled.TrendingDown,
-                        color = ExpenseRed,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    // percent badge
-                    Text(
-                        text = "${expenseChangePercent.toInt()}%",
-                        fontSize = 12.sp,
-                        color = if (expenseChangePercent >= 0) ExpenseRed else IncomeGreen,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(end = 8.dp, top = 8.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "Meta de ahorro: 25%",
+                                text = if (incomeChangePercent >= 0) "+${incomeChangePercent.toInt()}%" else "${incomeChangePercent.toInt()}%",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (incomeChangePercent >= 0) IncomeGreen else ExpenseRed
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "vs. mes pasado",
                                 fontSize = 12.sp,
                                 color = TextSecondary
                             )
                         }
                     }
+                }
 
-                    Column(horizontalAlignment = Alignment.End) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                // Expense trend card: simplified — show title + percent only
+                Box(modifier = Modifier.weight(1f)) {
+                    GlassCard(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        backgroundColor = GlassWhiteSubtle,
+                        cornerRadius = 16.dp
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.Start
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .background(ExpenseRed.copy(alpha = 0.12f), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon("gasto"),
+                                        contentDescription = "Gastos",
+                                        tint = ExpenseRed,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Gastos",
+                                    fontSize = 12.sp,
+                                    color = TextSecondary
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+                            val expenseColor = if (expenseChangePercent > 0) ExpenseRed else IncomeGreen
                             Text(
-                                text = "${savingsRate.toInt()}%",
+                                text = if (expenseChangePercent > 0) "+${expenseChangePercent.toInt()}%" else "${expenseChangePercent.toInt()}%",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = expenseColor
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "vs. mes pasado",
                                 fontSize = 12.sp,
-                                color = TextPrimary,
-                                fontWeight = FontWeight.Medium
+                                color = TextSecondary
                             )
                         }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-                LinearProgressIndicator(
-                    progress = { (savingsRate / 25.0).toFloat().coerceAtMost(1f) },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = if (savingsRate >= 25) IncomeGreen else AccentVibrantStart,
-                    trackColor = GlassWhiteSubtle
-                )
+            // Sección de ahorro: mostrar % de ahorro actual y comparación con mes pasado
+            val prevIncome = run {
+                try {
+                    if (incomeChangePercent != 0.0) monthlyIncome / (1 + (incomeChangePercent / 100.0)) else monthlyIncome
+                } catch (e: Exception) { monthlyIncome }
+            }
+            val prevExpenses = run {
+                try {
+                    if (expenseChangePercent != 0.0) monthlyExpenses / (1 + (expenseChangePercent / 100.0)) else monthlyExpenses
+                } catch (e: Exception) { monthlyExpenses }
+            }
+            val prevSavingsRate = if (prevIncome > 0) ((prevIncome - prevExpenses) / prevIncome) * 100 else 0.0
+            val savingsDelta = savingsRate - prevSavingsRate
+            val savingsDeltaColor = if (savingsDelta >= 0) IncomeGreen else ExpenseRed
+
+            GlassCard(
+                modifier = Modifier.fillMaxWidth(),
+                backgroundColor = GlassWhiteSubtle,
+                cornerRadius = 16.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(IncomeGreen.copy(alpha = 0.12f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromCategoryName("ahorros"),
+                                contentDescription = "Ahorro",
+                                tint = IncomeGreen,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column {
+                            Text(
+                                text = "Ahorro actual",
+                                fontSize = 12.sp,
+                                color = TextSecondary
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "${savingsRate.toInt()}%",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (savingsRate >= 0) IncomeGreen else ExpenseRed
+                            )
+                        }
+                    }
+
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = if (savingsDelta >= 0) "+${savingsDelta.toInt()}%" else "${savingsDelta.toInt()}%",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = savingsDeltaColor
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "vs. mes pasado",
+                            fontSize = 12.sp,
+                            color = TextSecondary
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Insight Clave: show top spending category this month when available
+            val top = categoryExpenses.maxByOrNull { it.amount }
+
+            GlassCard(
+                modifier = Modifier.fillMaxWidth(),
+                backgroundColor = GlassWhiteSubtle,
+                cornerRadius = 16.dp
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        text = "Insight Clave",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextPrimary
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (top != null) {
+                        val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .background(top.color.copy(alpha = 0.2f), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getCategoryIcon(
+                                            com.example.admin_ingresos.data.Category(0, top.name, "", "")
+                                        ),
+                                        contentDescription = top.name,
+                                        tint = top.color,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Column {
+                                    Text(
+                                        text = top.name,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextPrimary
+                                    )
+                                    Text(
+                                        text = formatter.format(top.amount),
+                                        fontSize = 13.sp,
+                                        color = TextSecondary
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Representa ${top.percentage.toInt()}% de tus gastos este mes",
+                                        fontSize = 12.sp,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
+
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.TrendingDown,
+                                contentDescription = null,
+                                tint = ExpenseRed,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Tu mayor gasto fue en...",
+                                    fontSize = 13.sp,
+                                    color = TextSecondary
+                                )
+                                Text(
+                                    text = "--",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
+                                )
+                            }
+
+                            Icon(
+                                imageVector = Icons.Default.Error,
+                                contentDescription = null,
+                                tint = TextSecondary,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
     }

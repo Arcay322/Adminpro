@@ -11,7 +11,7 @@ import com.example.admin_ingresos.data.dao.SavingsGoalDao
 
 @Database(
     entities = [Category::class, PaymentMethod::class, Transaction::class, Budget::class, SavingsGoal::class, com.example.admin_ingresos.data.ExportRecord::class],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -24,40 +24,17 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun exportRecordDao(): ExportRecordDao
     
     companion object {
+        // Migration 1 -> 2
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // Add color column to categories table
                 database.execSQL("ALTER TABLE categories ADD COLUMN color TEXT NOT NULL DEFAULT '#85C1E9'")
-                // Add icon column to payment_methods table
                 database.execSQL("ALTER TABLE payment_methods ADD COLUMN icon TEXT NOT NULL DEFAULT '💰'")
             }
         }
 
-        val MIGRATION_2_3 = object : Migration(2, 3) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Create budgets table
-                database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS budgets (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        categoryId INTEGER NOT NULL,
-                        amount REAL NOT NULL,
-                        period TEXT NOT NULL,
-                        startDate INTEGER NOT NULL,
-                        endDate INTEGER NOT NULL,
-                        isActive INTEGER NOT NULL DEFAULT 1,
-                        createdAt INTEGER NOT NULL,
-                        updatedAt INTEGER NOT NULL,
-                        FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE CASCADE
-                    )
-                """)
-                // Create index for categoryId
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_budgets_categoryId ON budgets(categoryId)")
-            }
-        }
-
+        // Migration 3 -> 4: create savings_goals table
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // Create savings_goals table
                 database.execSQL("""
                     CREATE TABLE IF NOT EXISTS savings_goals (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -75,21 +52,21 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // Migration 5 -> 6: add receipt photo uri to transactions
         val MIGRATION_5_6 = object : Migration(5, 6) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("ALTER TABLE transactions ADD COLUMN receiptPhotoUri TEXT")
             }
         }
 
+        // Migration 6 -> 7: add ordering to categories
         val MIGRATION_6_7 = object : Migration(6, 7) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("ALTER TABLE categories ADD COLUMN `order` INTEGER NOT NULL DEFAULT 0")
             }
         }
 
-    // NOTE: ALL_MIGRATIONS is defined later to include newer migrations (e.g. MIGRATION_11_12).
-    // Previous duplicate declaration removed to avoid conflicting declarations.
-
+        // Migration 11 -> 12: add export_records table
         val MIGRATION_11_12 = object : Migration(11, 12) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("""
@@ -100,11 +77,25 @@ abstract class AppDatabase : RoomDatabase() {
                         type TEXT NOT NULL,
                         createdAt INTEGER NOT NULL
                     )
-                """
-                )
+                """)
             }
         }
 
-        val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_11_12)
+        // Migration 12 -> 13: add goalId to transactions
+        val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE transactions ADD COLUMN goalId INTEGER")
+            }
+        }
+
+        // Register all defined migrations here. Omit migrations that aren't declared in this file.
+        val ALL_MIGRATIONS = arrayOf(
+            MIGRATION_1_2,
+            MIGRATION_3_4,
+            MIGRATION_5_6,
+            MIGRATION_6_7,
+            MIGRATION_11_12,
+            MIGRATION_12_13
+        )
     }
 }
