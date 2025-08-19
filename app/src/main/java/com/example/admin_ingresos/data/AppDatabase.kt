@@ -84,7 +84,12 @@ abstract class AppDatabase : RoomDatabase() {
         // Migration 12 -> 13: add goalId to transactions
         val MIGRATION_12_13 = object : Migration(12, 13) {
             override fun migrate(database: SupportSQLiteDatabase) {
+                // Add nullable goalId column
                 database.execSQL("ALTER TABLE transactions ADD COLUMN goalId INTEGER")
+                // Convert existing transactions that are linked to a goal (if any) to the transfer/ahorro type
+                // so historical contributions don't keep being counted as expenses.
+                // Note: Transaction.TYPE_TRANSFER constant is in Kotlin code; in SQL we use the literal value.
+                database.execSQL("UPDATE transactions SET type = 'Transfer' WHERE goalId IS NOT NULL")
             }
         }
 

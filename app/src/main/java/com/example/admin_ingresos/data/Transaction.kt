@@ -16,3 +16,11 @@ data class Transaction(
     val goalId: Long? = null,
     val receiptPhotoUri: String? = null // URI de la foto del recibo
 )
+
+{
+    companion object {
+        const val TYPE_INCOME = "Ingreso"
+        const val TYPE_EXPENSE = "Gasto"
+        const val TYPE_TRANSFER = "Transfer"
+    }
+}

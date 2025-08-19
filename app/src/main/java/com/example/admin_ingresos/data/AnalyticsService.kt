@@ -18,16 +18,21 @@ class AnalyticsService {
                 month = calendar.get(Calendar.MONTH) + 1,
                 income = 0.0,
                 expenses = 0.0,
+                transfers = 0.0,
                 transactionCount = 0
             )
-            
+
             monthlyData[monthKey] = when (transaction.type) {
-                "Ingreso" -> existing.copy(
+                com.example.admin_ingresos.data.Transaction.TYPE_INCOME -> existing.copy(
                     income = existing.income + transaction.amount,
                     transactionCount = existing.transactionCount + 1
                 )
-                "Gasto" -> existing.copy(
+                com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE -> existing.copy(
                     expenses = existing.expenses + transaction.amount,
+                    transactionCount = existing.transactionCount + 1
+                )
+                com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER -> existing.copy(
+                    transfers = existing.transfers + transaction.amount,
                     transactionCount = existing.transactionCount + 1
                 )
                 else -> existing
@@ -44,8 +49,8 @@ class AnalyticsService {
                 incomeChange = calculatePercentageChange(previous?.income, current.income),
                 expenseChange = calculatePercentageChange(previous?.expenses, current.expenses),
                 balanceChange = calculatePercentageChange(
-                    previous?.let { it.income - it.expenses },
-                    current.income - current.expenses
+                    previous?.let { it.income - it.expenses - it.transfers },
+                    current.income - current.expenses - current.transfers
                 ),
                 transactionCountChange = calculatePercentageChange(
                     previous?.transactionCount?.toDouble(),
@@ -62,7 +67,7 @@ class AnalyticsService {
         val calendar = Calendar.getInstance()
         val categoryMonthlyData = mutableMapOf<Int, MutableMap<String, Double>>()
         
-        transactions.filter { it.type == "Gasto" }.forEach { transaction ->
+    transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.forEach { transaction ->
             calendar.timeInMillis = transaction.date
             val monthKey = "${calendar.get(Calendar.YEAR)}-${String.format("%02d", calendar.get(Calendar.MONTH) + 1)}"
             
@@ -99,7 +104,7 @@ class AnalyticsService {
         val hourOfDaySpending = mutableMapOf<Int, Double>()
         val monthlySpending = mutableMapOf<Int, Double>()
         
-        transactions.filter { it.type == "Gasto" }.forEach { transaction ->
+    transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.forEach { transaction ->
             calendar.timeInMillis = transaction.date
             
             val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
@@ -240,7 +245,7 @@ class AnalyticsService {
         
         // Get last 30 days transactions
         val thirtyDaysAgo = System.currentTimeMillis() - (30 * 24 * 60 * 60 * 1000L)
-        val recentTransactions = transactions.filter { it.date >= thirtyDaysAgo && it.type == "Gasto" }
+    val recentTransactions = transactions.filter { it.date >= thirtyDaysAgo && it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }
         
         if (recentTransactions.isEmpty()) return insights
         
@@ -309,7 +314,7 @@ class AnalyticsService {
         val insights = mutableListOf<FinancialInsight>()
         
         // Analyze transaction frequency vs amount
-        val categorySpending = transactions.filter { it.type == "Gasto" }
+    val categorySpending = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }
             .groupBy { it.categoryId }
             .mapValues { (_, transactions) ->
                 CategorySpendingAnalysis(
@@ -346,11 +351,12 @@ class AnalyticsService {
     ): List<FinancialInsight> {
         val insights = mutableListOf<FinancialInsight>()
         
-        val totalIncome = transactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
-        val totalExpenses = transactions.filter { it.type == "Gasto" }.sumOf { it.amount }
+    val totalIncome = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME }.sumOf { it.amount }
+    val totalExpenses = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
+    val totalTransfers = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER }.sumOf { it.amount }
         
         if (totalIncome > 0) {
-            val savingsRate = ((totalIncome - totalExpenses) / totalIncome) * 100
+            val savingsRate = ((totalIncome - totalExpenses - totalTransfers) / totalIncome) * 100
             
             when {
                 savingsRate < 10 -> {
@@ -378,7 +384,7 @@ class AnalyticsService {
         
         // Recommend budget creation for categories without budgets
         val categoriesWithBudgets = budgets.map { it.category.id }.toSet()
-        val expensesByCategory = transactions.filter { it.type == "Gasto" }
+    val expensesByCategory = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }
             .groupBy { it.categoryId }
             .mapValues { it.value.sumOf { transaction -> transaction.amount } }
             .toList()
@@ -726,9 +732,11 @@ data class MonthlyData(
     val month: Int,
     val income: Double,
     val expenses: Double,
+    val transfers: Double,
     val transactionCount: Int
 ) {
-    val balance: Double get() = income - expenses
+    // Balance should consider transfers (savings) as outflows from available balance
+    val balance: Double get() = income - expenses - transfers
     val monthName: String get() = getMonthName(month)
     
     private fun getMonthName(month: Int): String {

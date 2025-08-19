@@ -50,7 +50,7 @@ fun TransactionHistoryScreenNew(navController: NavController) {
         value = withContext(Dispatchers.IO) {
             when (selectedFilter) {
                 "Ingresos" -> db.transactionDao().getAll().filter { it.type == "Ingreso" }
-                "Gastos" -> db.transactionDao().getAll().filter { it.type == "Gasto" }
+                "Gastos" -> db.transactionDao().getAll().filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }
                 else -> db.transactionDao().getAll()
             }.let { list ->
                 when (selectedPeriod) {
@@ -88,7 +88,7 @@ fun TransactionHistoryScreenNew(navController: NavController) {
     
     // Calculate summary stats
     val totalIncome = filteredTransactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
-    val totalExpense = filteredTransactions.filter { it.type == "Gasto" }.sumOf { it.amount }
+    val totalExpense = filteredTransactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
     val netAmount = totalIncome - totalExpense
 
     Column(
@@ -398,16 +398,21 @@ private fun EnhancedTransactionItem(
             Card(
                 shape = RoundedCornerShape(8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (transaction.type == "Ingreso") 
-                        Color(0xFF4CAF50).copy(alpha = 0.1f) 
-                    else 
-                        Color(0xFFE57373).copy(alpha = 0.1f)
+                    containerColor = when (transaction.type) {
+                        com.example.admin_ingresos.data.Transaction.TYPE_INCOME -> Color(0xFF4CAF50).copy(alpha = 0.1f)
+                        com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE -> Color(0xFFE57373).copy(alpha = 0.1f)
+                        else -> MaterialTheme.colorScheme.surfaceVariant
+                    }
                 )
             ) {
                 Icon(
                     imageVector = getCategoryIcon(category?.name ?: ""),
                     contentDescription = null,
-                    tint = if (transaction.type == "Ingreso") Color(0xFF4CAF50) else Color(0xFFE57373),
+                    tint = when (transaction.type) {
+                        com.example.admin_ingresos.data.Transaction.TYPE_INCOME -> Color(0xFF4CAF50)
+                        com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE -> Color(0xFFE57373)
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                     modifier = Modifier
                         .size(40.dp)
                         .padding(8.dp)
@@ -464,7 +469,11 @@ private fun EnhancedTransactionItem(
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold
                     ),
-                    color = if (transaction.type == "Ingreso") Color(0xFF4CAF50) else Color(0xFFE57373)
+                    color = when (transaction.type) {
+                        com.example.admin_ingresos.data.Transaction.TYPE_INCOME -> Color(0xFF4CAF50)
+                        com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE -> Color(0xFFE57373)
+                        else -> MaterialTheme.colorScheme.onSurface
+                    }
                 )
                 
                 Box {

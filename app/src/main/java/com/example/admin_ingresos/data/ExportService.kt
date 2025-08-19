@@ -188,9 +188,11 @@ class ExportService(private val context: Context) {
 
             y += 24f
             // Summary
-            val totalIncome = transactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
-            val totalExpenses = transactions.filter { it.type == "Gasto" }.sumOf { it.amount }
-            val balance = totalIncome - totalExpenses
+            val totalIncome = transactions.filter { it.type == Transaction.TYPE_INCOME }.sumOf { it.amount }
+            val totalExpenses = transactions.filter { it.type == Transaction.TYPE_EXPENSE }.sumOf { it.amount }
+            val totalTransfers = transactions.filter { it.type == Transaction.TYPE_TRANSFER }.sumOf { it.amount }
+            // Transfers reduce the available balance but are reported separately
+            val balance = totalIncome - totalExpenses - totalTransfers
 
             paint.textSize = 12f
             paint.isFakeBoldText = true
@@ -200,6 +202,8 @@ class ExportService(private val context: Context) {
             canvas.drawText("Total Ingresos: $${String.format("%.2f", totalIncome)}", 40f, y, paint)
             y += 14f
             canvas.drawText("Total Gastos: $${String.format("%.2f", totalExpenses)}", 40f, y, paint)
+            y += 14f
+            canvas.drawText("Ahorros (transferencias): $${String.format("%.2f", totalTransfers)}", 40f, y, paint)
             y += 14f
             canvas.drawText("Balance: $${String.format("%.2f", balance)}", 40f, y, paint)
 
@@ -388,9 +392,10 @@ class ExportService(private val context: Context) {
         categories: List<Category>,
         title: String = "Resumen Financiero"
     ) {
-        val totalIncome = transactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
-        val totalExpenses = transactions.filter { it.type == "Gasto" }.sumOf { it.amount }
-        val balance = totalIncome - totalExpenses
+    val totalIncome = transactions.filter { it.type == Transaction.TYPE_INCOME }.sumOf { it.amount }
+    val totalExpenses = transactions.filter { it.type == Transaction.TYPE_EXPENSE }.sumOf { it.amount }
+        val totalTransfers = transactions.filter { it.type == Transaction.TYPE_TRANSFER }.sumOf { it.amount }
+        val balance = totalIncome - totalExpenses - totalTransfers
         
         val summary = buildString {
             appendLine("📊 $title")
@@ -399,6 +404,7 @@ class ExportService(private val context: Context) {
             appendLine("💰 Resumen Financiero:")
             appendLine("• Total Ingresos: $${String.format("%.2f", totalIncome)}")
             appendLine("• Total Gastos: $${String.format("%.2f", totalExpenses)}")
+            appendLine("• Total Ahorros: $${String.format("%.2f", totalTransfers)}")
             appendLine("• Balance: $${String.format("%.2f", balance)}")
             appendLine("• Total Transacciones: ${transactions.size}")
             appendLine()

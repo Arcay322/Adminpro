@@ -184,7 +184,8 @@ fun FilterBottomSheet(
                 // Transaction Types Section
                 item {
                     FilterSection(title = "Tipo de transacción") {
-                        val transactionTypes = listOf("Ingreso", "Gasto")
+                        // Include the new Ahorro (savings/transfer) type so it can be filtered separately
+                        val transactionTypes = listOf("Ingreso", "Gasto", "Ahorro")
 
                         transactionTypes.forEach { type ->
                             Row(

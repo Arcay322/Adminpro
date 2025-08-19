@@ -248,9 +248,10 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
     }
 
     private suspend fun buildReportFromTransactions(transactions: List<Transaction>): ReportData {
-        val totalIncome = transactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
-        val totalExpenses = transactions.filter { it.type == "Gasto" }.sumOf { it.amount }
-        val expenseByCategory = calculateExpenseByCategory(transactions.filter { it.type == "Gasto" })
+        val totalIncome = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME }.sumOf { it.amount }
+        val totalExpenses = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
+        val totalTransfers = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER }.sumOf { it.amount }
+    val expenseByCategory = calculateExpenseByCategory(transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE })
         val incomeVsExpenseTrend = calculateIncomeVsExpenseTrend(transactions)
     val budgets = budgetDao.getAllBudgets().first()
     // when called without an explicit UI range, assume budgets cover their own ranges; no proration
@@ -259,7 +260,7 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
         return ReportData(
             totalIncome = totalIncome,
             totalExpenses = totalExpenses,
-            netSavings = totalIncome - totalExpenses,
+            netSavings = totalIncome - totalExpenses - totalTransfers,
             expenseByCategory = expenseByCategory,
             incomeVsExpenseTrend = incomeVsExpenseTrend,
             budgetVsActual = budgetVsActual
@@ -344,17 +345,18 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
 
                 val budgets = budgetDao.getAllBudgets().first()
 
-                val totalIncome = transactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
-                val totalExpenses = transactions.filter { it.type == "Gasto" }.sumOf { it.amount }
+                val totalIncome = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME }.sumOf { it.amount }
+                val totalExpenses = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
+                val totalTransfers = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER }.sumOf { it.amount }
 
-                val expenseByCategory = calculateExpenseByCategory(transactions.filter { it.type == "Gasto" })
+                val expenseByCategory = calculateExpenseByCategory(transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE })
                 val incomeVsExpenseTrend = calculateIncomeVsExpenseTrend(transactions)
-                val budgetVsActual = calculateBudgetVsActual(transactions.filter { it.type == "Gasto" }, budgets, range)
+                val budgetVsActual = calculateBudgetVsActual(transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }, budgets, range)
 
                 val newReportData = ReportData(
                     totalIncome = totalIncome,
                     totalExpenses = totalExpenses,
-                    netSavings = totalIncome - totalExpenses,
+                    netSavings = totalIncome - totalExpenses - totalTransfers,
                     expenseByCategory = expenseByCategory,
                     incomeVsExpenseTrend = incomeVsExpenseTrend,
                     budgetVsActual = budgetVsActual

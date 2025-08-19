@@ -158,9 +158,11 @@ class DashboardViewModel(
             val currentCategories = categories.value // Usar las categorías ya observadas
 
             // Calcular balance actual
-            val totalIncome = transactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
-            val totalExpenses = transactions.filter { it.type == "Gasto" }.sumOf { it.amount }
-            val currentBalance = totalIncome - totalExpenses
+            val totalIncome = transactions.filter { it.type == Transaction.TYPE_INCOME }.sumOf { it.amount }
+            val totalExpenses = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
+            // Transfers (Ahorro) should reduce the available balance but not be counted as regular expenses in reports
+            val totalTransfers = transactions.filter { it.type == Transaction.TYPE_TRANSFER }.sumOf { it.amount }
+            val currentBalance = totalIncome - totalExpenses - totalTransfers
 
             // Calcular ingresos y gastos del mes actual
             val currentMonth = Calendar.getInstance().apply {
@@ -172,8 +174,11 @@ class DashboardViewModel(
             }.timeInMillis
 
             val monthlyTransactions = transactions.filter { it.date >= currentMonth }
-            val monthlyIncome = monthlyTransactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
-            val monthlyExpenses = monthlyTransactions.filter { it.type == "Gasto" }.sumOf { it.amount }
+            val monthlyIncome = monthlyTransactions.filter { it.type == Transaction.TYPE_INCOME }.sumOf { it.amount }
+            val monthlyExpenses = monthlyTransactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
+
+            // Monthly transfers (savings) — keep separated so reports that rely on expenses remain unchanged
+            val monthlyTransfers = monthlyTransactions.filter { it.type == Transaction.TYPE_TRANSFER }.sumOf { it.amount }
 
             // Obtener transacciones recientes (últimas 10)
             val recentTransactions = transactions
@@ -199,13 +204,13 @@ class DashboardViewModel(
                         categoryColor = category?.let { parseColorFromCategory(it) } ?: getCategoryColor(category?.name),
                         icon = iconVector,
                         date = formatDate(transaction.date),
-                        isIncome = transaction.type == "Ingreso"
+                        isIncome = transaction.type == Transaction.TYPE_INCOME
                     )
                 }
 
             // Calcular gastos por categoría
             val expensesByCategory = monthlyTransactions
-                .filter { it.type == "Gasto" }
+                .filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }
                 .groupBy { it.categoryId }
                 .map { (categoryId, categoryTransactions) ->
                     val category = currentCategories.find { it.id == categoryId }
@@ -241,7 +246,7 @@ class DashboardViewModel(
 
             val prevMonthTransactions = transactions.filter { it.date >= prevMonthStart && it.date <= prevMonthEnd }
             val prevMonthIncome = prevMonthTransactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
-            val prevMonthExpenses = prevMonthTransactions.filter { it.type == "Gasto" }.sumOf { it.amount }
+            val prevMonthExpenses = prevMonthTransactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
 
             val incomeChangePercent = if (prevMonthIncome > 0) ((monthlyIncome - prevMonthIncome) / prevMonthIncome) * 100 else 0.0
             val expenseChangePercent = if (prevMonthExpenses > 0) ((monthlyExpenses - prevMonthExpenses) / prevMonthExpenses) * 100 else 0.0
@@ -377,7 +382,7 @@ class DashboardViewModel(
 
             val currentData = currentWeekData[adjustedDay] ?: Pair(0.0, 0.0)
 
-            if (transaction.type == "Ingreso") {
+            if (transaction.type == Transaction.TYPE_INCOME) {
                 currentWeekData[adjustedDay] = Pair(
                     currentData.first + transaction.amount,
                     currentData.second

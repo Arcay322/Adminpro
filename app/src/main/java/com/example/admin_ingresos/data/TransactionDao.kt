@@ -25,6 +25,20 @@ interface TransactionDao {
 
     @Delete
     suspend fun delete(transaction: Transaction)
+
+    @Query("SELECT * FROM transactions WHERE id = :id LIMIT 1")
+    suspend fun findById(id: Int): Transaction?
+
+    // If a transaction linked to a savings goal is deleted, decrement the goal currentAmount atomically
+    @androidx.room.Transaction
+    suspend fun deleteAndReconcile(transaction: Transaction, savingsGoalDao: com.example.admin_ingresos.data.dao.SavingsGoalDao) {
+        // If this transaction is linked to a goal, subtract its amount from the goal
+        if (transaction.goalId != null) {
+            // Use DAO method to subtract progress (add negative)
+            savingsGoalDao.addProgress(transaction.goalId, -transaction.amount)
+        }
+        delete(transaction)
+    }
     
     @Query("SELECT DISTINCT description FROM transactions WHERE description != '' ORDER BY description ASC")
     suspend fun getDistinctDescriptions(): List<String>

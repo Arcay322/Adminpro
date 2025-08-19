@@ -296,7 +296,7 @@ fun EditTransactionDialog(
                 Text("Tipo de transacción", color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f), style = MaterialTheme.typography.bodyMedium)
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("Ingreso", "Gasto").forEach { type ->
+                    listOf("Ingreso", "Gasto", "Ahorro").forEach { type ->
                         FilterChip(
                             selected = editType == type,
                             onClick = { editType = type },
@@ -352,7 +352,7 @@ fun ModernTransactionItem(
     onDelete: () -> Unit,
     onClick: () -> Unit = {}
 ) {
-    val isIncome = transaction.type == "Ingreso"
+    val isIncome = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME
     // derive category color from hex string; fallback to neutral
     val categoryColor = try {
         Color(android.graphics.Color.parseColor(category.color))
@@ -360,7 +360,11 @@ fun ModernTransactionItem(
         Color(0xFF85C1E9)
     }
     // amount color stays green for income and red for expense
-    val amountColor = if (isIncome) Color(0xFF4CAF50) else Color(0xFFE57373)
+    val amountColor = when {
+        transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME -> Color(0xFF4CAF50)
+        transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER -> Color(0xFF42A5F5)
+        else -> Color(0xFFE57373)
+    }
     val currencyFormat = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
     
     GlassCard(
@@ -507,9 +511,10 @@ fun ModernTransactionStats(
     val currencyFormat = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
     
     // Calcular estadísticas
-    val totalIncome = transactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
-    val totalExpenses = transactions.filter { it.type == "Gasto" }.sumOf { it.amount }
-    val netAmount = totalIncome - totalExpenses
+    val totalIncome = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME }.sumOf { it.amount }
+    val totalExpenses = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
+    val totalTransfers = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER }.sumOf { it.amount }
+    val netAmount = totalIncome - totalExpenses - totalTransfers
     
     GlassCard {
         Column(
@@ -566,8 +571,17 @@ fun ModernTransactionStats(
                 ImprovedStatsCard(
                     title = "Gastos", 
                     value = currencyFormat.format(totalExpenses),
-                    count = transactions.count { it.type == "Gasto" },
+                    count = transactions.count { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE },
                     color = Color(0xFFE57373),
+                    modifier = Modifier.weight(1f)
+                )
+                
+                // Ahorros (Transfers)
+                ImprovedStatsCard(
+                    title = "Ahorros",
+                    value = currencyFormat.format(totalTransfers),
+                    count = transactions.count { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER },
+                    color = Color(0xFF42A5F5),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -620,9 +634,9 @@ fun ModernTransactionStats(
                     
                     Icon(
                         imageVector = if (netAmount >= 0) 
-                            LucideIconMapper.getTransactionTypeIcon("Ingreso") 
+                            LucideIconMapper.getTransactionTypeIcon(com.example.admin_ingresos.data.Transaction.TYPE_INCOME) 
                         else 
-                            LucideIconMapper.getTransactionTypeIcon("Gasto"),
+                            LucideIconMapper.getTransactionTypeIcon(com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE),
                         contentDescription = null,
                         tint = if (netAmount >= 0) Color(0xFF4CAF50) else Color(0xFFE57373),
                         modifier = Modifier.size(28.dp)
@@ -854,7 +868,7 @@ fun ModernSearchAndFilters(
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(listOf("Todos", "Ingreso", "Gasto")) { type ->
+                        items(listOf("Todos", "Ingreso", "Gasto", "Ahorro")) { type ->
                             FilterChip(
                                 selected = selectedType == type,
                                 onClick = { onTypeChange(type) },
@@ -866,8 +880,9 @@ fun ModernSearchAndFilters(
                                         Icon(
                                             imageVector = when (type) {
                                                 "Todos" -> LucideIconMapper.getNavigationIcon("List")
-                                                "Ingreso" -> LucideIconMapper.getTransactionTypeIcon("Ingreso")
-                                                "Gasto" -> LucideIconMapper.getTransactionTypeIcon("Gasto")
+                                                "Ingreso" -> LucideIconMapper.getTransactionTypeIcon(com.example.admin_ingresos.data.Transaction.TYPE_INCOME)
+                                                "Gasto" -> LucideIconMapper.getTransactionTypeIcon(com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE)
+                                                "Ahorro" -> LucideIconMapper.getTransactionTypeIcon(com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER)
                                                 else -> LucideIconMapper.getNavigationIcon("List")
                                             },
                                             contentDescription = null,

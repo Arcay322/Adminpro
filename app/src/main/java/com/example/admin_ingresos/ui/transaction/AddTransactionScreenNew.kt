@@ -153,9 +153,17 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
     fun handleSave() {
         if (!isFormValid) return
         isLoading = true
+
+        val internalType = when (type) {
+            "Ingreso" -> com.example.admin_ingresos.data.Transaction.TYPE_INCOME
+            "Gasto" -> com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE
+            "Ahorro" -> com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER
+            else -> type
+        }
+
         pendingTransaction = com.example.admin_ingresos.data.Transaction(
             amount = amount.toDouble(),
-            type = type,
+            type = internalType,
             categoryId = selectedCategoryId!!,
             description = description.trim(),
             date = System.currentTimeMillis(),
@@ -235,6 +243,19 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                         Icon(Icons.Default.TrendingDown, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("Gasto", fontSize = MaterialTheme.typography.bodyMedium.fontSize)
+                    }
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Button(
+                        onClick = { type = "Ahorro" },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (type == "Ahorro") Color(0xFF42A5F5) else MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        modifier = Modifier.weight(1f).height(38.dp),
+                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
+                    ) {
+                        Icon(Icons.Default.Savings, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Ahorro", fontSize = MaterialTheme.typography.bodyMedium.fontSize)
                     }
                 }
             }
