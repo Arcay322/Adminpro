@@ -34,6 +34,7 @@ data class ReportsUiState(
 data class ReportData(
     val totalIncome: Double = 0.0,
     val totalExpenses: Double = 0.0,
+    val totalTransfers: Double = 0.0,
     val netSavings: Double = 0.0,
     val expenseByCategory: List<CategoryExpenseShare> = emptyList(),
     val incomeVsExpenseTrend: List<TrendDataPoint> = emptyList(),
@@ -248,9 +249,9 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
     }
 
     private suspend fun buildReportFromTransactions(transactions: List<Transaction>): ReportData {
-        val totalIncome = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME }.sumOf { it.amount }
-        val totalExpenses = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
-        val totalTransfers = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER }.sumOf { it.amount }
+    val totalIncome = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME }.sumOf { it.amount }
+    val totalExpenses = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
+    val totalTransfers = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER }.sumOf { it.amount }
     val expenseByCategory = calculateExpenseByCategory(transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE })
         val incomeVsExpenseTrend = calculateIncomeVsExpenseTrend(transactions)
     val budgets = budgetDao.getAllBudgets().first()
@@ -260,6 +261,7 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
         return ReportData(
             totalIncome = totalIncome,
             totalExpenses = totalExpenses,
+            totalTransfers = totalTransfers,
             netSavings = totalIncome - totalExpenses - totalTransfers,
             expenseByCategory = expenseByCategory,
             incomeVsExpenseTrend = incomeVsExpenseTrend,
@@ -356,6 +358,7 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
                 val newReportData = ReportData(
                     totalIncome = totalIncome,
                     totalExpenses = totalExpenses,
+                    totalTransfers = totalTransfers,
                     netSavings = totalIncome - totalExpenses - totalTransfers,
                     expenseByCategory = expenseByCategory,
                     incomeVsExpenseTrend = incomeVsExpenseTrend,

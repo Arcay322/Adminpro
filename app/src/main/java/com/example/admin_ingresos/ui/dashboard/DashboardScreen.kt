@@ -168,12 +168,13 @@ fun DashboardScreen(
                     visible = !uiState.isLoading,
                     enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
                 ) {
-                    MainBalanceCards(
-                        currentBalance = animatedBalance.toDouble(),
-                        monthlyIncome = uiState.monthlyIncome,
-                        monthlyExpenses = uiState.monthlyExpenses,
-                        onViewDetails = { onNavigateToReports() }
-                    )
+                        MainBalanceCards(
+                            currentBalance = animatedBalance.toDouble(),
+                            monthlyIncome = uiState.monthlyIncome,
+                            monthlyExpenses = uiState.monthlyExpenses,
+                            monthlyTransfers = uiState.monthlyTransfers,
+                            onViewDetails = { onNavigateToReports() }
+                        )
                 }
             }
 
@@ -451,6 +452,7 @@ private fun MainBalanceCards(
     currentBalance: Double,
     monthlyIncome: Double,
     monthlyExpenses: Double,
+    monthlyTransfers: Double,
     onViewDetails: () -> Unit
 ) {
     val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
@@ -485,6 +487,15 @@ private fun MainBalanceCards(
                 subtitle = "Este mes",
                 icon = Icons.AutoMirrored.Filled.TrendingDown,
                 color = ExpenseRed,
+                modifier = Modifier.weight(1f)
+            )
+
+            AdvancedMetricCard(
+                title = "Ahorro",
+                value = formatter.format(monthlyTransfers),
+                subtitle = "Este mes",
+                icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromCategoryName("ahorros"),
+                color = Color(0xFF42A5F5), // blue for transfers
                 modifier = Modifier.weight(1f)
             )
         }
@@ -1263,7 +1274,11 @@ private fun DashboardTransactionItemCard(transaction: DashboardTransaction) {
             text = "${if (transaction.isIncome) "+" else "-"}${formatter.format(transaction.amount)}",
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            color = if (transaction.isIncome) IncomeGreen else ExpenseRed
+            color = when {
+                transaction.isIncome -> IncomeGreen
+                transaction.isTransfer -> Color(0xFF42A5F5)
+                else -> ExpenseRed
+            }
         )
     }
 }

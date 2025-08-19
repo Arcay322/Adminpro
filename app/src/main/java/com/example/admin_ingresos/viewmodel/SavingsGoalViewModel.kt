@@ -94,15 +94,19 @@ class SavingsGoalViewModel(private val database: AppDatabase) : ViewModel() {
                         categoryDao.insert(newCat).toInt()
                     }
 
-                    val tx = com.example.admin_ingresos.data.Transaction(
-                        amount = amount,
-                        type = com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER,
-                        categoryId = savingsCategoryId,
-                        description = "Aporte a meta de ahorro (goalId=$goalId)",
-                        date = java.util.Date().time,
-                        paymentMethodId = null,
-                        goalId = goalId
-                    )
+                        // Resolve the goal name for a friendlier description
+                        val goal = savingsGoalDao.getById(goalId)
+                        val goalName = goal?.name ?: "meta"
+
+                        val tx = com.example.admin_ingresos.data.Transaction(
+                            amount = amount,
+                            type = com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER,
+                            categoryId = savingsCategoryId,
+                            description = "Aporte de ahorro a $goalName",
+                            date = java.util.Date().time,
+                            paymentMethodId = null,
+                            goalId = goalId
+                        )
 
                     // Use DAO @Transaction to perform both operations atomically
                     savingsGoalDao.addProgressWithTransaction(goalId, amount, tx)

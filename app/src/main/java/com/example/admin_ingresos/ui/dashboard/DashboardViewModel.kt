@@ -29,6 +29,8 @@ data class DashboardUiState(
     val currentBalance: Double = 0.0,
     val monthlyIncome: Double = 0.0,
     val monthlyExpenses: Double = 0.0,
+    val totalTransfers: Double = 0.0,
+    val monthlyTransfers: Double = 0.0,
     val incomeChangePercent: Double = 0.0,
     val expenseChangePercent: Double = 0.0,
     val recentTransactions: List<DashboardTransaction> = emptyList(),
@@ -43,7 +45,8 @@ data class DashboardTransaction(
     val categoryColor: Color,
     val icon: androidx.compose.ui.graphics.vector.ImageVector,
     val date: String,
-    val isIncome: Boolean
+    val isIncome: Boolean,
+    val isTransfer: Boolean
 )
 
 data class CategoryExpense(
@@ -204,7 +207,8 @@ class DashboardViewModel(
                         categoryColor = category?.let { parseColorFromCategory(it) } ?: getCategoryColor(category?.name),
                         icon = iconVector,
                         date = formatDate(transaction.date),
-                        isIncome = transaction.type == Transaction.TYPE_INCOME
+                        isIncome = transaction.type == Transaction.TYPE_INCOME,
+                        isTransfer = transaction.type == Transaction.TYPE_TRANSFER
                     )
                 }
 
@@ -256,6 +260,8 @@ class DashboardViewModel(
                 currentBalance = currentBalance,
                 monthlyIncome = monthlyIncome,
                 monthlyExpenses = monthlyExpenses,
+                totalTransfers = totalTransfers,
+                monthlyTransfers = monthlyTransfers,
                 incomeChangePercent = incomeChangePercent,
                 expenseChangePercent = expenseChangePercent,
                 recentTransactions = recentTransactions,

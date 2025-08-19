@@ -451,7 +451,7 @@ fun FinancialSummary(reportData: ReportData) {
             modifier = Modifier.fillMaxWidth()
         )
 
-        // Two small summary cards: Ingresos / Gastos
+        // Three small summary cards: Ingresos / Gastos / Ahorro
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 MiniSummaryCard(
                     title = "Ingresos",
@@ -464,6 +464,13 @@ fun FinancialSummary(reportData: ReportData) {
                     title = "Gastos",
                     amount = formatter.format(reportData.totalExpenses),
                     color = ExpenseRed,
+                    modifier = Modifier.weight(1f)
+                )
+
+                MiniSummaryCard(
+                    title = "Ahorro",
+                    amount = formatter.format(reportData.totalTransfers),
+                    color = Color(0xFF42A5F5),
                     modifier = Modifier.weight(1f)
                 )
         }
