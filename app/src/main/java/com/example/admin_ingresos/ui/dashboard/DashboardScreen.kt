@@ -234,9 +234,9 @@ fun DashboardScreen(
                             cornerRadius = 20.dp
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
-                                // Header placed at top-right: title then horizontal legend below it
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                                    Column(horizontalAlignment = Alignment.End) {
+                                // Header placed at top-left: title then horizontal legend below it
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+                                    Column(horizontalAlignment = Alignment.Start) {
                                         Text(
                                             text = "Flujo Semanal",
                                             fontSize = 18.sp,
