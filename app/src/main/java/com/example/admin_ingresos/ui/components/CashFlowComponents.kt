@@ -684,16 +684,24 @@ fun AmountInputCard(
                 },
                 textStyle = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    color = if (transactionType == "Ingreso") Color(0xFF4CAF50) else Color(0xFFE57373)
+                    color = when (transactionType) {
+                        com.example.admin_ingresos.data.Transaction.TYPE_INCOME -> Color(0xFF4CAF50)
+                        com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER -> Color(0xFF42A5F5)
+                        else -> Color(0xFFE57373)
+                    }
                 ),
-                leadingIcon = { 
+                    leadingIcon = {
                     Text(
-                        "$", 
+                        "$",
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold
                         ),
-                        color = if (transactionType == "Ingreso") Color(0xFF4CAF50) else Color(0xFFE57373)
-                    ) 
+                        color = when (transactionType) {
+                            com.example.admin_ingresos.data.Transaction.TYPE_INCOME -> Color(0xFF4CAF50)
+                            com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER -> Color(0xFF42A5F5)
+                            else -> Color(0xFFE57373)
+                        }
+                    )
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 isError = error != null,
@@ -701,7 +709,11 @@ fun AmountInputCard(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = if (transactionType == "Ingreso") Color(0xFF4CAF50) else Color(0xFFE57373)
+                    focusedBorderColor = when (transactionType) {
+                        com.example.admin_ingresos.data.Transaction.TYPE_INCOME -> Color(0xFF4CAF50)
+                        com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER -> Color(0xFF42A5F5)
+                        else -> Color(0xFFE57373)
+                    }
                 )
             )
         }
@@ -843,7 +855,11 @@ fun EnhancedCategorySelector(
                             Icon(
                                 imageVector = getCategoryIcon(selectedCategory?.name ?: ""),
                                 contentDescription = null,
-                                tint = if (transactionType == "Ingreso") Color(0xFF4CAF50) else Color(0xFFE57373)
+                                tint = when (transactionType) {
+                                    com.example.admin_ingresos.data.Transaction.TYPE_INCOME -> Color(0xFF4CAF50)
+                                    com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER -> Color(0xFF42A5F5)
+                                    else -> Color(0xFFE57373)
+                                }
                             )
                         },
                         modifier = Modifier

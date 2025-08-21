@@ -221,6 +221,73 @@ fun DashboardScreen(
                 }
             }
 
+            // Weekly Flow chart (Ingresos / Gastos / Ahorro)
+            if (weeklyData.isNotEmpty()) {
+                item {
+                    AnimatedVisibility(
+                        visible = !uiState.isLoading,
+                        enter = slideInVertically(initialOffsetY = { it / 5 }) + fadeIn()
+                    ) {
+                        GlassCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = GlassWhite,
+                            cornerRadius = 20.dp
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                // Header placed at top-right: title then horizontal legend below it
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text(
+                                            text = "Flujo Semanal",
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TextPrimary
+                                        )
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                            LegendItem(color = IncomeGreen, label = "Ingreso")
+                                            LegendItem(color = ExpenseRed, label = "Gasto")
+                                            LegendItem(color = Color(0xFF42A5F5), label = "Ahorro")
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                // Compute max value across income/expense/transfers to scale bars
+                                val maxVal = weeklyData.maxOfOrNull { maxOf(it.income, it.expense, it.transfers) } ?: 0.0
+
+                                // Chart rows: distribute day groups evenly and keep bars compact
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceEvenly,
+                                    verticalAlignment = Alignment.Bottom
+                                ) {
+                                    weeklyData.forEach { day ->
+                                        WeeklyBarChart(day = day, maxValue = if (maxVal > 0) maxVal else 1.0)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Metas de Ahorro (sección)
+            item {
+                AnimatedVisibility(
+                    visible = !uiState.isLoading,
+                    enter = slideInVertically(initialOffsetY = { it / 6 }) + fadeIn()
+                ) {
+                    // Use the SavingsGoalViewModel created at screen level
+                    SavingsGoalsSection(savingsGoalViewModel)
+                }
+            }
+
             // Transacciones recientes (solo si hay datos)
             if (uiState.recentTransactions.isNotEmpty()) {
                 item {
@@ -1261,8 +1328,9 @@ private fun WeeklyBarChart(
     day: DayData,
     maxValue: Double
 ) {
-    val incomeHeight = ((day.income / maxValue) * 80).dp
-    val expenseHeight = ((day.expense / maxValue) * 80).dp
+    val incomeHeight = if (maxValue > 0) ((day.income / maxValue) * 80).dp else 0.dp
+    val expenseHeight = if (maxValue > 0) ((day.expense / maxValue) * 80).dp else 0.dp
+    val transferHeight = if (maxValue > 0) ((day.transfers / maxValue) * 80).dp else 0.dp
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -1287,6 +1355,16 @@ private fun WeeklyBarChart(
                     .height(expenseHeight)
                     .background(
                         ExpenseRed,
+                        RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                    )
+            )
+            // Transfers / Ahorro bar
+            Box(
+                modifier = Modifier
+                    .width(8.dp)
+                    .height(transferHeight)
+                    .background(
+                        Color(0xFF42A5F5),
                         RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
                     )
             )

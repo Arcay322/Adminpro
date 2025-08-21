@@ -190,37 +190,43 @@ fun TransactionItemContent(
             // Transaction type chip
             AssistChip(
                 onClick = { },
-                label = { 
+                label = {
                     Text(
                         text = transaction.type,
                         style = MaterialTheme.typography.labelSmall
-                    ) 
+                    )
                 },
                 colors = AssistChipDefaults.assistChipColors(
-                    containerColor = if (transaction.type == "Ingreso") {
-                        Color(0xFF4CAF50).copy(alpha = 0.2f)
-                    } else {
-                        MaterialTheme.colorScheme.errorContainer
+                    // Explicitly style Income, Transfer (Ahorro) and Expense
+                    containerColor = when (transaction.type) {
+                        Transaction.TYPE_INCOME -> Color(0xFF4CAF50).copy(alpha = 0.2f)
+                        Transaction.TYPE_TRANSFER -> Color(0xFF42A5F5).copy(alpha = 0.12f)
+                        else -> MaterialTheme.colorScheme.errorContainer
                     },
-                    labelColor = if (transaction.type == "Ingreso") {
-                        Color(0xFF4CAF50)
-                    } else {
-                        MaterialTheme.colorScheme.onErrorContainer
+                    labelColor = when (transaction.type) {
+                        Transaction.TYPE_INCOME -> Color(0xFF4CAF50)
+                        Transaction.TYPE_TRANSFER -> Color(0xFF42A5F5)
+                        else -> MaterialTheme.colorScheme.onErrorContainer
                     }
                 )
             )
             
             // Amount
+            val isIncome = transaction.type == Transaction.TYPE_INCOME
+            val isTransfer = transaction.type == Transaction.TYPE_TRANSFER
+            val amountSign = if (isIncome) "+" else "-"
+            val amountColor = when {
+                isIncome -> Color(0xFF4CAF50)
+                isTransfer -> Color(0xFF42A5F5)
+                else -> MaterialTheme.colorScheme.error
+            }
+
             Text(
-                text = "${if (transaction.type == "Ingreso") "+" else "-"}$${String.format("%.2f", transaction.amount)}",
+                text = "${amountSign}$${String.format("%.2f", transaction.amount)}",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold
                 ),
-                color = if (transaction.type == "Ingreso") {
-                    Color(0xFF4CAF50)
-                } else {
-                    MaterialTheme.colorScheme.error
-                }
+                color = amountColor
             )
         }
         

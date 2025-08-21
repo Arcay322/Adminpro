@@ -249,7 +249,7 @@ class DashboardViewModel(
             }.timeInMillis
 
             val prevMonthTransactions = transactions.filter { it.date >= prevMonthStart && it.date <= prevMonthEnd }
-            val prevMonthIncome = prevMonthTransactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
+            val prevMonthIncome = prevMonthTransactions.filter { it.type == Transaction.TYPE_INCOME }.sumOf { it.amount }
             val prevMonthExpenses = prevMonthTransactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
 
             val incomeChangePercent = if (prevMonthIncome > 0) ((monthlyIncome - prevMonthIncome) / prevMonthIncome) * 100 else 0.0
@@ -349,11 +349,12 @@ class DashboardViewModel(
 
     private fun getWeeklyFlowData(transactions: List<com.example.admin_ingresos.data.Transaction>): List<DayData> {
         val calendar = Calendar.getInstance()
-        val currentWeekData = mutableMapOf<Int, Pair<Double, Double>>() // dayOfWeek to (income, expense)
+    // map dayOfWeek to Triple(income, expense, transfers)
+    val currentWeekData = mutableMapOf<Int, Triple<Double, Double, Double>>()
 
         // Initialize with zeros for all days of the week (Monday = 1, Sunday = 7)
         for (i in 1..7) {
-            currentWeekData[i] = Pair(0.0, 0.0)
+            currentWeekData[i] = Triple(0.0, 0.0, 0.0)
         }
 
         // Get current week's start (Monday)
@@ -386,29 +387,45 @@ class DashboardViewModel(
             val dayOfWeek = transactionCalendar.get(Calendar.DAY_OF_WEEK)
             val adjustedDay = if (dayOfWeek == Calendar.SUNDAY) 7 else dayOfWeek - 1
 
-            val currentData = currentWeekData[adjustedDay] ?: Pair(0.0, 0.0)
+            val currentData = currentWeekData[adjustedDay] ?: Triple(0.0, 0.0, 0.0)
 
-            if (transaction.type == Transaction.TYPE_INCOME) {
-                currentWeekData[adjustedDay] = Pair(
-                    currentData.first + transaction.amount,
-                    currentData.second
-                )
-            } else {
-                currentWeekData[adjustedDay] = Pair(
-                    currentData.first,
-                    currentData.second + transaction.amount
-                )
+            when (transaction.type) {
+                Transaction.TYPE_INCOME -> {
+                    currentWeekData[adjustedDay] = Triple(
+                        currentData.first + transaction.amount,
+                        currentData.second,
+                        currentData.third
+                    )
+                }
+                Transaction.TYPE_EXPENSE -> {
+                    currentWeekData[adjustedDay] = Triple(
+                        currentData.first,
+                        currentData.second + transaction.amount,
+                        currentData.third
+                    )
+                }
+                Transaction.TYPE_TRANSFER -> {
+                    currentWeekData[adjustedDay] = Triple(
+                        currentData.first,
+                        currentData.second,
+                        currentData.third + transaction.amount
+                    )
+                }
+                else -> {
+                    currentWeekData[adjustedDay] = currentData
+                }
             }
         }
 
         // Convert to DayData list
         val dayLabels = listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
         return (1..7).map { dayIndex ->
-            val data = currentWeekData[dayIndex] ?: Pair(0.0, 0.0)
+            val data = currentWeekData[dayIndex] ?: Triple(0.0, 0.0, 0.0)
             DayData(
                 day = dayLabels[dayIndex - 1],
                 income = data.first,
-                expense = data.second
+                expense = data.second,
+                transfers = data.third
             )
         }
     }

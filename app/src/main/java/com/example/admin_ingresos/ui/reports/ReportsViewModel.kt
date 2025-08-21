@@ -397,8 +397,8 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
         return transactions
             .groupBy { getStartOfDay(it.date) } // Group by day
             .map { (day, dayTransactions) ->
-                val income = dayTransactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
-                val expense = dayTransactions.filter { it.type == "Gasto" }.sumOf { it.amount }
+                val income = dayTransactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME }.sumOf { it.amount }
+                val expense = dayTransactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
                 TrendDataPoint(timestamp = day, income = income, expense = expense)
             }
             .sortedBy { it.timestamp }

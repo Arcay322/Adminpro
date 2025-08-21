@@ -466,12 +466,17 @@ fun generateQuickShortcuts(
                     "educación", "libros", "cursos" -> Icons.Default.School
                     "hogar", "casa", "renta" -> Icons.Default.Home
                     "trabajo", "salario", "freelance" -> Icons.Default.Work
-                    else -> if (firstTx.type == "Ingreso") Icons.Default.TrendingUp else Icons.Default.ShoppingCart
+                    else -> when (firstTx.type) {
+                        com.example.admin_ingresos.data.Transaction.TYPE_INCOME -> Icons.Default.TrendingUp
+                        com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER -> Icons.Default.Savings
+                        else -> Icons.Default.ShoppingCart
+                    }
                 },
-                color = if (firstTx.type == "Ingreso") 
-                    Color(0xFF4CAF50) 
-                else 
-                    Color(0xFFFF5722),
+                color = when (firstTx.type) {
+                    com.example.admin_ingresos.data.Transaction.TYPE_INCOME -> Color(0xFF4CAF50)
+                    com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER -> Color(0xFF42A5F5)
+                    else -> Color(0xFFFF5722)
+                },
                 frequency = txList.size,
                 lastUsed = null,
                 isRecurring = txList.size >= 3

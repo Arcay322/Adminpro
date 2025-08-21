@@ -396,8 +396,13 @@ private fun TransactionItem(
     transaction: com.example.admin_ingresos.data.Transaction,
     category: com.example.admin_ingresos.data.Category?
 ) {
-    val isIncome = transaction.type == "Ingreso"
-    val color = if (isIncome) Success else MaterialTheme.colorScheme.error
+    val isIncome = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME
+    val isTransfer = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER
+    val color = when {
+        isIncome -> Success
+        isTransfer -> com.example.admin_ingresos.ui.theme.CashFlowSecondary
+        else -> MaterialTheme.colorScheme.error
+    }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -433,8 +438,10 @@ private fun TransactionItem(
             )
         }
 
+        val amountSign = if (isIncome) "+" else "-"
+
         Text(
-            text = "${if (isIncome) "+" else "-"}${String.format("%.2f", transaction.amount)}",
+            text = "${amountSign}${String.format("%.2f", transaction.amount)}",
             style = MaterialTheme.typography.titleMedium,
             color = color,
             fontWeight = FontWeight.Bold

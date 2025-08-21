@@ -102,23 +102,26 @@ fun LongPressTransactionItem(
                     .size(40.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(
-                        if (transaction.type == "Ingreso") 
-                            Color(0xFF4CAF50).copy(alpha = 0.15f)
-                        else 
-                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+                        when (transaction.type) {
+                            Transaction.TYPE_INCOME -> Color(0xFF4CAF50).copy(alpha = 0.15f)
+                            Transaction.TYPE_TRANSFER -> Color(0xFF42A5F5).copy(alpha = 0.12f)
+                            else -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+                        }
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = if (transaction.type == "Ingreso") 
-                        Icons.Default.TrendingUp 
-                    else 
-                        Icons.Default.TrendingDown,
+                    imageVector = when (transaction.type) {
+                        Transaction.TYPE_INCOME -> Icons.Default.TrendingUp
+                        Transaction.TYPE_TRANSFER -> Icons.Default.Savings
+                        else -> Icons.Default.TrendingDown
+                    },
                     contentDescription = transaction.type,
-                    tint = if (transaction.type == "Ingreso") 
-                        Color(0xFF4CAF50)
-                    else 
-                        MaterialTheme.colorScheme.error,
+                    tint = when (transaction.type) {
+                        Transaction.TYPE_INCOME -> Color(0xFF4CAF50)
+                        Transaction.TYPE_TRANSFER -> Color(0xFF42A5F5)
+                        else -> MaterialTheme.colorScheme.error
+                    },
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -144,14 +147,20 @@ fun LongPressTransactionItem(
             }
             
             // Amount
+            val isIncome = transaction.type == Transaction.TYPE_INCOME
+            val isTransfer = transaction.type == Transaction.TYPE_TRANSFER
+            val amountSign = if (isIncome) "+" else "-"
+            val amountColor = when {
+                isIncome -> Color(0xFF4CAF50)
+                isTransfer -> Color(0xFF42A5F5)
+                else -> MaterialTheme.colorScheme.error
+            }
+
             Text(
-                text = "${if (transaction.type == "Ingreso") "+" else "-"}${String.format("%.2f", transaction.amount)}",
+                text = "${amountSign}${String.format("%.2f", transaction.amount)}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = if (transaction.type == "Ingreso") 
-                    Color(0xFF4CAF50)
-                else 
-                    MaterialTheme.colorScheme.error
+                color = amountColor
             )
         }
     }

@@ -49,7 +49,7 @@ fun TransactionHistoryScreenNew(navController: NavController) {
     val transactions by produceState(initialValue = emptyList<Transaction>(), db, selectedFilter, selectedPeriod) {
         value = withContext(Dispatchers.IO) {
             when (selectedFilter) {
-                "Ingresos" -> db.transactionDao().getAll().filter { it.type == "Ingreso" }
+                "Ingresos" -> db.transactionDao().getAll().filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME }
                 "Gastos" -> db.transactionDao().getAll().filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }
                 else -> db.transactionDao().getAll()
             }.let { list ->
@@ -87,7 +87,7 @@ fun TransactionHistoryScreenNew(navController: NavController) {
     }
     
     // Calculate summary stats
-    val totalIncome = filteredTransactions.filter { it.type == "Ingreso" }.sumOf { it.amount }
+    val totalIncome = filteredTransactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME }.sumOf { it.amount }
     val totalExpense = filteredTransactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
     val netAmount = totalIncome - totalExpense
 
