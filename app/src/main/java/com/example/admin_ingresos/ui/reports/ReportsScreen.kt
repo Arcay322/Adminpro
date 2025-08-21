@@ -23,6 +23,7 @@ import java.util.Date
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
@@ -47,6 +48,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.example.admin_ingresos.AppDatabaseProvider
 import com.example.admin_ingresos.ui.components.GlassCard
 import com.example.admin_ingresos.ui.components.GlassmorphismScreen
+import com.example.admin_ingresos.ui.components.MainBalanceCards
 import com.example.admin_ingresos.ui.dashboard.CategoryData
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.*
@@ -219,7 +221,12 @@ fun ReportsScreen() {
                 }
 
                 item {
-                    FinancialSummary(reportData = uiState.reportData)
+                    MainBalanceCardsReport(
+                        reportData = uiState.reportData,
+                        dateRangePreset = uiState.dateRangePreset,
+                        selectedRange = uiState.selectedDateRange,
+                        onViewDetails = { /* no-op for now */ }
+                    )
                 }
 
                 item {
@@ -448,7 +455,8 @@ fun FinancialSummary(reportData: ReportData) {
             title = "Balance Total",
             amount = formatter.format(reportData.netSavings).replace(" ", "\u00A0"),
             subtitle = "Actualizado ahora",
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getNavigationIcon("DollarSign")
         )
 
         // Three small summary cards: Ingresos / Gastos / Ahorro
@@ -457,14 +465,16 @@ fun FinancialSummary(reportData: ReportData) {
                     title = "Ingresos",
                     amount = formatter.format(reportData.totalIncome).replace(" ", "\u00A0"),
                     color = IncomeGreen,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    leadingIcon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon(com.example.admin_ingresos.data.Transaction.TYPE_INCOME)
                 )
 
                 MiniSummaryCard(
                     title = "Gastos",
                     amount = formatter.format(reportData.totalExpenses).replace(" ", "\u00A0"),
                     color = ExpenseRed,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    leadingIcon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon(com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE)
                 )
 
                 MiniSummaryCard(
@@ -477,8 +487,56 @@ fun FinancialSummary(reportData: ReportData) {
     }
 }
 
+private fun presetToSubtitle(preset: DateRangePreset, range: DateRange?): String {
+    // Map preset to a human-friendly subtitle that matches the active filter
+    return when (preset) {
+        DateRangePreset.TODAY -> "Hoy"
+        DateRangePreset.THIS_WEEK -> "Esta semana"
+        DateRangePreset.THIS_MONTH -> "Este mes"
+        DateRangePreset.LAST_3_MONTHS -> "Últimos 3 meses"
+        DateRangePreset.THIS_YEAR -> "Este año"
+        DateRangePreset.CUSTOM -> {
+            if (range != null) {
+                try {
+                    val sdf = SimpleDateFormat("dd MMM", Locale("es", "PE"))
+                    val start = sdf.format(Date(range.startDate))
+                    val end = sdf.format(Date(range.endDate))
+                    "$start - $end"
+                } catch (e: Exception) {
+                    "Personalizado"
+                }
+            } else {
+                "Personalizado"
+            }
+        }
+    }
+}
+
 @Composable
-fun BalanceCardLarge(title: String, amount: String, subtitle: String? = null, modifier: Modifier = Modifier) {
+fun MainBalanceCardsReport(
+    reportData: ReportData,
+    dateRangePreset: DateRangePreset,
+    selectedRange: DateRange?,
+    onViewDetails: () -> Unit
+) {
+    // Compute a subtitle matching the currently selected date-range filter and pass it
+    val subtitle = remember(dateRangePreset, selectedRange) { presetToSubtitle(dateRangePreset, selectedRange) }
+
+    MainBalanceCards(
+        currentBalance = reportData.netSavings,
+        monthlyIncome = reportData.totalIncome,
+        monthlyExpenses = reportData.totalExpenses,
+        monthlyTransfers = reportData.totalTransfers,
+        modifier = Modifier.fillMaxWidth(),
+        onViewDetails = onViewDetails,
+        incomeSubtitle = subtitle,
+        expensesSubtitle = subtitle,
+        transfersSubtitle = subtitle
+    )
+}
+
+@Composable
+fun BalanceCardLarge(title: String, amount: String, subtitle: String? = null, modifier: Modifier = Modifier, icon: ImageVector? = null) {
     val onSurface = MaterialTheme.colorScheme.onSurface
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
     GlassCard(modifier = modifier) {
@@ -489,8 +547,14 @@ fun BalanceCardLarge(title: String, amount: String, subtitle: String? = null, mo
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(text = amount, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 34.sp)
                 }
-                // subtle ghost circle for visual accent (like sample)
-                Box(modifier = Modifier.size(36.dp).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f), shape = CircleShape))
+                // icon or subtle ghost circle for visual accent
+                if (icon != null) {
+                    Box(modifier = Modifier.size(36.dp).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.02f), shape = CircleShape), contentAlignment = Alignment.Center) {
+                        Icon(imageVector = icon, contentDescription = null, tint = AccentVibrantStart, modifier = Modifier.size(18.dp))
+                    }
+                } else {
+                    Box(modifier = Modifier.size(36.dp).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f), shape = CircleShape))
+                }
             }
             if (!subtitle.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
@@ -501,14 +565,43 @@ fun BalanceCardLarge(title: String, amount: String, subtitle: String? = null, mo
 }
 
 @Composable
-fun MiniSummaryCard(title: String, amount: String, color: Color, modifier: Modifier = Modifier) {
+fun MiniSummaryCard(
+    title: String,
+    amount: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+    leadingIcon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    subtitle: String? = null
+) {
     // Use a colored border to indicate type (green/red) per design request
     GlassCard(modifier = modifier, borderColor = color.copy(alpha = 0.45f)) {
         Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            Column {
-                Text(text = title, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(text = amount, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (leadingIcon != null) {
+                    Box(modifier = Modifier.size(28.dp).clip(CircleShape).background(color.copy(alpha = 0.10f)), contentAlignment = Alignment.Center) {
+                        Icon(imageVector = leadingIcon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+
+                Column {
+                    Text(text = title, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = amount,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Black,
+                        color = TextPrimary,
+                        lineHeight = 20.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        softWrap = false
+                    )
+                    if (!subtitle.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                    }
+                }
             }
 
             // keep the right side clean (no icon) — border indicates type

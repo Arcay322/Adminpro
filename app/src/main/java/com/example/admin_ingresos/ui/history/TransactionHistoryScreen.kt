@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -98,16 +99,15 @@ fun TransactionHistoryScreen(navController: NavController) {
             item {
                 ModernHistoryHeader()
             }
-
-            // Estadísticas de transacciones
-            if (filteredTransactions.isNotEmpty()) {
-                item {
-                    ModernTransactionStats(
-                        transactions = filteredTransactions,
-                        onAnalyticsClick = { viewModel.onAnalyticsClick(true) }
-                    )
-                }
+            // Main balance (copied from Dashboard MainBalanceCards)
+            item {
+                MainBalanceCardsHistory(
+                    transactions = filteredTransactions,
+                    onViewDetails = { viewModel.onAnalyticsClick(true) }
+                )
             }
+
+            // Estadísticas de transacciones (se removió el contenedor aquí porque MainBalanceCardsHistory ya muestra el resumen)
 
             // Búsqueda y filtros con glassmorphism
             item {
@@ -187,6 +187,37 @@ fun TransactionHistoryScreen(navController: NavController) {
             )
         }
     }
+}
+
+@Composable
+fun MainBalanceCardsHistory(
+    transactions: List<com.example.admin_ingresos.data.Transaction>,
+    onViewDetails: () -> Unit
+) {
+    // Compute totals and delegate rendering to the shared MainBalanceCards so visuals match Dashboard exactly.
+    val totalIncome = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME }.sumOf { it.amount }
+    val totalExpenses = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
+    val totalTransfers = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER }.sumOf { it.amount }
+    val netAmount = totalIncome - totalExpenses - totalTransfers
+
+    // provide subtitles showing transaction counts instead of "Este mes"
+    val incomeCount = transactions.count { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME }
+    val expensesCount = transactions.count { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }
+    val transfersCount = transactions.count { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER }
+    val totalCount = transactions.size
+
+    MainBalanceCards(
+        currentBalance = netAmount,
+        monthlyIncome = totalIncome,
+        monthlyExpenses = totalExpenses,
+        monthlyTransfers = totalTransfers,
+        modifier = Modifier.fillMaxWidth(),
+        onViewDetails = onViewDetails,
+        balanceSubtitle = if (totalCount == 1) "$totalCount transacción" else "$totalCount transacciones",
+        incomeSubtitle = if (incomeCount == 1) "$incomeCount transacción" else "$incomeCount transacciones",
+        expensesSubtitle = if (expensesCount == 1) "$expensesCount transacción" else "$expensesCount transacciones",
+        transfersSubtitle = if (transfersCount == 1) "$transfersCount transacción" else "$transfersCount transacciones"
+    )
 }
 
 @Composable
@@ -525,126 +556,8 @@ fun ModernTransactionStats(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header del resumen
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "Resumen Financiero",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = com.example.admin_ingresos.ui.theme.TextPrimary
-                    )
-                    Text(
-                        text = "Balance actual de tus transacciones",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                }
-                IconButton(onClick = onClose) {
-                    Icon(
-                        imageVector = LucideIconMapper.getNavigationIcon("Close"),
-                        contentDescription = "Cerrar",
-                        tint = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f)
-                    )
-                }
-            }
             
-            // Tarjetas principales de resumen
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Ingresos
-                    ImprovedStatsCard(
-                        title = "Ingresos",
-                        value = currencyFormat.format(totalIncome).replace(" ", "\u00A0"),
-                    count = transactions.count { it.type == "Ingreso" },
-                    color = Color(0xFF4CAF50),
-                    modifier = Modifier.weight(1f)
-                )
-                
-                // Gastos
-                ImprovedStatsCard(
-                    title = "Gastos", 
-                    value = currencyFormat.format(totalExpenses).replace(" ", "\u00A0"),
-                    count = transactions.count { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE },
-                    color = Color(0xFFE57373),
-                    modifier = Modifier.weight(1f)
-                )
-                
-                // Ahorros (Transfers)
-                ImprovedStatsCard(
-                    title = "Ahorros",
-                    value = currencyFormat.format(totalTransfers).replace(" ", "\u00A0"),
-                    count = transactions.count { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER },
-                    color = Color(0xFF42A5F5),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            
-            // Balance total
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = if (netAmount >= 0) {
-                                listOf(
-                                    Color(0xFF4CAF50).copy(alpha = 0.2f),
-                                    Color(0xFF81C784).copy(alpha = 0.1f)
-                                )
-                            } else {
-                                listOf(
-                                    Color(0xFFE57373).copy(alpha = 0.2f),
-                                    Color(0xFFEF5350).copy(alpha = 0.1f)
-                                )
-                            }
-                        ),
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .padding(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Balance Total",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Medium
-                            ),
-                            color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.9f)
-                        )
-                        Text(
-                            text = currencyFormat.format(netAmount),
-                            style = MaterialTheme.typography.headlineSmall.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = if (netAmount >= 0) Color(0xFF4CAF50) else Color(0xFFE57373),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    
-                    Icon(
-                        imageVector = if (netAmount >= 0) 
-                            LucideIconMapper.getTransactionTypeIcon(com.example.admin_ingresos.data.Transaction.TYPE_INCOME) 
-                        else 
-                            LucideIconMapper.getTransactionTypeIcon(com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE),
-                        contentDescription = null,
-                        tint = if (netAmount >= 0) Color(0xFF4CAF50) else Color(0xFFE57373),
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-            }
+            // (Old summary cards removed; MainBalanceCardsHistory provides the summary above.)
             }
         }
     }
@@ -687,13 +600,14 @@ fun ImprovedStatsCard(
             
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold
-                ),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Black,
                 color = color,
+                lineHeight = 20.sp,
                 textAlign = TextAlign.Center,
-                maxLines = 2,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                softWrap = false,
                 modifier = Modifier.fillMaxWidth()
             )
             

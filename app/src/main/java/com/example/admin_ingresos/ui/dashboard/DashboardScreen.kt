@@ -370,66 +370,6 @@ private fun DashboardHeader(
     }
 }
 
-@Composable
-private fun MainBalanceCards(
-    currentBalance: Double,
-    monthlyIncome: Double,
-    monthlyExpenses: Double,
-    monthlyTransfers: Double,
-    onViewDetails: () -> Unit
-) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
-    val balanceChange = monthlyIncome - monthlyExpenses
-    val balanceChangePercent = if (monthlyExpenses > 0) (balanceChange / monthlyExpenses) * 100 else 0.0
-
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        AdvancedBalanceCard(
-            title = "Balance Total",
-            amount = formatter.format(currentBalance),
-            subtitle = "Actualizado ahora",
-            icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getNavigationIcon("DollarSign"),
-            onClick = onViewDetails,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                InsightCard(
-                    title = "Ingresos",
-                    value = formatter.format(monthlyIncome).replace(" ", "\u00A0"),
-                    subtitle = "Este mes",
-                    icon = Icons.AutoMirrored.Filled.TrendingUp,
-                    color = IncomeGreen,
-                    modifier = Modifier.weight(1f)
-                )
-
-                InsightCard(
-                    title = "Gastos",
-                    value = formatter.format(monthlyExpenses).replace(" ", "\u00A0"),
-                    subtitle = "Este mes",
-                    icon = Icons.AutoMirrored.Filled.TrendingDown,
-                    color = ExpenseRed,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            // Ahorro card on its own row below
-            Row(modifier = Modifier.fillMaxWidth()) {
-                InsightCard(
-                    title = "Ahorro",
-                    value = formatter.format(monthlyTransfers).replace(" ", "\u00A0"),
-                    subtitle = "Este mes",
-                    icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromCategoryName("ahorros"),
-                    color = Color(0xFF42A5F5),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun QuickActionsSection(
@@ -797,61 +737,7 @@ private fun TrendsAndInsights(
     }
 }
 
-@Composable
-private fun InsightCard(
-    title: String,
-    value: String,
-    subtitle: String,
-    icon: ImageVector,
-    color: Color,
-    valueColor: Color? = null,
-    modifier: Modifier = Modifier
-) {
-    GlassCard(
-        modifier = modifier,
-        backgroundColor = GlassWhiteSubtle,
-        cornerRadius = 16.dp
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            // header: small icon + title
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.size(20.dp), contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = title,
-                        tint = color,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = title,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = TextSecondary
-                )
-            }
-
-            // big value (allow overriding color)
-            Text(
-                text = value,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = valueColor ?: TextPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                softWrap = false
-            )
-
-            // subtitle
-            Text(
-                text = subtitle,
-                fontSize = 12.sp,
-                color = TextSecondary
-            )
-        }
-    }
-}
+// MainBalanceCards and InsightCard have been moved to ui.components.MainBalance.kt
 
 @Composable
 private fun RecentTransactionsSection(
