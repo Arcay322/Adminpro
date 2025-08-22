@@ -225,7 +225,12 @@ fun MainAppNavigation() {
                         )
                         CategoryDetailScreen(
                             viewModel = categoryDetailViewModel,
-                            onNavigateBack = { navController.popBackStack() }
+                            onNavigateBack = { categoryType ->
+                                if (categoryType == com.example.admin_ingresos.data.CategoryType.AHORRO) {
+                                    categoryViewModel.onTabSelected(com.example.admin_ingresos.data.CategoryType.AHORRO)
+                                }
+                                navController.popBackStack()
+                            }
                         )
                     }
 

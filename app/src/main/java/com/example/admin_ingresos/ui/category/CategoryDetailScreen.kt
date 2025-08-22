@@ -33,6 +33,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.example.admin_ingresos.AppDatabaseProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,10 +75,11 @@ import java.util.Locale
 @Composable
 fun CategoryDetailScreen(
     viewModel: CategoryDetailViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: (com.example.admin_ingresos.data.CategoryType?) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val category = uiState.category
+    // No parent viewmodel here; navigation returns a CategoryType back to the caller so it can restore the tab
 
     val groupedTransactions = uiState.transactions.groupBy { transaction ->
         val date = Date(transaction.date)
@@ -93,7 +99,7 @@ fun CategoryDetailScreen(
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = onNavigateBack) {
+                        IconButton(onClick = { onNavigateBack(category?.type) }) {
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
                                 contentDescription = "Volver atrás",

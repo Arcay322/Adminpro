@@ -201,17 +201,12 @@ fun CategoryScreen(
                     Spacer(Modifier.height(8.dp))
 
                     // Pestañas estilo píldora convertidas en botones: Gastos, Ingresos y Ahorros (consistentes)
-                    var showSavingsSection by remember { mutableStateOf(false) }
-
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                         // Gastos button (usa icono de tipo de transacción)
                         Button(
-                            onClick = {
-                                showSavingsSection = false
-                                viewModel.onTabSelected(CategoryType.GASTO)
-                            },
+                            onClick = { viewModel.onTabSelected(CategoryType.GASTO) },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (!showSavingsSection && uiState.selectedTab == CategoryType.GASTO) ExpenseRed else GlassWhiteSubtle
+                                containerColor = if (uiState.selectedTab == CategoryType.GASTO) ExpenseRed else GlassWhiteSubtle
                             ),
                             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                             modifier = Modifier
@@ -222,13 +217,13 @@ fun CategoryScreen(
                                 Icon(
                                     LucideIconMapper.getTransactionTypeIcon("Gasto"),
                                     contentDescription = null,
-                                    tint = if (!showSavingsSection && uiState.selectedTab == CategoryType.GASTO) Color.White else TextSecondary,
+                                    tint = if (uiState.selectedTab == CategoryType.GASTO) Color.White else TextSecondary,
                                     modifier = Modifier.size(12.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "Gastos",
-                                    color = if (!showSavingsSection && uiState.selectedTab == CategoryType.GASTO) Color.White else TextSecondary,
+                                    color = if (uiState.selectedTab == CategoryType.GASTO) Color.White else TextSecondary,
                                     style = MaterialTheme.typography.bodySmall,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -240,12 +235,9 @@ fun CategoryScreen(
 
                         // Ingresos button
                         Button(
-                            onClick = {
-                                showSavingsSection = false
-                                viewModel.onTabSelected(CategoryType.INGRESO)
-                            },
+                            onClick = { viewModel.onTabSelected(CategoryType.INGRESO) },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (!showSavingsSection && uiState.selectedTab == CategoryType.INGRESO) AccentVibrantStart else GlassWhiteSubtle
+                                containerColor = if (uiState.selectedTab == CategoryType.INGRESO) AccentVibrantStart else GlassWhiteSubtle
                             ),
                             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                             modifier = Modifier
@@ -256,13 +248,13 @@ fun CategoryScreen(
                                 Icon(
                                     LucideIconMapper.getTransactionTypeIcon("Ingreso"),
                                     contentDescription = null,
-                                    tint = if (!showSavingsSection && uiState.selectedTab == CategoryType.INGRESO) Color.White else TextSecondary,
+                                    tint = if (uiState.selectedTab == CategoryType.INGRESO) Color.White else TextSecondary,
                                     modifier = Modifier.size(12.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "Ingresos",
-                                    color = if (!showSavingsSection && uiState.selectedTab == CategoryType.INGRESO) Color.White else TextSecondary,
+                                    color = if (uiState.selectedTab == CategoryType.INGRESO) Color.White else TextSecondary,
                                     style = MaterialTheme.typography.bodySmall,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -272,10 +264,10 @@ fun CategoryScreen(
 
                         Spacer(modifier = Modifier.width(8.dp))
 
-                        // Ahorros button: azul solo cuando está seleccionado (showSavingsSection)
-                        val savingsSelected = showSavingsSection
+                        // Ahorros button: azul solo cuando está seleccionado
+                        val savingsSelected = uiState.selectedTab == CategoryType.AHORRO
                         Button(
-                            onClick = { showSavingsSection = true },
+                            onClick = { viewModel.onTabSelected(CategoryType.AHORRO) },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (savingsSelected) Color(0xFF2196F3) else GlassWhiteSubtle
                             ),
@@ -308,7 +300,7 @@ fun CategoryScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         // Si estamos en Gastos o Ingresos mostrar botón "Nueva" y "Archivados"
                         var showArchived by remember { mutableStateOf(false) }
-                        if (!showSavingsSection) {
+                        if (uiState.selectedTab != CategoryType.AHORRO) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                                 OutlinedButton(
                                     onClick = { showArchived = !showArchived },
@@ -337,7 +329,7 @@ fun CategoryScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                         }
 
-                        if (showSavingsSection) {
+                        if (uiState.selectedTab == CategoryType.AHORRO) {
                             SavingsGoalsSummary(
                                 savingsGoalViewModel = savingsGoalViewModel,
                                 searchQuery = uiState.searchQuery,
