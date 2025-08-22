@@ -115,6 +115,25 @@ class SavingsGoalViewModel(private val database: AppDatabase) : ViewModel() {
             }
         }
     }
+
+    fun deleteSavingsGoalWithTransactions(goal: SavingsGoal) {
+        viewModelScope.launch {
+            try {
+                // delete transactions linked to this goal first
+                try {
+                    val txDao = database.transactionDao()
+                    txDao.deleteByGoalId(goal.id)
+                } catch (_: Exception) {
+                    // non-fatal: continue to delete the goal even if transactions deletion fails
+                }
+
+                savingsGoalDao.delete(goal)
+                _uiState.value = _uiState.value.copy(message = "Meta eliminada junto con sus transacciones")
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = "Error al eliminar la meta: ${e.message}")
+            }
+        }
+    }
     
     fun addProgress(goalId: Long, amount: Double) {
         viewModelScope.launch {

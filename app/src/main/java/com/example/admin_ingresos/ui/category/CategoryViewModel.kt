@@ -97,4 +97,19 @@ class CategoryViewModel(private val db: AppDatabase) : ViewModel() {
         val updates = newOrder.mapIndexed { index, category -> category.copy(order = index) }
         categoryDao.updateAll(updates)
     }
+
+    fun deleteCategoryWithTransactions(category: Category) = viewModelScope.launch {
+        try {
+            // Delete transactions linked to the category first
+            transactionDao.deleteByCategoryId(category.id)
+
+            // If this category is linked to a savings goal (per-goal category), also consider deleting the goal association
+            // (we keep goals intact but nullify their categoryId - optional behavior). For now, just delete category.
+            categoryDao.delete(category)
+
+            _snackbarEvents.send("Categoría y transacciones eliminadas")
+        } catch (e: Exception) {
+            _snackbarEvents.send("Error al eliminar la categoría: ${e.message}")
+        }
+    }
 }

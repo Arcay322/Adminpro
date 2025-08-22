@@ -68,6 +68,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.admin_ingresos.data.Category
 import com.example.admin_ingresos.data.CategoryType
+import com.example.admin_ingresos.data.model.SavingsGoal
 import com.example.admin_ingresos.ui.components.GlassCard
 import com.example.admin_ingresos.ui.components.GlassmorphismScreen
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
@@ -98,11 +99,25 @@ fun CategoryScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Local delete dialog states shared across the composable (categories and savings goals)
+    var categoryToDelete by remember { mutableStateOf<Category?>(null) }
+    var savingsToDelete by remember { mutableStateOf<com.example.admin_ingresos.data.model.SavingsGoal?>(null) }
+
     LaunchedEffect(Unit) {
         viewModel.snackbarEvents.collectLatest { msg ->
             snackbarHostState.showSnackbar(message = msg)
         }
     }
+
+    // Move DB and savings goal ViewModel to the composable top-level scope so dialogs can use it
+    val context = LocalContext.current
+    val db = remember { AppDatabaseProvider.getDatabase(context) }
+    val savingsGoalViewModel: SavingsGoalViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+            @Suppress("UNCHECKED_CAST")
+            return SavingsGoalViewModel(db) as T
+        }
+    })
 
     GlassmorphismScreen {
         Scaffold(
@@ -186,15 +201,6 @@ fun CategoryScreen(
                     Spacer(Modifier.height(8.dp))
 
                     // Pestañas estilo píldora convertidas en botones: Gastos, Ingresos y Ahorros (consistentes)
-                    val context = LocalContext.current
-                    val db = remember { AppDatabaseProvider.getDatabase(context) }
-                    val savingsGoalViewModel: SavingsGoalViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-                        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                            @Suppress("UNCHECKED_CAST")
-                            return SavingsGoalViewModel(db) as T
-                        }
-                    })
-
                     var showSavingsSection by remember { mutableStateOf(false) }
 
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
@@ -321,7 +327,12 @@ fun CategoryScreen(
                         }
 
                         if (showSavingsSection) {
-                            SavingsGoalsSummary(savingsGoalViewModel = savingsGoalViewModel, searchQuery = uiState.searchQuery, onOpen = { goalId -> onNavigateToSavingsDetail(goalId) })
+                            SavingsGoalsSummary(
+                                savingsGoalViewModel = savingsGoalViewModel,
+                                searchQuery = uiState.searchQuery,
+                                onOpen = { goalId -> onNavigateToSavingsDetail(goalId) },
+                                onDelete = { goal -> savingsToDelete = goal }
+                            )
                         } else if (uiState.categories.isEmpty() && uiState.searchQuery.isBlank()) {
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -421,6 +432,16 @@ fun CategoryScreen(
                                                                 viewModel.showArchiveDialog(category)
                                                             },
                                                             leadingIcon = { Icon(LucideIconMapper.getNavigationIcon("Archive"), null, tint = ExpenseRed) }
+                                                        )
+                                                        DropdownMenuItem(
+                                                            text = { Text("Eliminar", color = ExpenseRed) },
+                                                            onClick = {
+                                                                menuExpanded = false
+                                                                viewModel.hideAddEditDialog()
+                                                                viewModel.hideArchiveDialog()
+                                                                categoryToDelete = category
+                                                            },
+                                                            leadingIcon = { Icon(LucideIconMapper.Navigation.delete, null, tint = ExpenseRed) }
                                                         )
                                                     }
                                                 }
@@ -523,10 +544,61 @@ fun CategoryScreen(
                         )
                     }
                 }
+
+                }
+
+                // Category delete confirmation dialog (rendered outside archive-if so it's available always)
+                if (categoryToDelete != null) {
+                    val cat = categoryToDelete!!
+                    DialogScrim(onDismiss = { categoryToDelete = null }) {
+                        AlertDialog(
+                            onDismissRequest = { categoryToDelete = null },
+                            title = { Text("Eliminar categoría") },
+                            text = { Text("¿Seguro que deseas eliminar la categoría '${cat.name}' y todas sus transacciones? Esta acción no se puede deshacer.") },
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        viewModel.deleteCategoryWithTransactions(cat)
+                                        categoryToDelete = null
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = ExpenseRed)
+                                ) { Text("Eliminar") }
+                            },
+                            dismissButton = { OutlinedButton(onClick = { categoryToDelete = null }) { Text("Cancelar") } },
+                            shape = RoundedCornerShape(20.dp),
+                            containerColor = Color(0xFF2A2D32),
+                            modifier = Modifier.border(width = 1.dp, color = Color.White.copy(alpha = 0.2f), shape = RoundedCornerShape(20.dp))
+                        )
+                    }
+                }
+
+                // Savings delete confirmation dialog
+                if (savingsToDelete != null) {
+                    val goal = savingsToDelete!!
+                    DialogScrim(onDismiss = { savingsToDelete = null }) {
+                        AlertDialog(
+                            onDismissRequest = { savingsToDelete = null },
+                            title = { Text("Eliminar meta de ahorro") },
+                            text = { Text("¿Seguro que deseas eliminar la meta '${goal.name}' y todas sus transacciones relacionadas? Esta acción no se puede deshacer.") },
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        savingsGoalViewModel.deleteSavingsGoalWithTransactions(goal)
+                                        savingsToDelete = null
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = ExpenseRed)
+                                ) { Text("Eliminar") }
+                            },
+                            dismissButton = { OutlinedButton(onClick = { savingsToDelete = null }) { Text("Cancelar") } },
+                            shape = RoundedCornerShape(20.dp),
+                            containerColor = Color(0xFF2A2D32),
+                            modifier = Modifier.border(width = 1.dp, color = Color.White.copy(alpha = 0.2f), shape = RoundedCornerShape(20.dp))
+                        )
+                    }
+                }
             }
         }
     }
-}
 
 @Composable
 private fun DialogScrim(
@@ -645,7 +717,12 @@ private fun CategoryAddEditDialog(category: Category, viewModel: CategoryViewMod
 }
 
 @Composable
-private fun SavingsGoalsSummary(savingsGoalViewModel: SavingsGoalViewModel, searchQuery: String = "", onOpen: (Long) -> Unit) {
+private fun SavingsGoalsSummary(
+    savingsGoalViewModel: SavingsGoalViewModel,
+    searchQuery: String = "",
+    onOpen: (Long) -> Unit,
+    onDelete: (com.example.admin_ingresos.data.model.SavingsGoal) -> Unit
+) {
     val savingsGoals by savingsGoalViewModel.savingsGoals.collectAsState()
     val filteredSavings = remember(savingsGoals, searchQuery) {
         if (searchQuery.isBlank()) savingsGoals else savingsGoals.filter { it.name.contains(searchQuery, ignoreCase = true) }
@@ -732,7 +809,7 @@ private fun SavingsGoalsSummary(savingsGoalViewModel: SavingsGoalViewModel, sear
                                         text = { Text("Eliminar", color = ExpenseRed) },
                                         onClick = {
                                             menuExpanded = false
-                                            savingsGoalViewModel.deleteSavingsGoal(goal)
+                                            onDelete(goal)
                                         },
                                         leadingIcon = { Icon(LucideIconMapper.Navigation.delete, null, tint = ExpenseRed) }
                                     )

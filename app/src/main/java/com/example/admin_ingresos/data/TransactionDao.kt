@@ -153,6 +153,12 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE id = :id LIMIT 1")
     fun getByIdFlow(id: Int): Flow<Transaction?>
 
+    @Query("DELETE FROM transactions WHERE categoryId = :categoryId")
+    suspend fun deleteByCategoryId(categoryId: Int)
+
+    @Query("DELETE FROM transactions WHERE goalId = :goalId")
+    suspend fun deleteByGoalId(goalId: Long)
+
     // --- NUEVA FUNCIÓN AÑADIDA PARA FILTROS DE TIEMPO ---
     @Query("SELECT * FROM transactions WHERE categoryId = :categoryId AND date BETWEEN :startDate AND :endDate ORDER BY date DESC")
     fun getTransactionsByCategoryIdAndDateRangeFlow(categoryId: Int, startDate: Long, endDate: Long): Flow<List<Transaction>>
