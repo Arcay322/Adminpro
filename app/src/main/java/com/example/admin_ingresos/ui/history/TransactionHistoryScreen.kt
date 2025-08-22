@@ -582,8 +582,8 @@ fun ModernHistoryHeader() {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
             Icon(
-                imageVector = LucideIconMapper.getNavigationIcon("History"),
-                contentDescription = "Historial",
+                imageVector = LucideIconMapper.Navigation.dollarSign,
+                contentDescription = "Transacciones",
                 tint = AccentVibrantStart,
                 modifier = Modifier.size(28.dp)
             )
@@ -592,7 +592,7 @@ fun ModernHistoryHeader() {
 
             Column(verticalArrangement = Arrangement.Center) {
                 Text(
-                    text = "Historial de Transacciones",
+                    text = "Transacciones",
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontWeight = FontWeight.Bold
                     ),
