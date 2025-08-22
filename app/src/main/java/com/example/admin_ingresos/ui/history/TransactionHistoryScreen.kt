@@ -1062,19 +1062,7 @@ fun ModernDateHeader(
         
         Spacer(modifier = Modifier.width(12.dp))
         
-        Box(
-            modifier = Modifier
-                .height(1.dp)
-                .weight(1f)
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
+    Spacer(modifier = Modifier.weight(1f))
     }
 }
 
