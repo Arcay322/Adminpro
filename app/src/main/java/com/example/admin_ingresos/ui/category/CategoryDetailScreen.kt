@@ -42,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -219,11 +220,20 @@ private fun CategoryDetailHeader(
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondary
                     )
+                    // If this is a savings category, color the headline amount based on progress (red -> green)
+                    val headlineAmountColor = if (category.type == CategoryType.AHORRO) {
+                        val targetForHeader = activeBudget?.amount ?: (totalAmount + 1.0)
+                        val headerProgress = (totalAmount / targetForHeader).toFloat().coerceIn(0f, 1f)
+                        lerp(ExpenseRed, IncomeGreen, headerProgress)
+                    } else {
+                        amountColor
+                    }
+
                     Text(
                         text = formatter.format(totalAmount),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = amountColor
+                        color = headlineAmountColor
                     )
                     Text(
                         text = "$transactionCount ${if (transactionCount == 1) "transacción" else "transacciones"}",
@@ -238,6 +248,7 @@ private fun CategoryDetailHeader(
                 Spacer(modifier = Modifier.height(16.dp))
                 val target = activeBudget?.amount ?: (totalAmount + 1.0)
                 val progress = (totalAmount / target).toFloat().coerceIn(0f, 1f)
+                val progressColor = lerp(ExpenseRed, IncomeGreen, progress)
                 com.example.admin_ingresos.ui.theme.GradientProgressBar(
                     progress = progress,
                     startColor = ExpenseRed,
@@ -246,8 +257,20 @@ private fun CategoryDetailHeader(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(text = "${formatter.format(totalAmount)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-                    Text(text = "${formatter.format(target)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                    // Current saved amount colored according to progress
+                    Text(
+                        text = "${formatter.format(totalAmount)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = progressColor,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    // Show target and percentage; percentage colored according to progress
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = "${formatter.format(target)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "${(progress * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = progressColor)
+                    }
                 }
             } else if (activeBudget != null && category.type == CategoryType.GASTO) {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -268,7 +291,7 @@ private fun BudgetProgressInfo(
     formatter: NumberFormat
 ) {
     val progress = (spentAmount / budget.amount).toFloat().coerceIn(0f, 1f)
-    // Percentage text color interpolates between IncomeGreen (0f) and ExpenseRed (1f)
+    // Percentage text color interpolates between IncomeGreen (0f) and ExpenseRed (1f) for budgets (green -> red)
     val pctColor = lerp(IncomeGreen, ExpenseRed, progress)
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {

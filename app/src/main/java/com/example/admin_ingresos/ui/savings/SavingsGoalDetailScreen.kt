@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -165,7 +166,10 @@ fun SavingsGoalDetailScreen(
                                     }
                                     Column {
                                         Text("Total ahorrado", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-                                        Text(formatter.format(goal!!.currentAmount), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color(0xFF2196F3))
+                                        // Color del monto interpolado de rojo -> verde según progreso
+                                        val headerProgress = if (goal!!.targetAmount > 0.0) (goal!!.currentAmount / goal!!.targetAmount).toFloat().coerceIn(0f, 1f) else 0f
+                                        val headerColor = lerp(ExpenseRed, IncomeGreen, headerProgress)
+                                        Text(formatter.format(goal!!.currentAmount), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = headerColor)
                                         Text("${filteredTx.size} ${if (filteredTx.size == 1) "transacción" else "transacciones"}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                                     }
                                 }
@@ -265,11 +269,8 @@ private fun DateHeader(date: String) {
 @Composable
 private fun GoalProgressInfo(targetAmount: Double, currentAmount: Double, formatter: NumberFormat) {
     val progress = (currentAmount / targetAmount).toFloat().coerceIn(0f, 1f)
-    val progressColor = when {
-        progress > 0.9f -> ExpenseRed
-        progress > 0.7f -> Color(0xFFFBBF24)
-        else -> IncomeGreen
-    }
+    // Interpolate color from red -> green based on progress
+    val progressColor = lerp(ExpenseRed, IncomeGreen, progress)
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(
