@@ -310,6 +310,16 @@ fun CategoryScreen(
                         var showArchived by remember { mutableStateOf(false) }
                         if (!showSavingsSection) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                                OutlinedButton(
+                                    onClick = { showArchived = !showArchived },
+                                    modifier = Modifier.height(36.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp)
+                                ) {
+                                    Text(text = if (showArchived) "Cerrar archivados" else "Archivados", style = MaterialTheme.typography.bodySmall)
+                                }
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
                                 Button(
                                     onClick = {
                                         // Abrir diálogo de categoría (nuevo)
@@ -322,16 +332,6 @@ fun CategoryScreen(
                                     Icon(LucideIconMapper.Navigation.add, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(text = "Nueva", color = Color.White, style = MaterialTheme.typography.bodySmall)
-                                }
-
-                                Spacer(modifier = Modifier.width(8.dp))
-
-                                OutlinedButton(
-                                    onClick = { showArchived = !showArchived },
-                                    modifier = Modifier.height(36.dp),
-                                    contentPadding = PaddingValues(horizontal = 12.dp)
-                                ) {
-                                    Text(text = if (showArchived) "Cerrar archivados" else "Archivados", style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                             Spacer(modifier = Modifier.height(8.dp))
@@ -357,41 +357,57 @@ fun CategoryScreen(
                                             tint = TextSecondary
                                         )
                                         Spacer(Modifier.height(16.dp))
-                                        Text("No hay categorías archivadas en esta sección.", color = TextSecondary)
+                                        Text(
+                                            "No hay categorías archivadas en esta sección.",
+                                            color = TextSecondary,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            textAlign = TextAlign.Center
+                                        )
                                     }
                                 }
                             } else {
-                                val state = rememberReorderableLazyGridState(onMove = { _, _ -> })
+                                // Render archived items using the same card design as active categories
                                 LazyVerticalGrid(
-                                    state = state.gridState,
                                     columns = GridCells.Fixed(2),
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .reorderable(state),
+                                    modifier = Modifier.fillMaxSize(),
                                     verticalArrangement = Arrangement.spacedBy(8.dp),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     contentPadding = PaddingValues(bottom = 0.dp)
                                 ) {
                                     items(archivedForTab, key = { it.id }) { category ->
-                                        val cardColor = try { Color(android.graphics.Color.parseColor(category.color)) } catch (_: Exception) { com.example.admin_ingresos.ui.theme.getCategoryColor(category.name) }
-                                        val brightBorder = androidx.compose.ui.graphics.lerp(cardColor.copy(alpha = 0.12f), Color.White, 0.06f)
+                                        // Reuse same visuals/behavior as active category cards
+                                        val cardColor by remember(category.color) { mutableStateOf(Color(android.graphics.Color.parseColor(category.color))) }
+                                        val iconVector by remember(category.icon) {
+                                            val iconOption = LucideIconMapper.getAvailableCategoryIcons().find { it.name == category.icon }
+                                            val vector = if (iconOption != null) {
+                                                LucideIconMapper.getIconFromEmoji(iconOption.icon)
+                                            } else {
+                                                LucideIconMapper.getCategoryIcon(category)
+                                            }
+                                            mutableStateOf(vector)
+                                        }
+
+                                        val brightBorder = androidx.compose.ui.graphics.lerp(cardColor.copy(alpha = 0.34f), Color.White, 0.12f)
 
                                         GlassCard(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .aspectRatio(1.05f)
-                                                .clickable { /* no-op or open detail if desired */ },
+                                                .clickable { onNavigateToCategoryDetail(category.id) },
                                             cornerRadius = 20.dp,
-                                            backgroundColor = cardColor.copy(alpha = 0.06f),
+                                            backgroundColor = cardColor.copy(alpha = 0.10f),
                                             borderColor = brightBorder,
-                                            borderWidth = 1.0.dp,
+                                            borderWidth = 1.5.dp,
                                         ) {
                                             Box(modifier = Modifier.fillMaxSize()) {
+
                                                 Box(modifier = Modifier.align(Alignment.TopEnd)) {
                                                     var menuExpanded by remember { mutableStateOf(false) }
+
                                                     IconButton(onClick = { menuExpanded = true }) {
                                                         Icon(LucideIconMapper.Navigation.more, "Más opciones", tint = TextSecondary, modifier = Modifier.size(20.dp))
                                                     }
+
                                                     DropdownMenu(
                                                         expanded = menuExpanded,
                                                         onDismissRequest = { menuExpanded = false },
@@ -424,14 +440,18 @@ fun CategoryScreen(
                                                         .padding(12.dp),
                                                     horizontalAlignment = Alignment.CenterHorizontally
                                                 ) {
+                                                    // Use the category's stored color for background and derive an icon tint
+                                                    val bgColor = cardColor
+                                                    val iconTint = bgColor
+
                                                     Box(
                                                         Modifier
                                                             .size(42.dp)
                                                             .clip(CircleShape)
-                                                            .background(cardColor.copy(alpha = 0.12f)),
+                                                            .background(bgColor.copy(alpha = 0.18f)),
                                                         contentAlignment = Alignment.Center
                                                     ) {
-                                                        Icon(LucideIconMapper.getCategoryIcon(category), null, tint = cardColor, modifier = Modifier.size(22.dp))
+                                                        Icon(iconVector, null, tint = iconTint, modifier = Modifier.size(22.dp))
                                                     }
                                                     Spacer(Modifier.height(8.dp))
                                                     Text(
@@ -443,6 +463,27 @@ fun CategoryScreen(
                                                         overflow = TextOverflow.Ellipsis,
                                                         textAlign = TextAlign.Center,
                                                         modifier = Modifier.padding(horizontal = 4.dp)
+                                                    )
+
+                                                    Spacer(Modifier.weight(1f))
+
+                                                    val stats = uiState.statsMap[category.id]
+                                                    Text(
+                                                        text = "${stats?.transactionCount ?: 0} transacciones",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = com.example.admin_ingresos.ui.theme.TextSecondary,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+
+                                                    val amountColor = if (category.type == CategoryType.GASTO) ExpenseRed else AccentVibrantStart
+                                                    Text(
+                                                        text = "$${String.format("%.2f", stats?.totalAmount ?: 0.0)}",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = amountColor,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
                                                     )
                                                 }
                                             }
