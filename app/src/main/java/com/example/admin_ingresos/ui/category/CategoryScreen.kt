@@ -204,7 +204,7 @@ fun CategoryScreen(
                     var showSavingsSection by remember { mutableStateOf(false) }
 
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                        // Gastos button
+                        // Gastos button (usa icono de tipo de transacción)
                         Button(
                             onClick = {
                                 showSavingsSection = false
@@ -213,21 +213,27 @@ fun CategoryScreen(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (!showSavingsSection && uiState.selectedTab == CategoryType.GASTO) ExpenseRed else GlassWhiteSubtle
                             ),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                             modifier = Modifier
                                 .weight(1f)
-                                .height(40.dp)
+                                .height(36.dp)
                         ) {
-                            Icon(
-                                LucideIconMapper.getNavigationIcon("TrendingDown"),
-                                contentDescription = null,
-                                tint = if (!showSavingsSection && uiState.selectedTab == CategoryType.GASTO) Color.White else TextSecondary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Gastos",
-                                color = if (!showSavingsSection && uiState.selectedTab == CategoryType.GASTO) Color.White else TextSecondary
-                            )
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    LucideIconMapper.getTransactionTypeIcon("Gasto"),
+                                    contentDescription = null,
+                                    tint = if (!showSavingsSection && uiState.selectedTab == CategoryType.GASTO) Color.White else TextSecondary,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Gastos",
+                                    color = if (!showSavingsSection && uiState.selectedTab == CategoryType.GASTO) Color.White else TextSecondary,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
@@ -241,36 +247,59 @@ fun CategoryScreen(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (!showSavingsSection && uiState.selectedTab == CategoryType.INGRESO) AccentVibrantStart else GlassWhiteSubtle
                             ),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                             modifier = Modifier
                                 .weight(1f)
-                                .height(40.dp)
+                                .height(36.dp)
                         ) {
-                            Icon(
-                                LucideIconMapper.getNavigationIcon("TrendingUp"),
-                                contentDescription = null,
-                                tint = if (!showSavingsSection && uiState.selectedTab == CategoryType.INGRESO) Color.White else TextSecondary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Ingresos",
-                                color = if (!showSavingsSection && uiState.selectedTab == CategoryType.INGRESO) Color.White else TextSecondary
-                            )
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    LucideIconMapper.getTransactionTypeIcon("Ingreso"),
+                                    contentDescription = null,
+                                    tint = if (!showSavingsSection && uiState.selectedTab == CategoryType.INGRESO) Color.White else TextSecondary,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Ingresos",
+                                    color = if (!showSavingsSection && uiState.selectedTab == CategoryType.INGRESO) Color.White else TextSecondary,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
 
-                        // Ahorros button (azul con icono alcancía)
+                        // Ahorros button: azul solo cuando está seleccionado (showSavingsSection)
+                        val savingsSelected = showSavingsSection
                         Button(
                             onClick = { showSavingsSection = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3)),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (savingsSelected) Color(0xFF2196F3) else GlassWhiteSubtle
+                            ),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                             modifier = Modifier
                                 .weight(1f)
-                                .height(40.dp)
+                                .height(36.dp)
                         ) {
-                            Icon(LucideIconMapper.getNavigationIcon("PiggyBank"), contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = "Ahorros", color = Color.White)
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    LucideIconMapper.getIconFromCategoryName("ahorros"),
+                                    contentDescription = null,
+                                    tint = if (savingsSelected) Color.White else TextSecondary,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Ahorros",
+                                    color = if (savingsSelected) Color.White else TextSecondary,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
                     Spacer(Modifier.height(8.dp))
