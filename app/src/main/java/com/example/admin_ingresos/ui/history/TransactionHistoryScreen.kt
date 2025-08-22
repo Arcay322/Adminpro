@@ -390,10 +390,10 @@ fun ModernTransactionItem(
     } catch (e: Exception) {
         Color(0xFF85C1E9)
     }
-    // amount color stays green for income and red for expense
+    // amount color: income green, expense red, but for transfers (ahorro) use the category color
     val amountColor = when {
         transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME -> Color(0xFF4CAF50)
-        transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER -> Color(0xFF42A5F5)
+        transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER -> categoryColor
         else -> Color(0xFFE57373)
     }
     val currencyFormat = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
@@ -426,8 +426,15 @@ fun ModernTransactionItem(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                // Use a contrasting tint for icons placed over colored circles
-                val catIcon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getCategoryIcon(category)
+                // Preferir icono guardado por nombre (opciones disponibles) antes del fallback
+                val available = com.example.admin_ingresos.ui.icons.LucideIconMapper.getAvailableCategoryIcons()
+                val iconOption = available.find { it.name.equals(category.icon, ignoreCase = true) }
+                val catIcon = if (iconOption != null) {
+                    com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromEmoji(iconOption.icon)
+                } else {
+                    com.example.admin_ingresos.ui.icons.LucideIconMapper.getCategoryIcon(category)
+                }
+
                 Icon(
                     imageVector = catIcon,
                     contentDescription = category.name,

@@ -191,7 +191,7 @@ fun CategoryScreen(
                     )
                     Spacer(Modifier.height(8.dp))
 
-                    // Pestañas Estilo Píldora con Colores + botón Ahorros
+                    // Pestañas estilo píldora convertidas en botones: Gastos, Ingresos y Ahorros (consistentes)
                     val context = LocalContext.current
                     val db = remember { AppDatabaseProvider.getDatabase(context) }
                     val savingsGoalViewModel: SavingsGoalViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
@@ -203,54 +203,70 @@ fun CategoryScreen(
 
                     var showSavingsSection by remember { mutableStateOf(false) }
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        val tabs = listOf(CategoryType.GASTO, CategoryType.INGRESO)
-                        val selectedTabIndex = tabs.indexOf(uiState.selectedTab)
-
-                        TabRow(
-                            selectedTabIndex = selectedTabIndex,
-                            modifier = Modifier.weight(1f),
-                            containerColor = Color.Transparent,
-                            indicator = {}, // Sin indicador
-                            divider = {} // Sin divisor
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                        // Gastos button
+                        Button(
+                            onClick = {
+                                showSavingsSection = false
+                                viewModel.onTabSelected(CategoryType.GASTO)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (!showSavingsSection && uiState.selectedTab == CategoryType.GASTO) ExpenseRed else GlassWhiteSubtle
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(40.dp)
                         ) {
-                            tabs.forEachIndexed { index, tabType ->
-                                val selected = selectedTabIndex == index && !showSavingsSection
-                                val pillColor = if (tabType == CategoryType.GASTO) ExpenseRed else AccentVibrantStart
-
-                                Tab(
-                                    selected = selected,
-                                    onClick = {
-                                        showSavingsSection = false
-                                        viewModel.onTabSelected(tabType)
-                                    },
-                                    text = {
-                                        val title = if (tabType == CategoryType.GASTO) "Gastos" else "Ingresos"
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(50))
-                                                .background(
-                                                    if (selected) pillColor else Color.Transparent
-                                                )
-                                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                                        ) {
-                                            Text(
-                                                text = title,
-                                                color = if (selected) TextPrimary else TextSecondary
-                                            )
-                                        }
-                                    }
-                                )
-                            }
+                            Icon(
+                                LucideIconMapper.getNavigationIcon("TrendingDown"),
+                                contentDescription = null,
+                                tint = if (!showSavingsSection && uiState.selectedTab == CategoryType.GASTO) Color.White else TextSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Gastos",
+                                color = if (!showSavingsSection && uiState.selectedTab == CategoryType.GASTO) Color.White else TextSecondary
+                            )
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
 
-                        // Blue savings button
+                        // Ingresos button
+                        Button(
+                            onClick = {
+                                showSavingsSection = false
+                                viewModel.onTabSelected(CategoryType.INGRESO)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (!showSavingsSection && uiState.selectedTab == CategoryType.INGRESO) AccentVibrantStart else GlassWhiteSubtle
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(40.dp)
+                        ) {
+                            Icon(
+                                LucideIconMapper.getNavigationIcon("TrendingUp"),
+                                contentDescription = null,
+                                tint = if (!showSavingsSection && uiState.selectedTab == CategoryType.INGRESO) Color.White else TextSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Ingresos",
+                                color = if (!showSavingsSection && uiState.selectedTab == CategoryType.INGRESO) Color.White else TextSecondary
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // Ahorros button (azul con icono alcancía)
                         Button(
                             onClick = { showSavingsSection = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF009688)),
-                            modifier = Modifier.height(40.dp)
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3)),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(40.dp)
                         ) {
                             Icon(LucideIconMapper.getNavigationIcon("PiggyBank"), contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(8.dp))

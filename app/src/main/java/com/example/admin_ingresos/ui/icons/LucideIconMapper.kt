@@ -164,11 +164,33 @@ object LucideIconMapper {
 
     fun getCategoryIcon(category: Category): ImageVector {
         if (category.icon.isNotEmpty()) {
+            // 1) Try if the stored value is an emoji mapped to an icon
             val iconFromEmoji = getIconFromEmoji(category.icon)
             if (iconFromEmoji != Lucide.Tag) {
                 return iconFromEmoji
             }
+
+            // 2) Try if the stored value is a savings-goal key (e.g. "car", "emergency")
+            val savingsIcon = getSavingsGoalIcon(category.icon)
+            if (savingsIcon != Lucide.Tag) {
+                return savingsIcon
+            }
+
+            // 3) Try to match against the available category icon names (case-insensitive)
+            val available = getAvailableCategoryIcons().find { it.name.equals(category.icon, ignoreCase = true) }
+            if (available != null) {
+                val vector = getIconFromEmoji(available.icon)
+                if (vector != Lucide.Tag) return vector
+            }
+
+            // 4) Finally, try to interpret the stored value as a category name
+            val iconFromStoredName = getIconFromCategoryName(category.icon)
+            if (iconFromStoredName != Lucide.Tag) {
+                return iconFromStoredName
+            }
         }
+
+        // Fallback: infer icon from category name
         return getIconFromCategoryName(category.name)
     }
 
