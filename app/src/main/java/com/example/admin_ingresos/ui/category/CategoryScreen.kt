@@ -119,7 +119,7 @@ fun CategoryScreen(
                         .padding(
                             start = paddingValues.calculateStartPadding(layoutDir),
                             end = paddingValues.calculateEndPadding(layoutDir),
-                            bottom = paddingValues.calculateBottomPadding()
+                            bottom = 0.dp // avoid leaving a visible gap above BottomNavigation
                         )
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
@@ -338,8 +338,8 @@ fun CategoryScreen(
                                     .fillMaxSize()
                                     .reorderable(state),
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                contentPadding = PaddingValues(bottom = 16.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    contentPadding = PaddingValues(bottom = 0.dp)
                             ) {
                                 items(uiState.categories, key = { it.id }) { category ->
                                     ReorderableItem(state, key = category.id) { isDragging ->
@@ -667,7 +667,7 @@ private fun SavingsGoalsSummary(savingsGoalViewModel: SavingsGoalViewModel, onOp
                     .reorderable(gridState),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(bottom = 16.dp)
+                contentPadding = PaddingValues(bottom = 0.dp)
             ) {
                 items(savingsGoals) { goal ->
                     val cardColor = try { Color(android.graphics.Color.parseColor(goal.color)) } catch (_: Exception) { com.example.admin_ingresos.ui.theme.getCategoryColor(goal.name) }
