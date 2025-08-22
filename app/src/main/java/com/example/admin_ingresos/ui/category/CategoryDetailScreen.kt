@@ -122,6 +122,9 @@ fun CategoryDetailScreen(
                     )
                 }
             } else if (category != null) {
+                // Compute category color once and pass to chips so selected color matches header
+                val headerCategoryColor = try { Color(android.graphics.Color.parseColor(category.color)) } catch (_: Exception) { com.example.admin_ingresos.ui.theme.getCategoryColor(category.name) }
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -144,7 +147,8 @@ fun CategoryDetailScreen(
                     item {
                         TimeFilterChips(
                             selectedFilter = uiState.selectedFilter,
-                            onFilterSelected = { viewModel.setTimeFilter(it) }
+                            onFilterSelected = { viewModel.setTimeFilter(it) },
+                            selectedColor = headerCategoryColor
                         )
                     }
 
@@ -328,7 +332,8 @@ private fun BudgetProgressInfo(
 @Composable
 private fun TimeFilterChips(
     selectedFilter: TimeFilter,
-    onFilterSelected: (TimeFilter) -> Unit
+    onFilterSelected: (TimeFilter) -> Unit,
+    selectedColor: Color = AccentVibrantStart
 ) {
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
@@ -363,7 +368,7 @@ private fun TimeFilterChips(
                     containerColor = GlassWhiteSubtle,
                     labelColor = TextSecondary,
                     iconColor = TextSecondary,
-                    selectedContainerColor = AccentVibrantStart,
+                    selectedContainerColor = selectedColor,
                     selectedLabelColor = TextPrimary,
                     selectedLeadingIconColor = TextPrimary
                 )
