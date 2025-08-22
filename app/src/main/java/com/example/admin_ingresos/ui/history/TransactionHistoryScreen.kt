@@ -57,9 +57,10 @@ fun TransactionHistoryScreen(navController: NavController) {
         }
     })
     val uiState by viewModel.uiState.collectAsState()
+    var selectedType by remember { mutableStateOf("Todos") }
 
     // Filtrar y ordenar transacciones
-    val filteredTransactions = remember(uiState.transactions, uiState.searchQuery, uiState.sortOption) {
+    val filteredTransactions = remember(uiState.transactions, uiState.searchQuery, uiState.sortOption, selectedType) {
         var filtered = uiState.transactions
 
         // Filtrar por búsqueda
@@ -67,6 +68,18 @@ fun TransactionHistoryScreen(navController: NavController) {
             filtered = filtered.filter { transaction ->
                 transaction.description.contains(uiState.searchQuery, ignoreCase = true) ||
                         transaction.amount.toString().contains(uiState.searchQuery)
+            }
+        }
+
+        // Filtrar por tipo (Ingreso/Gasto/Ahorro)
+        if (selectedType != "Todos") {
+            filtered = filtered.filter { transaction ->
+                when (selectedType) {
+                    "Ingreso" -> transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME
+                    "Gasto" -> transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE
+                    "Ahorro" -> transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER
+                    else -> true
+                }
             }
         }
 
@@ -114,8 +127,8 @@ fun TransactionHistoryScreen(navController: NavController) {
                 ModernSearchAndFilters(
                     searchQuery = uiState.searchQuery,
                     onSearchQueryChange = viewModel::onSearchQueryChanged,
-                    selectedType = "Todos", // TODO: Implement type filter in ViewModel
-                    onTypeChange = { /* TODO */ },
+                    selectedType = selectedType,
+                    onTypeChange = { selectedType = it },
                     sortOption = uiState.sortOption,
                     onSortOrderChange = viewModel::onSortOptionChanged,
                     showFilters = uiState.showFilters,
@@ -406,12 +419,16 @@ fun ModernTransactionItem(
             .animateContentSize(),
         onClick = onClick
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        // container Box so we can overlay the overflow menu on the top-right
+        Box(modifier = Modifier.fillMaxWidth()) {
+            var menuExpanded by remember { mutableStateOf(false) }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
             // Icono de categoría con glassmorphism
             Box(
                 modifier = Modifier
@@ -488,25 +505,37 @@ fun ModernTransactionItem(
                 )
             }
             
-            // Botones de acción con glassmorphism
-            Column {
-                Row {
-                    IconButton(onClick = onEdit) {
-                            Icon(
-                                imageVector = LucideIconMapper.getNavigationIcon("Edit"),
-                                contentDescription = "Editar",
-                                tint = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f),
-                                modifier = Modifier.size(20.dp)
-                            )
-                    }
-                    IconButton(onClick = onDelete) {
-                        Icon(
-                            imageVector = LucideIconMapper.getNavigationIcon("Delete"),
-                            contentDescription = "Eliminar",
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+            }
+
+            // Overflow menu placed in the top-right corner of the card
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentSize(Alignment.TopEnd)
+                    .padding(4.dp)
+            ) {
+                IconButton(onClick = { menuExpanded = true }) {
+                    Icon(
+                        imageVector = LucideIconMapper.Navigation.more,
+                        contentDescription = "Más opciones",
+                        tint = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.85f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    DropdownMenuItem(text = { Text("Editar") }, onClick = {
+                        menuExpanded = false
+                        onEdit()
+                    }, leadingIcon = { Icon(LucideIconMapper.getNavigationIcon("Edit"), null) })
+
+                    DropdownMenuItem(text = { Text("Eliminar", color = MaterialTheme.colorScheme.error) }, onClick = {
+                        menuExpanded = false
+                        onDelete()
+                    }, leadingIcon = { Icon(LucideIconMapper.getNavigationIcon("Delete"), null, tint = MaterialTheme.colorScheme.error) })
                 }
             }
         }
