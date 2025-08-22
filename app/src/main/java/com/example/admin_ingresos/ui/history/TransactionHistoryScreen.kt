@@ -384,6 +384,8 @@ fun ModernTransactionItem(
     onClick: () -> Unit = {}
 ) {
     val isIncome = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME
+    val isExpense = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE
+    val isTransfer = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER
     // derive category color from hex string; fallback to neutral
     val categoryColor = try {
         Color(android.graphics.Color.parseColor(category.color))
@@ -392,8 +394,8 @@ fun ModernTransactionItem(
     }
     // amount color: income green, expense red, but for transfers (ahorro) use the category color
     val amountColor = when {
-        transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME -> Color(0xFF4CAF50)
-        transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER -> categoryColor
+        isIncome -> Color(0xFF4CAF50)
+        isTransfer -> Color(0xFF2196F3) // blue for savings/transfer
         else -> Color(0xFFE57373)
     }
     val currencyFormat = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
@@ -467,8 +469,15 @@ fun ModernTransactionItem(
                 )
                 
                 // Monto con estilo mejorado (no-wrap)
+                val absAmt = kotlin.math.abs(transaction.amount)
+                val sign = when {
+                    isExpense -> "-"
+                    isIncome -> "+"
+                    else -> "" // transfers/ahorro: no sign
+                }
+
                 Text(
-                    text = "${if (isIncome) "+" else "-"}${currencyFormat.format(transaction.amount).replace(" ", "\u00A0")}",
+                    text = "$sign${currencyFormat.format(absAmt).replace(" ", "\u00A0")}",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold
                     ),

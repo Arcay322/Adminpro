@@ -367,9 +367,9 @@ private fun DateHeader(date: String) {
 @Composable
 private fun TransactionListItem(transaction: Transaction) {
     val formatter = remember { NumberFormat.getCurrencyInstance(Locale("es", "ES")) }
-    val isGasto = transaction.type == CategoryType.GASTO.name
-    val isIngreso = transaction.type == CategoryType.INGRESO.name
-    val isAhorro = transaction.type == CategoryType.AHORRO.name
+    val isGasto = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE
+    val isIngreso = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME
+    val isAhorro = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER
     val amountColor = when {
         isGasto -> ExpenseRed
         isIngreso -> IncomeGreen

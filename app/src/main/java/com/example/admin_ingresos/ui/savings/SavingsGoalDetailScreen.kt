@@ -164,8 +164,8 @@ fun SavingsGoalDetailScreen(
                                         )
                                     }
                                     Column {
-                                        Text("Meta", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-                                        Text(formatter.format(goal!!.currentAmount), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = AccentVibrantStart)
+                                        Text("Total ahorrado", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                                        Text(formatter.format(goal!!.currentAmount), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color(0xFF2196F3))
                                         Text("${filteredTx.size} ${if (filteredTx.size == 1) "transacción" else "transacciones"}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                                     }
                                 }
@@ -250,6 +250,7 @@ fun SavingsGoalDetailScreen(
 
 @Composable
 private fun DateHeader(date: String) {
+    // Mostrar la fecha con mayor contraste sin necesidad de un contenedor
     Text(
         text = date,
         style = MaterialTheme.typography.titleSmall,
@@ -257,7 +258,6 @@ private fun DateHeader(date: String) {
         color = TextPrimary,
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.Black.copy(alpha = 0.9f))
             .padding(vertical = 8.dp)
     )
 }
@@ -357,7 +357,15 @@ private fun setEndOfDay(calendar: java.util.Calendar) {
 @Composable
 private fun TransactionRow(transaction: Transaction) {
     val formatter = remember { java.text.NumberFormat.getCurrencyInstance(Locale("es", "ES")) }
-    val amountColor = if (transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE) com.example.admin_ingresos.ui.theme.ExpenseRed else com.example.admin_ingresos.ui.theme.AccentVibrantStart
+    val isExpense = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE
+    val isIncome = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME
+    val isTransfer = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER
+    val amountColor = when {
+        isExpense -> com.example.admin_ingresos.ui.theme.ExpenseRed
+        isIncome -> com.example.admin_ingresos.ui.theme.IncomeGreen
+        isTransfer -> Color(0xFF2196F3)
+        else -> com.example.admin_ingresos.ui.theme.AccentVibrantStart
+    }
     val dateFormat = remember { java.text.SimpleDateFormat("HH:mm", Locale.getDefault()) }
 
     androidx.compose.foundation.layout.Row(
@@ -378,11 +386,19 @@ private fun TransactionRow(transaction: Transaction) {
             Text(
                 text = dateFormat.format(java.util.Date(transaction.date)),
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary.copy(alpha = 0.75f)
             )
         }
+        val absAmt = kotlin.math.abs(transaction.amount)
+        val sign = when {
+            isExpense -> "-"
+            isIncome -> "+"
+            else -> ""
+        }
+
         Text(
-            text = formatter.format(transaction.amount),
+            text = "$sign${formatter.format(absAmt)}",
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold,
             color = amountColor
