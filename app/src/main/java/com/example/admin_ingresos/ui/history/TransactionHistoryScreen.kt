@@ -15,6 +15,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -734,6 +736,7 @@ fun DetailedStatItem(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModernSearchAndFilters(
     searchQuery: String,
@@ -763,42 +766,68 @@ fun ModernSearchAndFilters(
                     imageVector = LucideIconMapper.getNavigationIcon("Search"),
                     contentDescription = "Buscar",
                     tint = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f),
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(18.dp)
                 )
-                
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = onSearchQueryChange,
-                    placeholder = {
-                        Text(
-                            text = "Buscar transacciones...",
-                            color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.5f)
-                        )
-                    },
-                    modifier = Modifier.weight(1f),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = com.example.admin_ingresos.ui.theme.TextPrimary,
-                        unfocusedTextColor = com.example.admin_ingresos.ui.theme.TextPrimary,
-                        focusedBorderColor = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.3f),
-                        unfocusedBorderColor = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.2f),
-                        cursorColor = CashFlowPrimary
-                    ),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(
-                        onSearch = { keyboardController?.hide() }
-                    ),
-                    singleLine = true
-                )
-                
-                IconButton(
-                    onClick = { onToggleFilters() }
+
+                // Box with subtle border so the input matches other glass containers
+                var searchFocused by remember { mutableStateOf(false) }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)), RoundedCornerShape(10.dp))
+                        .background(Color.Transparent),
+                    contentAlignment = Alignment.CenterStart
                 ) {
-                    Icon(
-                        imageVector = LucideIconMapper.getNavigationIcon("Filter"),
-                        contentDescription = "Filtros",
-                        tint = if (selectedType != "Todos" || sortOption != SortOption.DATE_DESC) 
-                            CashFlowPrimary else com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f),
-                        modifier = Modifier.size(20.dp)
+                    BasicTextField(
+                        value = searchQuery,
+                        onValueChange = onSearchQueryChange,
+                        singleLine = true,
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = com.example.admin_ingresos.ui.theme.TextPrimary),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(start = 12.dp, end = 12.dp)
+                            .onFocusChanged { searchFocused = it.isFocused },
+                        decorationBox = { innerTextField ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                if (searchQuery.isEmpty()) {
+                                    Text(
+                                        text = "Buscar transacciones...",
+                                        color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.6f),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        }
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    IconButton(
+                        onClick = { onToggleFilters() }
+                    ) {
+                        Icon(
+                            imageVector = LucideIconMapper.getNavigationIcon("Filter"),
+                            contentDescription = "Filtros",
+                            tint = if (selectedType != "Todos" || sortOption != SortOption.DATE_DESC)
+                                CashFlowPrimary else com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Text(
+                        text = "Filtros",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f)
                     )
                 }
             }
