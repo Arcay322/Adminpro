@@ -6,8 +6,7 @@ import androidx.lifecycle.viewModelScope
 import android.content.Context
 import android.net.Uri
 import com.example.admin_ingresos.data.AppDatabase
-import com.example.admin_ingresos.data.Budget
-import com.example.admin_ingresos.data.BudgetPeriod
+// Budget types removed from this ViewModel per cleanup
 import com.example.admin_ingresos.data.Category
 import com.example.admin_ingresos.data.Transaction
 import com.example.admin_ingresos.ui.history.DateRange
@@ -37,9 +36,10 @@ data class ReportData(
     val totalTransfers: Double = 0.0,
     val netSavings: Double = 0.0,
     val expenseByCategory: List<CategoryExpenseShare> = emptyList(),
+    val incomeByCategory: List<CategoryExpenseShare> = emptyList(),
     val incomeVsExpenseTrend: List<TrendDataPoint> = emptyList(),
     val transfersGrowth: List<SavingsPoint> = emptyList(),
-    val budgetVsActual: List<BudgetComparison> = emptyList()
+    // budgetVsActual removed per cleanup request
 )
 
 data class CategoryExpenseShare(
@@ -61,13 +61,7 @@ data class SavingsPoint(
     val amount: Double
 )
 
-data class BudgetComparison(
-    val budget: Budget,
-    val category: Category,
-    val actualAmount: Double,
-    val progress: Float,
-    val proratedAmount: Double = 0.0
-)
+// BudgetComparison and related budget types removed per request
 
 enum class DateRangePreset(val displayName: String) {
     TODAY("Hoy"),
@@ -92,7 +86,6 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
     val uiState: StateFlow<ReportsUiState> = _uiState.asStateFlow()
 
     private val transactionDao = db.transactionDao()
-    private val budgetDao = db.budgetDao()
     private val categoryDao = db.categoryDao()
     private val paymentDao = db.paymentMethodDao()
     private val exportRecordDao = db.exportRecordDao()
@@ -260,23 +253,20 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
     val totalExpenses = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
     val totalTransfers = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER }.sumOf { it.amount }
     val expenseByCategory = calculateExpenseByCategory(transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE })
-        val incomeVsExpenseTrend = calculateIncomeVsExpenseTrend(transactions)
-    val budgets = budgetDao.getAllBudgets().first()
-    // when called without an explicit UI range, assume budgets cover their own ranges; no proration
-    val budgetVsActual = calculateBudgetVsActual(transactions.filter { it.type == "Gasto" }, budgets, null)
-
+    val incomeByCategory = calculateIncomeByCategory(transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME })
+    val incomeVsExpenseTrend = calculateIncomeVsExpenseTrend(transactions)
     val transfersGrowth = calculateCumulativeTransfers(transactions)
 
-        return ReportData(
-            totalIncome = totalIncome,
-            totalExpenses = totalExpenses,
-            totalTransfers = totalTransfers,
-            netSavings = totalIncome - totalExpenses - totalTransfers,
-            expenseByCategory = expenseByCategory,
-            incomeVsExpenseTrend = incomeVsExpenseTrend,
-            transfersGrowth = transfersGrowth,
-            budgetVsActual = budgetVsActual
-        )
+    return ReportData(
+        totalIncome = totalIncome,
+        totalExpenses = totalExpenses,
+        totalTransfers = totalTransfers,
+        netSavings = totalIncome - totalExpenses - totalTransfers,
+        expenseByCategory = expenseByCategory,
+        incomeByCategory = incomeByCategory,
+        incomeVsExpenseTrend = incomeVsExpenseTrend,
+        transfersGrowth = transfersGrowth
+    )
     }
 
     // Public helper to get a DateRange for a preset (UI can call this)
@@ -355,15 +345,13 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
                     sortBy = "DATE_DESC"
                 )
 
-                val budgets = budgetDao.getAllBudgets().first()
-
                 val totalIncome = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME }.sumOf { it.amount }
                 val totalExpenses = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
                 val totalTransfers = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER }.sumOf { it.amount }
 
                 val expenseByCategory = calculateExpenseByCategory(transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE })
+                val incomeByCategory = calculateIncomeByCategory(transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME })
                 val incomeVsExpenseTrend = calculateIncomeVsExpenseTrend(transactions)
-                val budgetVsActual = calculateBudgetVsActual(transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }, budgets, range)
 
                 val transfersGrowth = calculateCumulativeTransfers(transactions)
 
@@ -373,9 +361,9 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
                     totalTransfers = totalTransfers,
                     netSavings = totalIncome - totalExpenses - totalTransfers,
                     expenseByCategory = expenseByCategory,
+                    incomeByCategory = incomeByCategory,
                     incomeVsExpenseTrend = incomeVsExpenseTrend,
-                    transfersGrowth = transfersGrowth,
-                    budgetVsActual = budgetVsActual
+                    transfersGrowth = transfersGrowth
                 )
                 _uiState.update { it.copy(isLoading = false, reportData = newReportData) }
 
@@ -404,6 +392,25 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
             .sortedByDescending { it.amount }
     }
 
+    private suspend fun calculateIncomeByCategory(incomes: List<Transaction>): List<CategoryExpenseShare> {
+        val totalIncome = incomes.sumOf { it.amount }
+        if (totalIncome == 0.0) return emptyList()
+
+        return incomes
+            .groupBy { it.categoryId }
+            .map { (categoryId, transactions) ->
+                val category = categoryDao.getCategoryById(categoryId) ?: Category.uncategorized()
+                val categoryTotal = transactions.sumOf { it.amount }
+                CategoryExpenseShare(
+                    category = category,
+                    amount = categoryTotal,
+                    percentage = (categoryTotal / totalIncome).toFloat(),
+                    color = Color(android.graphics.Color.parseColor(category.color))
+                )
+            }
+            .sortedByDescending { it.amount }
+    }
+
     private fun calculateIncomeVsExpenseTrend(transactions: List<Transaction>): List<TrendDataPoint> {
         if (transactions.isEmpty()) return emptyList()
 
@@ -418,141 +425,9 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
             .sortedBy { it.timestamp }
     }
 
-    private fun proratedAmountForRange(budget: Budget, range: DateRange): Double {
-        // If budget has explicit dates, use overlap-based proration.
-        val hasValidDates = budget.startDate > 0L && budget.endDate > budget.startDate
-        if (hasValidDates) {
-            val overlapStart = maxOf(budget.startDate, range.startDate)
-            val overlapEnd = minOf(budget.endDate, range.endDate)
-            if (overlapEnd <= overlapStart) return 0.0
-            val budgetDuration = (budget.endDate - budget.startDate).coerceAtLeast(1L).toDouble()
-            val overlapDuration = (overlapEnd - overlapStart).toDouble()
-            return budget.amount * (overlapDuration / budgetDuration)
-        }
+    // proratedAmountForRange removed; budget calculations cleaned up
 
-        // Budget is a recurring template (no concrete start/end) -> generate calendar-aligned
-        // periods that intersect the requested range and sum prorrated contributions.
-        try {
-            val periods = mutableListOf<Pair<Long, Long>>()
-            val cal = Calendar.getInstance()
-            cal.timeInMillis = range.startDate
-
-            // Align calendar to the beginning of the period that contains range.startDate
-            when (budget.period) {
-                BudgetPeriod.WEEKLY -> {
-                    cal.firstDayOfWeek = Calendar.MONDAY
-                    cal.set(Calendar.DAY_OF_WEEK, cal.firstDayOfWeek)
-                    cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
-                }
-                BudgetPeriod.MONTHLY -> {
-                    cal.set(Calendar.DAY_OF_MONTH, 1)
-                    cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
-                }
-                BudgetPeriod.QUARTERLY -> {
-                    val month = cal.get(Calendar.MONTH)
-                    val quarterStartMonth = (month / 3) * 3
-                    cal.set(Calendar.MONTH, quarterStartMonth)
-                    cal.set(Calendar.DAY_OF_MONTH, 1)
-                    cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
-                }
-                BudgetPeriod.YEARLY -> {
-                    cal.set(Calendar.MONTH, Calendar.JANUARY)
-                    cal.set(Calendar.DAY_OF_MONTH, 1)
-                    cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
-                }
-            }
-
-            // Generate successive period windows until we pass range.endDate
-            while (cal.timeInMillis <= range.endDate) {
-                val periodStart = cal.timeInMillis
-                // compute next period start
-                when (budget.period) {
-                    BudgetPeriod.WEEKLY -> cal.add(Calendar.WEEK_OF_YEAR, 1)
-                    BudgetPeriod.MONTHLY -> cal.add(Calendar.MONTH, 1)
-                    BudgetPeriod.QUARTERLY -> cal.add(Calendar.MONTH, 3)
-                    BudgetPeriod.YEARLY -> cal.add(Calendar.YEAR, 1)
-                }
-                val periodEndExclusive = cal.timeInMillis
-                periods.add(Pair(periodStart, periodEndExclusive))
-                // safety: break if infinite loop
-                if (periods.size > 1000) break
-            }
-
-            var total = 0.0
-            val periodMs = budget.period.durationInMillis.toDouble()
-            for ((pStart, pEndExclusive) in periods) {
-                val overlapStart = maxOf(pStart, range.startDate)
-                val overlapEnd = minOf(pEndExclusive, range.endDate)
-                if (overlapEnd <= overlapStart) continue
-                val overlapDur = (overlapEnd - overlapStart).toDouble()
-                total += budget.amount * (overlapDur / periodMs)
-            }
-
-            // Treat very small prorated totals as zero to avoid huge % due to rounding
-            if (total < 0.01) return 0.0
-            return total
-        } catch (_: Exception) {
-            // In unexpected cases, fallback to proportional by simple duration
-            val periodMs = budget.period.durationInMillis.toDouble()
-            val rangeDuration = (range.endDate - range.startDate).coerceAtLeast(1L).toDouble()
-            val fallback = budget.amount * (rangeDuration / periodMs)
-            return if (fallback < 0.01) 0.0 else fallback
-        }
-    }
-
-    private suspend fun calculateBudgetVsActual(expenses: List<Transaction>, budgets: List<Budget>, range: DateRange? = null): List<BudgetComparison> {
-        // Sum expenses by category (expenses list assumed already filtered to range where appropriate)
-        val expensesByCategory = expenses.groupBy { it.categoryId }.mapValues { entry -> entry.value.sumOf { it.amount } }
-
-        // Sum prorated (or full) budgets by category
-        val budgetsByCategory = budgets.groupBy { it.categoryId }
-
-        val result = mutableListOf<BudgetComparison>()
-
-        val allCategoryIds = (expensesByCategory.keys + budgetsByCategory.keys).toSet()
-
-        for (catId in allCategoryIds) {
-            val actual = expensesByCategory[catId] ?: 0.0
-            val budgetsForCat = budgetsByCategory[catId] ?: emptyList()
-            var prorated = if (range != null) {
-                budgetsForCat.sumOf { proratedAmountForRange(it, range) }
-            } else {
-                budgetsForCat.sumOf { it.amount }
-            }
-
-            // Normalize tiny prorated amounts to zero (practical threshold)
-            if (prorated < 0.01) prorated = 0.0
-
-            val category = if (budgetsForCat.isNotEmpty()) {
-                // pick first for metadata (color/name), prefer actual category lookup
-                categoryDao.getCategoryById(budgetsForCat.first().categoryId) ?: Category.uncategorized()
-            } else {
-                categoryDao.getCategoryById(catId) ?: Category.uncategorized()
-            }
-
-            val progress = when {
-                prorated > 0.0 -> (actual / prorated).toFloat()
-                actual > 0.0 -> Float.POSITIVE_INFINITY
-                else -> 0f
-            }
-
-            // For budget metadata, if we have a budget entity, use the first one; otherwise create a placeholder
-            val budgetMeta = budgetsForCat.firstOrNull() ?: Budget(id = 0, categoryId = catId, amount = prorated, period = BudgetPeriod.MONTHLY, startDate = range?.startDate ?: 0L, endDate = range?.endDate ?: 0L)
-
-            result.add(
-                BudgetComparison(
-                    budget = budgetMeta,
-                    category = category,
-                    actualAmount = actual,
-                    progress = progress,
-                    proratedAmount = prorated
-                )
-            )
-        }
-
-        // Sort: prefer items with an applicable prorated budget ordered by progress; otherwise sort by actual spent
-        return result.sortedWith(compareByDescending<BudgetComparison> { if (it.proratedAmount > 0.0) it.progress else it.actualAmount.toFloat() })
-    }
+    // calculateBudgetVsActual removed per cleanup request
 
     private fun getStartOfDay(timestamp: Long): Long {
         val calendar = Calendar.getInstance().apply { timeInMillis = timestamp }

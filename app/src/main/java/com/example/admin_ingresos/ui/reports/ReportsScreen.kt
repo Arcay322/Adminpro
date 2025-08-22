@@ -136,21 +136,21 @@ fun ReportsScreen() {
     val createXlsxLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(xlsxMime)) { destUri ->
         if (destUri != null && pendingDownloadSourceUri != null) {
             try {
-                context.contentResolver.openInputStream(pendingDownloadSourceUri!!).use { input ->
-                    context.contentResolver.openOutputStream(destUri).use { output ->
-                        if (input != null && output != null) {
-                            input.copyTo(output)
+                    context.contentResolver.openInputStream(pendingDownloadSourceUri!!).use { input ->
+                        context.contentResolver.openOutputStream(destUri).use { output ->
+                            if (input != null && output != null) {
+                                input.copyTo(output)
+                            }
                         }
                     }
+                    coroutineScope.launch { snackbarHostState.showSnackbar("Descargado correctamente") }
+                } catch (e: Exception) {
+                    coroutineScope.launch { snackbarHostState.showSnackbar("Error al guardar: ${e.message}") }
+                } finally {
+                    pendingDownloadSourceUri = null
+                    isDownloadPending = false
+                    pendingDownloadMime = null
                 }
-                coroutineScope.launch { snackbarHostState.showSnackbar("Descargado correctamente") }
-            } catch (e: Exception) {
-                coroutineScope.launch { snackbarHostState.showSnackbar("Error al guardar: ${e.message}") }
-            } finally {
-                pendingDownloadSourceUri = null
-                isDownloadPending = false
-                pendingDownloadMime = null
-            }
         } else {
             pendingDownloadSourceUri = null
             isDownloadPending = false
@@ -240,10 +240,10 @@ fun ReportsScreen() {
                 item {
                     ExpenseByCategoryChart(reportData = uiState.reportData)
                 }
-
                 item {
-                    BudgetVsActualComparison(reportData = uiState.reportData, viewModel = viewModel, currentRange = uiState.selectedDateRange)
+                    IncomeByCategoryChart(reportData = uiState.reportData)
                 }
+
             }
         }
     }
@@ -702,6 +702,46 @@ fun ExpenseByCategoryChart(reportData: ReportData) {
                 }
             } else {
                 Text(text = "No hay datos de gastos para este período.", color = TextSecondary)
+            }
+        }
+    }
+}
+
+@Composable
+fun IncomeByCategoryChart(reportData: ReportData) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Ingresos por Categoría",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            if (reportData.incomeByCategory.isNotEmpty()) {
+                DonutChart(
+                    categories = reportData.incomeByCategory.map { CategoryData(it.category.name, it.percentage, it.color) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                        .padding(vertical = 10.dp),
+                    totalAmount = reportData.totalIncome
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(reportData.incomeByCategory) { categoryShare ->
+                        CategoryLegendItem(
+                            category = CategoryData(categoryShare.category.name, categoryShare.percentage, categoryShare.color),
+                            amount = categoryShare.amount
+                        )
+                    }
+                }
+            } else {
+                Text(text = "No hay datos de ingresos para este período.", color = TextSecondary)
             }
         }
     }
@@ -1319,180 +1359,6 @@ private fun computeDeltaFromTrend(data: List<TrendDataPoint>, selector: (TrendDa
     return ((last - prev) / kotlin.math.abs(prev)) * 100.0
 }
 
-@Composable
-fun BudgetVsActualComparison(reportData: ReportData, viewModel: ReportsViewModel, currentRange: DateRange?) {
-    GlassCard(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "Presupuesto vs. Gasto Real",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            if (reportData.budgetVsActual.isNotEmpty()) {
-                // show highest progress first (items closest to/exceeding budget)
-                val sorted = reportData.budgetVsActual.sortedByDescending { it.progress }
-                sorted.forEachIndexed { idx, budgetComparison ->
-                    val cardColor = Color(android.graphics.Color.parseColor(budgetComparison.category.color))
-                    GlassCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        cornerRadius = 20.dp,
-                        backgroundColor = cardColor.copy(alpha = 0.10f),
-                        borderColor = cardColor.copy(alpha = 0.20f)
-                    ) {
-                        // match Category card internals: fill available area and use modest inner padding
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp)) {
-                                BudgetComparisonItemWithExtras(
-                                    item = budgetComparison,
-                                    viewModel = viewModel,
-                                    currentRange = currentRange,
-                                    rowIndex = idx
-                                )
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                }
-            } else {
-                Text(text = "No hay presupuestos activos para este período.", color = TextSecondary)
-            }
-        }
-    }
-}
-
-@Composable
-fun BudgetComparisonItemWithExtras(item: BudgetComparison, viewModel: ReportsViewModel, currentRange: DateRange?, rowIndex: Int) {
-    // animate with slight stagger per rowIndex
-    val animationDelay = (rowIndex * 50)
-    // ...existing content from BudgetComparisonItem adapted
-    BudgetComparisonItem(item)
-    // Add extra info row: days left, percent time used, sparkline, forecast
-    Spacer(modifier = Modifier.height(6.dp))
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Column {
-            // days left and percent time used (if dates available)
-            if (item.budget.startDate > 0L && item.budget.endDate > 0L) {
-                val now = System.currentTimeMillis()
-                val millisPerDay = 1000L * 60 * 60 * 24
-                val totalDays = ((item.budget.endDate - item.budget.startDate) / millisPerDay).coerceAtLeast(1L)
-                val elapsedDays = ((now - item.budget.startDate) / millisPerDay).coerceIn(0L, totalDays)
-                val daysLeft = ((item.budget.endDate - now) / millisPerDay).coerceAtLeast(0L)
-                val percentTime = ((elapsedDays.toFloat() / totalDays.toFloat()) * 100f).coerceIn(0f, 100f)
-                Text(text = "Días restantes: $daysLeft", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
-                Text(text = "Periodo usado: ${DecimalFormat("#0.#").format(percentTime)}%", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
-            }
-        }
-
-    // removed mini-sparkline by user request; keep layout compact
-    Spacer(modifier = Modifier.width(8.dp))
-    }
-}
-
-@Composable
-fun BudgetComparisonItem(item: BudgetComparison) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
-    Column(modifier = Modifier.padding(vertical = 6.dp)) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // category icon like CategoryScreen
-                val cardColor = Color(android.graphics.Color.parseColor(item.category.color))
-                Box(
-                    Modifier
-                        .size(34.dp)
-                        .clip(CircleShape)
-                        .background(cardColor.copy(alpha = 0.18f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val bg = try { Color(android.graphics.Color.parseColor(item.category.color)) } catch (_: Exception) { TextPrimary }
-                    // Use full category color for the icon and a light circle background to match CategoryScreen
-                    val iconTint = bg
-                    Icon(LucideIconMapper.getCategoryIcon(item.category), null, tint = iconTint, modifier = Modifier.size(18.dp))
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                if (item.progress > 1f) {
-                    Icon(Icons.Default.Warning, contentDescription = "Excedido", tint = ExpenseRed, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                }
-                Text(text = item.category.name, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-                // percentage badge (formatted, capped). Handle no/prorated=0 and Infinity safely.
-                val badgeColor = when {
-                    item.progress.isFinite() && item.progress > 1f -> ExpenseRed
-                    item.progress.isFinite() && item.progress >= 0.75f -> androidx.compose.ui.graphics.Color(0xFFF0A500)
-                    else -> IncomeGreen
-                }
-
-                val pctForm = when {
-                    item.proratedAmount <= 0.0 -> "Sin presupuesto"
-                    item.progress.isFinite() -> {
-                        val pctFloat = (item.progress * 100f)
-                        val pctCapped = pctFloat.coerceAtMost(500f)
-                        DecimalFormat("#0.#").format(pctCapped) + "%"
-                    }
-                    item.actualAmount > 0.0 -> "--"
-                    else -> "0%"
-                }
-
-                Text(text = pctForm, color = badgeColor, fontWeight = FontWeight.Bold)
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Custom progress bar with animation and color thresholds
-        val displayProgress = when {
-            item.progress.isFinite() -> item.progress.coerceIn(0f, 1f)
-            else -> 0f
-        }
-        val barColor = when {
-            item.progress.isFinite() && item.progress > 1f -> ExpenseRed
-            item.progress.isFinite() && item.progress >= 0.75f -> androidx.compose.ui.graphics.Color(0xFFF0A500)
-            else -> IncomeGreen
-        }
-        BudgetProgressBar(progress = displayProgress, color = barColor, modifier = Modifier.fillMaxWidth())
-
-        Spacer(modifier = Modifier.height(6.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                Text(text = "Gastado: ${formatter.format(item.actualAmount).replace(" ", "\u00A0")}", style = MaterialTheme.typography.bodySmall, color = TextSecondary, maxLines = 1)
-                Text(text = "Presupuesto (ajust.): ${formatter.format(item.proratedAmount).replace(" ", "\u00A0")}", style = MaterialTheme.typography.bodySmall, color = TextSecondary, maxLines = 1)
-                if (item.proratedAmount != item.budget.amount) {
-                    Text(text = "Original: ${formatter.format(item.budget.amount).replace(" ", "\u00A0")}", style = MaterialTheme.typography.bodySmall, color = TextSecondary, maxLines = 1)
-                }
-            }
-            // show absolute over/remaining amounts relative to the prorated budget for the selected range
-            if (item.proratedAmount <= 0.0) {
-                // No budget applied to this period
-                Text(text = "No hay presupuesto para este período", color = TextSecondary, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
-            } else {
-                val overAmount = item.actualAmount - item.proratedAmount
-                if (overAmount > 0.0) {
-                    Text(text = "Sobre: ${formatter.format(overAmount).replace(" ", "\u00A0")}", color = ExpenseRed, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic, maxLines = 1)
-                } else {
-                    Text(text = "Libre: ${formatter.format(-overAmount).replace(" ", "\u00A0")}", color = IncomeGreen, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic, maxLines = 1)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun BudgetProgressBar(progress: Float, color: Color, modifier: Modifier = Modifier) {
-    val animated = animateFloatAsState(targetValue = progress.coerceIn(0f, 1f))
-    Box(modifier = modifier.height(14.dp)) {
-        // track
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF2A2A2A), shape = CircleShape)
-        )
-        // fill
-        Box(modifier = Modifier
-            .fillMaxWidth(animated.value)
-            .height(14.dp)
-            .clip(CircleShape)
-            .background(color.copy(alpha = 0.95f))
-        )
-    // end percentage pill removed to avoid duplication with top-line badge
-    }
-}
+// Budget section removed per request. The previous composables for "Presupuesto vs. Gasto Real"
+// were intentionally deleted to clean up the codebase. If you need to restore later, check
+// version control or ask to re-implement a lighter-weight budget feature.
