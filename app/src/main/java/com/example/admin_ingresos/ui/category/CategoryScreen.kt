@@ -306,7 +306,8 @@ fun CategoryScreen(
 
                     // Contenido principal
                     Column(modifier = Modifier.weight(1f)) {
-                        // Si estamos en Gastos o Ingresos mostrar botón "Nueva" que abre el formulario de categoría
+                        // Si estamos en Gastos o Ingresos mostrar botón "Nueva" y "Archivados"
+                        var showArchived by remember { mutableStateOf(false) }
                         if (!showSavingsSection) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                                 Button(
@@ -322,6 +323,16 @@ fun CategoryScreen(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(text = "Nueva", color = Color.White, style = MaterialTheme.typography.bodySmall)
                                 }
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                OutlinedButton(
+                                    onClick = { showArchived = !showArchived },
+                                    modifier = Modifier.height(36.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp)
+                                ) {
+                                    Text(text = if (showArchived) "Cerrar archivados" else "Archivados", style = MaterialTheme.typography.bodySmall)
+                                }
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                         }
@@ -333,6 +344,112 @@ fun CategoryScreen(
                                 onOpen = { goalId -> onNavigateToSavingsDetail(goalId) },
                                 onDelete = { goal -> savingsToDelete = goal }
                             )
+                        } else if (showArchived) {
+                            // Mostrar categorías archivadas para la pestaña actual
+                            val archivedForTab = uiState.archivedCategories.filter { it.type == uiState.selectedTab }
+                            if (archivedForTab.isEmpty()) {
+                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Icon(
+                                            imageVector = LucideIconMapper.getNavigationIcon("Archive"),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(48.dp),
+                                            tint = TextSecondary
+                                        )
+                                        Spacer(Modifier.height(16.dp))
+                                        Text("No hay categorías archivadas en esta sección.", color = TextSecondary)
+                                    }
+                                }
+                            } else {
+                                val state = rememberReorderableLazyGridState(onMove = { _, _ -> })
+                                LazyVerticalGrid(
+                                    state = state.gridState,
+                                    columns = GridCells.Fixed(2),
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .reorderable(state),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    contentPadding = PaddingValues(bottom = 0.dp)
+                                ) {
+                                    items(archivedForTab, key = { it.id }) { category ->
+                                        val cardColor = try { Color(android.graphics.Color.parseColor(category.color)) } catch (_: Exception) { com.example.admin_ingresos.ui.theme.getCategoryColor(category.name) }
+                                        val brightBorder = androidx.compose.ui.graphics.lerp(cardColor.copy(alpha = 0.12f), Color.White, 0.06f)
+
+                                        GlassCard(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .aspectRatio(1.05f)
+                                                .clickable { /* no-op or open detail if desired */ },
+                                            cornerRadius = 20.dp,
+                                            backgroundColor = cardColor.copy(alpha = 0.06f),
+                                            borderColor = brightBorder,
+                                            borderWidth = 1.0.dp,
+                                        ) {
+                                            Box(modifier = Modifier.fillMaxSize()) {
+                                                Box(modifier = Modifier.align(Alignment.TopEnd)) {
+                                                    var menuExpanded by remember { mutableStateOf(false) }
+                                                    IconButton(onClick = { menuExpanded = true }) {
+                                                        Icon(LucideIconMapper.Navigation.more, "Más opciones", tint = TextSecondary, modifier = Modifier.size(20.dp))
+                                                    }
+                                                    DropdownMenu(
+                                                        expanded = menuExpanded,
+                                                        onDismissRequest = { menuExpanded = false },
+                                                        modifier = Modifier
+                                                            .background(Color(0xFF2A2D32))
+                                                            .clip(RoundedCornerShape(12.dp))
+                                                    ) {
+                                                        DropdownMenuItem(
+                                                            text = { Text("Restaurar", color = AccentVibrantStart) },
+                                                            onClick = {
+                                                                menuExpanded = false
+                                                                viewModel.unarchiveCategory(category)
+                                                            },
+                                                            leadingIcon = { Icon(LucideIconMapper.Navigation.upload, null, tint = AccentVibrantStart) }
+                                                        )
+                                                        DropdownMenuItem(
+                                                            text = { Text("Eliminar", color = ExpenseRed) },
+                                                            onClick = {
+                                                                menuExpanded = false
+                                                                categoryToDelete = category
+                                                            },
+                                                            leadingIcon = { Icon(LucideIconMapper.Navigation.delete, null, tint = ExpenseRed) }
+                                                        )
+                                                    }
+                                                }
+
+                                                Column(
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .padding(12.dp),
+                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                ) {
+                                                    Box(
+                                                        Modifier
+                                                            .size(42.dp)
+                                                            .clip(CircleShape)
+                                                            .background(cardColor.copy(alpha = 0.12f)),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Icon(LucideIconMapper.getCategoryIcon(category), null, tint = cardColor, modifier = Modifier.size(22.dp))
+                                                    }
+                                                    Spacer(Modifier.height(8.dp))
+                                                    Text(
+                                                        text = category.name,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = com.example.admin_ingresos.ui.theme.TextPrimary,
+                                                        style = MaterialTheme.typography.titleMedium,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis,
+                                                        textAlign = TextAlign.Center,
+                                                        modifier = Modifier.padding(horizontal = 4.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         } else if (uiState.categories.isEmpty() && uiState.searchQuery.isBlank()) {
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
