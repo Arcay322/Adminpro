@@ -771,13 +771,15 @@ fun ModernSearchAndFilters(
 
                 // Box with subtle border so the input matches other glass containers
                 var searchFocused by remember { mutableStateOf(false) }
+                // Use the shared glassmorphism modifier so the search box matches other containers
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(44.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)), RoundedCornerShape(10.dp))
-                        .background(Color.Transparent),
+                        .glassmorphism(
+                            cornerRadius = 10.dp,
+                            borderWidth = 1.dp
+                        ),
                     contentAlignment = Alignment.CenterStart
                 ) {
                     BasicTextField(
