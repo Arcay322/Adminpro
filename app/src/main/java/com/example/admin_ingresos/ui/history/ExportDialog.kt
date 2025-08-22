@@ -9,13 +9,16 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.admin_ingresos.data.*
-import android.net.Uri
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,12 +32,95 @@ fun ExportDialog(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val exportService = remember { ExportService(context) }
+    // Download/save-to-device state (mirrors ReportsScreen download flow)
+    var pendingDownloadSourceUri by remember { mutableStateOf<Uri?>(null) }
+    var isDownloadPending by remember { mutableStateOf(false) }
+    var pendingDownloadMime by remember { mutableStateOf<String?>(null) }
+
+    var exportResult by remember { mutableStateOf<String?>(null) }
+
+    val createCsvLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { destUri ->
+        if (destUri != null && pendingDownloadSourceUri != null) {
+            try {
+                context.contentResolver.openInputStream(pendingDownloadSourceUri!!).use { input ->
+                    context.contentResolver.openOutputStream(destUri).use { output ->
+                        if (input != null && output != null) {
+                            input.copyTo(output)
+                        }
+                    }
+                }
+                exportResult = "Descargado correctamente"
+                Toast.makeText(context, "Descargado correctamente", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                exportResult = "Error al guardar: ${e.message}"
+            } finally {
+                pendingDownloadSourceUri = null
+                isDownloadPending = false
+                pendingDownloadMime = null
+            }
+        } else {
+            pendingDownloadSourceUri = null
+            pendingDownloadMime = null
+        }
+    }
+
+    val createPdfLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { destUri ->
+        if (destUri != null && pendingDownloadSourceUri != null) {
+            try {
+                context.contentResolver.openInputStream(pendingDownloadSourceUri!!).use { input ->
+                    context.contentResolver.openOutputStream(destUri).use { output ->
+                        if (input != null && output != null) {
+                            input.copyTo(output)
+                        }
+                    }
+                }
+                exportResult = "Descargado correctamente"
+                Toast.makeText(context, "Descargado correctamente", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                exportResult = "Error al guardar: ${e.message}"
+            } finally {
+                pendingDownloadSourceUri = null
+                isDownloadPending = false
+                pendingDownloadMime = null
+            }
+        } else {
+            pendingDownloadSourceUri = null
+            isDownloadPending = false
+            pendingDownloadMime = null
+        }
+    }
+
+    val xlsxMime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    val createXlsxLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(xlsxMime)) { destUri ->
+        if (destUri != null && pendingDownloadSourceUri != null) {
+            try {
+                context.contentResolver.openInputStream(pendingDownloadSourceUri!!).use { input ->
+                    context.contentResolver.openOutputStream(destUri).use { output ->
+                        if (input != null && output != null) {
+                            input.copyTo(output)
+                        }
+                    }
+                }
+                exportResult = "Descargado correctamente"
+                Toast.makeText(context, "Descargado correctamente", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                exportResult = "Error al guardar: ${e.message}"
+            } finally {
+                pendingDownloadSourceUri = null
+                isDownloadPending = false
+                pendingDownloadMime = null
+            }
+        } else {
+            pendingDownloadSourceUri = null
+            isDownloadPending = false
+            pendingDownloadMime = null
+        }
+    }
     
     var selectedFields by remember { mutableStateOf(ExportField.getDefaultFields()) }
     var includeHeaders by remember { mutableStateOf(true) }
     var exportFormat by remember { mutableStateOf(ExportFormat.CSV) }
     var isExporting by remember { mutableStateOf(false) }
-    var exportResult by remember { mutableStateOf<String?>(null) }
     
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -235,7 +321,113 @@ fun ExportDialog(
                     ) {
                         Text("Cancelar")
                     }
-                    
+
+                    // Download button: saves file to device using a CreateDocument launcher
+                    OutlinedButton(
+                        onClick = {
+                            val canExport = when (exportFormat) {
+                                ExportFormat.CSV -> selectedFields.isNotEmpty()
+                                ExportFormat.PDF -> true
+                                ExportFormat.EXCEL -> true
+                            }
+
+                            if (canExport) {
+                                scope.launch {
+                                    isExporting = true
+                                    exportResult = null
+
+                                    try {
+                                        val result = when (exportFormat) {
+                                            ExportFormat.CSV -> exportService.exportTransactionsToCSV(
+                                                transactions = transactions,
+                                                categories = categories,
+                                                paymentMethods = paymentMethods,
+                                                includeHeaders = includeHeaders,
+                                                customFields = selectedFields
+                                            )
+                                            ExportFormat.PDF -> exportService.generateTransactionsPDFReport(
+                                                transactions = transactions,
+                                                categories = categories,
+                                                paymentMethods = paymentMethods,
+                                                reportTitle = "Reporte de Transacciones"
+                                            )
+                                            ExportFormat.EXCEL -> exportService.exportTransactionsToXlsx(
+                                                transactions = transactions,
+                                                categories = categories,
+                                                paymentMethods = paymentMethods
+                                            )
+                                        }
+
+                                        when (result) {
+                                            is com.example.admin_ingresos.data.ExportResult -> {
+                                                val uri = result.uri
+                                                if (uri != null) {
+                                                    // Queue download
+                                                    pendingDownloadSourceUri = uri
+                                                    isDownloadPending = true
+                                                    pendingDownloadMime = if (result.usedFallback) "text/csv" else exportFormat.mimeType
+                                                    // Launch appropriate CreateDocument
+                                                    if (pendingDownloadMime == "application/pdf") {
+                                                        createPdfLauncher.launch("transacciones_${System.currentTimeMillis()}.pdf")
+                                                    } else if (pendingDownloadMime == xlsxMime) {
+                                                        createXlsxLauncher.launch("transacciones_${System.currentTimeMillis()}.xlsx")
+                                                    } else {
+                                                        createCsvLauncher.launch("transacciones_${System.currentTimeMillis()}.csv")
+                                                    }
+                                                    exportResult = "Generando archivo para descarga..."
+                                                } else {
+                                                    exportResult = "❌ Error al generar el archivo"
+                                                }
+                                            }
+                                            is android.net.Uri -> {
+                                                val uri = result as android.net.Uri
+                                                pendingDownloadSourceUri = uri
+                                                isDownloadPending = true
+                                                pendingDownloadMime = exportFormat.mimeType
+                                                if (pendingDownloadMime == "application/pdf") {
+                                                    createPdfLauncher.launch("transacciones_${System.currentTimeMillis()}.pdf")
+                                                } else if (pendingDownloadMime == xlsxMime) {
+                                                    createXlsxLauncher.launch("transacciones_${System.currentTimeMillis()}.xlsx")
+                                                } else {
+                                                    createCsvLauncher.launch("transacciones_${System.currentTimeMillis()}.csv")
+                                                }
+                                                exportResult = "Generando archivo para descarga..."
+                                            }
+                                            null -> {
+                                                exportResult = "❌ Error al exportar el archivo"
+                                            }
+                                            else -> {
+                                                exportResult = "❌ Error al exportar el archivo"
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        exportResult = "❌ Error: ${e.message}"
+                                    } finally {
+                                        isExporting = false
+                                    }
+                                }
+                            }
+                        },
+                        enabled = (exportFormat == ExportFormat.PDF || selectedFields.isNotEmpty()) && !isExporting,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        if (isExporting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Download,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Descargar")
+                        }
+                    }
+
                     Button(
                         onClick = {
                             val canExport = when (exportFormat) {
@@ -243,12 +435,12 @@ fun ExportDialog(
                                 ExportFormat.PDF -> true // PDF doesn't need field selection
                                 ExportFormat.EXCEL -> true // Excel will export full dataset
                             }
-                            
+
                             if (canExport) {
                                 scope.launch {
                                     isExporting = true
                                     exportResult = null
-                                    
+
                                     try {
                                         val result = when (exportFormat) {
                                             ExportFormat.CSV -> exportService.exportTransactionsToCSV(
