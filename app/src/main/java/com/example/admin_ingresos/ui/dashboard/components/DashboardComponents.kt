@@ -324,13 +324,14 @@ private fun BudgetProgressItem(budget: BudgetProgress) {
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        LinearProgressIndicator(
-            progress = progress,
+        // Use inverted gradient for budget progress: green -> red
+        GradientProgressBar(
+            progress = progress.coerceIn(0f, 1f),
+            startColor = IncomeGreen,
+            endColor = ExpenseRed,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(6.dp),
-            color = color,
-            trackColor = color.copy(alpha = 0.2f)
+                .height(6.dp)
         )
     }
 }

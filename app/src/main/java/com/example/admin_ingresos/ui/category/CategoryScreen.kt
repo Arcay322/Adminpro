@@ -76,7 +76,12 @@ import com.example.admin_ingresos.ui.theme.ExpenseRed
 import com.example.admin_ingresos.ui.theme.GlassWhiteSubtle
 import com.example.admin_ingresos.ui.theme.TextPrimary
 import com.example.admin_ingresos.ui.theme.TextSecondary
+import com.example.admin_ingresos.ui.dashboard.SavingsGoalCard
 import kotlinx.coroutines.flow.collectLatest
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.admin_ingresos.AppDatabaseProvider
+import com.example.admin_ingresos.viewmodel.SavingsGoalViewModel
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorderAfterLongPress
 import org.burnoutcrew.reorderable.rememberReorderableLazyGridState
@@ -87,7 +92,8 @@ import org.burnoutcrew.reorderable.reorderable
 fun CategoryScreen(
     viewModel: CategoryViewModel,
     // Parámetro para manejar la navegación al tocar una categoría
-    onNavigateToCategoryDetail: (Int) -> Unit
+    onNavigateToCategoryDetail: (Int) -> Unit,
+    onNavigateToSavingsDetail: (Long) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -185,46 +191,79 @@ fun CategoryScreen(
                     )
                     Spacer(Modifier.height(8.dp))
 
-                    // Pestañas Estilo Píldora con Colores
-                    val tabs = listOf(CategoryType.GASTO, CategoryType.INGRESO)
-                    val selectedTabIndex = tabs.indexOf(uiState.selectedTab)
-                    TabRow(
-                        selectedTabIndex = selectedTabIndex,
-                        containerColor = Color.Transparent,
-                        indicator = {}, // Sin indicador
-                        divider = {} // Sin divisor
-                    ) {
-                        tabs.forEachIndexed { index, tabType ->
-                            val selected = selectedTabIndex == index
-                            val pillColor = if (tabType == CategoryType.GASTO) ExpenseRed else AccentVibrantStart
+                    // Pestañas Estilo Píldora con Colores + botón Ahorros
+                    val context = LocalContext.current
+                    val db = remember { AppDatabaseProvider.getDatabase(context) }
+                    val savingsGoalViewModel: SavingsGoalViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+                        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                            @Suppress("UNCHECKED_CAST")
+                            return SavingsGoalViewModel(db) as T
+                        }
+                    })
 
-                            Tab(
-                                selected = selected,
-                                onClick = { viewModel.onTabSelected(tabType) },
-                                text = {
-                                    val title = if (tabType == CategoryType.GASTO) "Gastos" else "Ingresos"
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(50))
-                                            .background(
-                                                if (selected) pillColor else Color.Transparent
+                    var showSavingsSection by remember { mutableStateOf(false) }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        val tabs = listOf(CategoryType.GASTO, CategoryType.INGRESO)
+                        val selectedTabIndex = tabs.indexOf(uiState.selectedTab)
+
+                        TabRow(
+                            selectedTabIndex = selectedTabIndex,
+                            modifier = Modifier.weight(1f),
+                            containerColor = Color.Transparent,
+                            indicator = {}, // Sin indicador
+                            divider = {} // Sin divisor
+                        ) {
+                            tabs.forEachIndexed { index, tabType ->
+                                val selected = selectedTabIndex == index && !showSavingsSection
+                                val pillColor = if (tabType == CategoryType.GASTO) ExpenseRed else AccentVibrantStart
+
+                                Tab(
+                                    selected = selected,
+                                    onClick = {
+                                        showSavingsSection = false
+                                        viewModel.onTabSelected(tabType)
+                                    },
+                                    text = {
+                                        val title = if (tabType == CategoryType.GASTO) "Gastos" else "Ingresos"
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(50))
+                                                .background(
+                                                    if (selected) pillColor else Color.Transparent
+                                                )
+                                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                        ) {
+                                            Text(
+                                                text = title,
+                                                color = if (selected) TextPrimary else TextSecondary
                                             )
-                                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                                    ) {
-                                        Text(
-                                            text = title,
-                                            color = if (selected) TextPrimary else TextSecondary
-                                        )
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // Blue savings button
+                        Button(
+                            onClick = { showSavingsSection = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF009688)),
+                            modifier = Modifier.height(40.dp)
+                        ) {
+                            Icon(LucideIconMapper.getNavigationIcon("PiggyBank"), contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = "Ahorros", color = Color.White)
                         }
                     }
                     Spacer(Modifier.height(8.dp))
 
                     // Contenido principal
                     Column(modifier = Modifier.weight(1f)) {
-                        if (uiState.categories.isEmpty() && uiState.searchQuery.isBlank()) {
+                        if (showSavingsSection) {
+                            SavingsGoalsSummary(savingsGoalViewModel = savingsGoalViewModel, onOpen = { goalId -> onNavigateToSavingsDetail(goalId) })
+                        } else if (uiState.categories.isEmpty() && uiState.searchQuery.isBlank()) {
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Icon(
@@ -387,6 +426,8 @@ fun CategoryScreen(
                             }
                         }
                     }
+
+                
                 }
 
                 // Diálogos con Scrim y Estilo Mejorado
@@ -542,4 +583,161 @@ private fun CategoryAddEditDialog(category: Category, viewModel: CategoryViewMod
             shape = RoundedCornerShape(28.dp)
         )
     )
+}
+
+@Composable
+private fun SavingsGoalsSummary(savingsGoalViewModel: SavingsGoalViewModel, onOpen: (Long) -> Unit) {
+    val savingsGoals by savingsGoalViewModel.savingsGoals.collectAsState()
+    var showAdd by remember { mutableStateOf(false) }
+    // Obtain database for transaction queries
+    val context = LocalContext.current
+    val db = remember { AppDatabaseProvider.getDatabase(context) }
+
+    Column {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "Metas de Ahorro", fontWeight = FontWeight.Bold, color = TextPrimary)
+            Button(onClick = { showAdd = true }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF009688))) {
+                Icon(LucideIconMapper.Navigation.add, contentDescription = null, tint = Color.White)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Nueva", color = Color.White)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (savingsGoals.isEmpty()) {
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("No tienes metas de ahorro", color = TextSecondary)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Crea una meta para empezar a ahorrar", color = TextSecondary)
+            }
+        } else {
+            // Show savings goals in a two-column grid so cards match size of other category cards
+            val gridState = rememberReorderableLazyGridState(onMove = { _, _ -> })
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                state = gridState.gridState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .reorderable(gridState),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
+                items(savingsGoals) { goal ->
+                    val cardColor = try { Color(android.graphics.Color.parseColor(goal.color)) } catch (_: Exception) { com.example.admin_ingresos.ui.theme.getCategoryColor(goal.name) }
+                    val brightBorder = androidx.compose.ui.graphics.lerp(cardColor.copy(alpha = 0.34f), Color.White, 0.12f)
+
+                    GlassCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1.05f)
+                            .clickable { onOpen(goal.id) },
+                        cornerRadius = 20.dp,
+                        backgroundColor = cardColor.copy(alpha = 0.10f),
+                        borderColor = brightBorder,
+                        borderWidth = 1.5.dp,
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            Box(modifier = Modifier.align(Alignment.TopEnd)) {
+                                var menuExpanded by remember { mutableStateOf(false) }
+
+                                IconButton(onClick = { menuExpanded = true }) {
+                                    Icon(LucideIconMapper.Navigation.more, "Más opciones", tint = TextSecondary, modifier = Modifier.size(20.dp))
+                                }
+
+                                DropdownMenu(
+                                    expanded = menuExpanded,
+                                    onDismissRequest = { menuExpanded = false },
+                                    modifier = Modifier
+                                        .background(Color(0xFF2A2D32))
+                                        .clip(RoundedCornerShape(12.dp))
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("Editar", color = AccentVibrantStart) },
+                                        onClick = {
+                                            menuExpanded = false
+                                            // Could open an edit savings dialog here
+                                        },
+                                        leadingIcon = { Icon(LucideIconMapper.Navigation.edit, null, tint = AccentVibrantStart) }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Eliminar", color = ExpenseRed) },
+                                        onClick = {
+                                            menuExpanded = false
+                                            savingsGoalViewModel.deleteSavingsGoal(goal)
+                                        },
+                                        leadingIcon = { Icon(LucideIconMapper.Navigation.delete, null, tint = ExpenseRed) }
+                                    )
+                                }
+                            }
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Box(
+                                    Modifier
+                                        .size(42.dp)
+                                        .clip(CircleShape)
+                                        .background(cardColor.copy(alpha = 0.18f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(LucideIconMapper.getSavingsGoalIcon(goal.emoji), null, tint = cardColor, modifier = Modifier.size(22.dp))
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    text = goal.name,
+                                    fontWeight = FontWeight.Bold,
+                                    color = com.example.admin_ingresos.ui.theme.TextPrimary,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(horizontal = 4.dp)
+                                )
+
+                                Spacer(Modifier.weight(1f))
+
+                                // Collect transactions for this goal to show accurate count and sum
+                                val txDao = db.transactionDao()
+                                val txList by txDao.getTransactionsByGoalIdFlow(goal.id).collectAsState(initial = emptyList())
+                                val txCount = txList.size
+                                val txSum = txList.sumOf { it.amount }
+
+                                Text(
+                                    text = "${txCount} transacciones",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = com.example.admin_ingresos.ui.theme.TextSecondary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+
+                                Text(
+                                    text = "$${String.format("%.2f", txSum)}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = AccentVibrantStart,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (showAdd) {
+            com.example.admin_ingresos.ui.savings.AddEditSavingsGoalDialog(
+                onConfirm = { name, amount, icon, color ->
+                    savingsGoalViewModel.addSavingsGoal(name = name, targetAmount = amount, emoji = icon, color = color)
+                    showAdd = false
+                },
+                onDismiss = { showAdd = false }
+            )
+        }
+    }
 }

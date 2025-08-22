@@ -311,10 +311,12 @@ fun SavingsGoalWidget(
             
             val progress = (currentAmount / goalAmount).coerceIn(0.0, 1.0)
             
-            LinearProgressIndicator(
+            // Use inverted gradient (red -> green) for savings progress
+            com.example.admin_ingresos.ui.theme.GradientProgressBar(
                 progress = progress.toFloat(),
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.secondary,
+                startColor = com.example.admin_ingresos.ui.theme.ExpenseRed,
+                endColor = com.example.admin_ingresos.ui.theme.IncomeGreen,
+                modifier = Modifier.fillMaxWidth()
             )
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -336,10 +338,11 @@ fun SavingsGoalWidget(
                 )
             }
             
+            val pctColor = androidx.compose.ui.graphics.lerp(com.example.admin_ingresos.ui.theme.ExpenseRed, com.example.admin_ingresos.ui.theme.IncomeGreen, progress.toFloat().coerceIn(0f,1f))
             Text(
                 text = "${String.format("%.1f", progress * 100)}% completado",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = pctColor,
                 modifier = Modifier.padding(top = 4.dp)
             )
         }

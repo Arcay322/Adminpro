@@ -144,6 +144,9 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE categoryId = :categoryId ORDER BY date DESC")
     fun getTransactionsByCategoryIdFlow(categoryId: Int): Flow<List<Transaction>>
 
+    @Query("SELECT * FROM transactions WHERE goalId = :goalId ORDER BY date DESC")
+    fun getTransactionsByGoalIdFlow(goalId: Long): Flow<List<Transaction>>
+
     @Query("SELECT * FROM transactions WHERE id = :id LIMIT 1")
     suspend fun getById(id: Int): Transaction?
 

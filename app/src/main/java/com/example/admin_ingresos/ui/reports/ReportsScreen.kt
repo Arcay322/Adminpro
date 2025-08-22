@@ -244,6 +244,10 @@ fun ReportsScreen() {
                     IncomeByCategoryChart(reportData = uiState.reportData)
                 }
 
+                item {
+                    SavingsByCategoryChart(reportData = uiState.reportData)
+                }
+
             }
         }
     }
@@ -1082,6 +1086,45 @@ fun SavingsGrowthChart(reportData: ReportData) {
                 }
             } else {
                 Text(text = "No hay datos de ahorro para este período.", color = TextSecondary)
+            }
+        }
+    }
+}
+
+@Composable
+fun SavingsByCategoryChart(reportData: ReportData) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Ahorros por Categoría",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (reportData.savingsByCategory.isNotEmpty()) {
+                DonutChart(
+                    categories = reportData.savingsByCategory.map { CategoryData(it.category.name, it.percentage, it.color) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                        .padding(vertical = 10.dp),
+                    totalAmount = reportData.totalTransfers
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    items(reportData.savingsByCategory) { categoryShare ->
+                        CategoryLegendItem(
+                            category = CategoryData(categoryShare.category.name, categoryShare.percentage, categoryShare.color),
+                            amount = categoryShare.amount
+                        )
+                    }
+                }
+            } else {
+                Text(text = "No hay datos de ahorros para este período.", color = TextSecondary)
             }
         }
     }

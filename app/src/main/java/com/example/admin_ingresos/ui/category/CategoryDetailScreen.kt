@@ -25,7 +25,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -233,7 +233,23 @@ private fun CategoryDetailHeader(
                 }
             }
 
-            if (activeBudget != null && category.type == CategoryType.GASTO) {
+            if (category.type == CategoryType.AHORRO) {
+                // Show savings-style inverted gradient progress (red -> green)
+                Spacer(modifier = Modifier.height(16.dp))
+                val target = activeBudget?.amount ?: (totalAmount + 1.0)
+                val progress = (totalAmount / target).toFloat().coerceIn(0f, 1f)
+                com.example.admin_ingresos.ui.theme.GradientProgressBar(
+                    progress = progress,
+                    startColor = ExpenseRed,
+                    endColor = IncomeGreen,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(text = "${formatter.format(totalAmount)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                    Text(text = "${formatter.format(target)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                }
+            } else if (activeBudget != null && category.type == CategoryType.GASTO) {
                 Spacer(modifier = Modifier.height(16.dp))
                 BudgetProgressInfo(
                     budget = activeBudget,
@@ -252,11 +268,8 @@ private fun BudgetProgressInfo(
     formatter: NumberFormat
 ) {
     val progress = (spentAmount / budget.amount).toFloat().coerceIn(0f, 1f)
-    val progressColor = when {
-        progress > 0.9f -> ExpenseRed
-        progress > 0.7f -> Color(0xFFFBBF24) // Amarillo/Naranja
-        else -> IncomeGreen
-    }
+    // Percentage text color interpolates between IncomeGreen (0f) and ExpenseRed (1f)
+    val pctColor = lerp(IncomeGreen, ExpenseRed, progress)
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(
@@ -272,17 +285,18 @@ private fun BudgetProgressInfo(
                 text = "${(progress * 100).toInt()}% Usado",
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Bold,
-                color = progressColor
+                color = pctColor
             )
         }
-        LinearProgressIndicator(
+
+        com.example.admin_ingresos.ui.theme.GradientProgressBar(
             progress = progress,
+            startColor = IncomeGreen,
+            endColor = ExpenseRed,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp)
-                .clip(CircleShape),
-            color = progressColor,
-            trackColor = GlassWhiteSubtle
+                .clip(CircleShape)
         )
     }
 }

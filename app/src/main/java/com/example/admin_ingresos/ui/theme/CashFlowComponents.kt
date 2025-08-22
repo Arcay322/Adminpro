@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -113,10 +114,11 @@ fun CashFlowProgressIndicator(
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium
             )
+            val pctColor = lerp(ExpenseRed, IncomeGreen, progress.coerceIn(0f, 1f))
             Text(
                 text = "${(progress * 100).toInt()}%",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = pctColor
             )
         }
         
@@ -149,6 +151,38 @@ fun CashFlowProgressIndicator(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@Composable
+fun GradientProgressBar(
+    progress: Float,
+    startColor: Color,
+    endColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier) {
+        // background track
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(startColor.copy(alpha = 0.12f))
+        )
+
+        // filled portion with horizontal gradient
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(progress)
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(startColor, endColor)
+                    )
+                )
+        )
     }
 }
 

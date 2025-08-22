@@ -3,7 +3,7 @@ package com.example.admin_ingresos.data
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-enum class CategoryType { GASTO, INGRESO }
+enum class CategoryType { GASTO, INGRESO, AHORRO }
 
 @Entity(tableName = "categories")
 data class Category(

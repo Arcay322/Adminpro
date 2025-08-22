@@ -37,6 +37,7 @@ data class ReportData(
     val netSavings: Double = 0.0,
     val expenseByCategory: List<CategoryExpenseShare> = emptyList(),
     val incomeByCategory: List<CategoryExpenseShare> = emptyList(),
+    val savingsByCategory: List<CategoryExpenseShare> = emptyList(),
     val incomeVsExpenseTrend: List<TrendDataPoint> = emptyList(),
     val transfersGrowth: List<SavingsPoint> = emptyList(),
     // budgetVsActual removed per cleanup request
@@ -254,6 +255,7 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
     val totalTransfers = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER }.sumOf { it.amount }
     val expenseByCategory = calculateExpenseByCategory(transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE })
     val incomeByCategory = calculateIncomeByCategory(transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME })
+    val savingsByCategory = calculateSavingsByCategory(transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER })
     val incomeVsExpenseTrend = calculateIncomeVsExpenseTrend(transactions)
     val transfersGrowth = calculateCumulativeTransfers(transactions)
 
@@ -264,6 +266,7 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
         netSavings = totalIncome - totalExpenses - totalTransfers,
         expenseByCategory = expenseByCategory,
         incomeByCategory = incomeByCategory,
+            savingsByCategory = savingsByCategory,
         incomeVsExpenseTrend = incomeVsExpenseTrend,
         transfersGrowth = transfersGrowth
     )
@@ -351,6 +354,7 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
 
                 val expenseByCategory = calculateExpenseByCategory(transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE })
                 val incomeByCategory = calculateIncomeByCategory(transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME })
+                val savingsByCategory = calculateSavingsByCategory(transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER })
                 val incomeVsExpenseTrend = calculateIncomeVsExpenseTrend(transactions)
 
                 val transfersGrowth = calculateCumulativeTransfers(transactions)
@@ -362,6 +366,7 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
                     netSavings = totalIncome - totalExpenses - totalTransfers,
                     expenseByCategory = expenseByCategory,
                     incomeByCategory = incomeByCategory,
+                    savingsByCategory = savingsByCategory,
                     incomeVsExpenseTrend = incomeVsExpenseTrend,
                     transfersGrowth = transfersGrowth
                 )
@@ -406,6 +411,31 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
                     amount = categoryTotal,
                     percentage = (categoryTotal / totalIncome).toFloat(),
                     color = Color(android.graphics.Color.parseColor(category.color))
+                )
+            }
+            .sortedByDescending { it.amount }
+    }
+
+    private suspend fun calculateSavingsByCategory(transfers: List<Transaction>): List<CategoryExpenseShare> {
+        // Use exactly the categories that appear in the Categories -> Ahorros section
+        val ahorroCategories = categoryDao.getCategoriesList().filter { it.type == com.example.admin_ingresos.data.CategoryType.AHORRO }
+        val ahorroCategoryIds = ahorroCategories.map { it.id }.toSet()
+
+        // Only consider transfers that are explicitly assigned to an AHORRO category
+        val filtered = transfers.filter { it.categoryId in ahorroCategoryIds }
+        val totalTransfers = filtered.sumOf { it.amount }
+        if (totalTransfers == 0.0) return emptyList()
+
+        return filtered
+            .groupBy { it.categoryId }
+            .map { (categoryId, transactions) ->
+                val category = categoryDao.getCategoryById(categoryId) ?: Category.uncategorized()
+                val categoryTotal = transactions.sumOf { it.amount }
+                CategoryExpenseShare(
+                    category = category,
+                    amount = categoryTotal,
+                    percentage = (categoryTotal / totalTransfers).toFloat(),
+                    color = try { Color(android.graphics.Color.parseColor(category.color)) } catch (_: Exception) { Color.Unspecified }
                 )
             }
             .sortedByDescending { it.amount }

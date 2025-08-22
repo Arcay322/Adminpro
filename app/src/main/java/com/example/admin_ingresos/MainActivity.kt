@@ -180,6 +180,9 @@ fun MainAppNavigation() {
                             onNavigateToCategoryDetail = { categoryId ->
                                 navController.navigate("category_detail/$categoryId")
                             }
+                            , onNavigateToSavingsDetail = { goalId ->
+                                navController.navigate("savings_detail/$goalId")
+                            }
                         )
                     }
                     composable("history") {
@@ -222,6 +225,26 @@ fun MainAppNavigation() {
                         )
                         CategoryDetailScreen(
                             viewModel = categoryDetailViewModel,
+                            onNavigateBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable(
+                        route = "savings_detail/{goalId}",
+                        arguments = listOf(navArgument("goalId") { type = NavType.LongType })
+                    ) { backStackEntry ->
+                        val goalId = backStackEntry.arguments?.getLong("goalId") ?: 0L
+                        val savingsGoalViewModel: com.example.admin_ingresos.viewmodel.SavingsGoalViewModel = viewModel(
+                            factory = object : ViewModelProvider.Factory {
+                                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                    @Suppress("UNCHECKED_CAST")
+                                    return com.example.admin_ingresos.viewmodel.SavingsGoalViewModel(database) as T
+                                }
+                            }
+                        )
+                        com.example.admin_ingresos.ui.savings.SavingsGoalDetailScreen(
+                            savingsGoalViewModel = savingsGoalViewModel,
+                            savingsGoalId = goalId,
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }

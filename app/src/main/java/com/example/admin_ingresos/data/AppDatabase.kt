@@ -11,7 +11,7 @@ import com.example.admin_ingresos.data.dao.SavingsGoalDao
 
 @Database(
     entities = [Category::class, PaymentMethod::class, Transaction::class, Budget::class, SavingsGoal::class, com.example.admin_ingresos.data.ExportRecord::class],
-    version = 13,
+        version = 14,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -93,6 +93,14 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // Migration 13 -> 14: add categoryId to savings_goals so each goal can have its own AHORRO category
+        val MIGRATION_13_14 = object : Migration(13, 14) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE savings_goals ADD COLUMN categoryId INTEGER")
+                // Existing goals will have null categoryId; UI logic will create per-goal categories on-demand
+            }
+        }
+
         // Register all defined migrations here. Omit migrations that aren't declared in this file.
         val ALL_MIGRATIONS = arrayOf(
             MIGRATION_1_2,
@@ -100,7 +108,8 @@ abstract class AppDatabase : RoomDatabase() {
             MIGRATION_5_6,
             MIGRATION_6_7,
             MIGRATION_11_12,
-            MIGRATION_12_13
+            MIGRATION_12_13,
+            MIGRATION_13_14
         )
     }
 }

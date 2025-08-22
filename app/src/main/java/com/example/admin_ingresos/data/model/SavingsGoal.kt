@@ -18,6 +18,9 @@ data class SavingsGoal(
     val createdAt: Date = Date(),
     val isActive: Boolean = true,
     val priority: Int = 0 // 0 = baja, 1 = media, 2 = alta
+    ,
+    // Link each savings goal to its own AHORRO category (nullable for migration compatibility)
+    val categoryId: Int? = null
 ) {
     val progressPercentage: Float
         get() = if (targetAmount > 0) (currentAmount / targetAmount).toFloat().coerceAtMost(1f) else 0f

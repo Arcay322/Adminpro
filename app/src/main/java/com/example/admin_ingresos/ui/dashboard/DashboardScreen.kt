@@ -1098,7 +1098,7 @@ private fun SavingsGoalsSection(savingsGoalViewModel: com.example.admin_ingresos
 }
 
 @Composable
-private fun SavingsGoalCard(
+fun SavingsGoalCard(
     goal: com.example.admin_ingresos.data.model.SavingsGoal,
     onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
@@ -1193,14 +1193,14 @@ private fun SavingsGoalCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LinearProgressIndicator(
-                progress = { progress },
+            // Gradient progress bar (red -> green) for savings card
+            com.example.admin_ingresos.ui.theme.GradientProgressBar(
+                progress = (progress).toFloat(),
+                startColor = com.example.admin_ingresos.ui.theme.ExpenseRed,
+                endColor = com.example.admin_ingresos.ui.theme.IncomeGreen,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
-                    .clip(CircleShape),
-                color = if (goal.isCompleted) IncomeGreen else goalColor,
-                trackColor = GlassWhiteStrong
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -1216,11 +1216,12 @@ private fun SavingsGoalCard(
                     color = TextSecondary,
                     fontWeight = FontWeight.Medium
                 )
+                val pctColor = androidx.compose.ui.graphics.lerp(com.example.admin_ingresos.ui.theme.ExpenseRed, com.example.admin_ingresos.ui.theme.IncomeGreen, (progress).toFloat().coerceIn(0f,1f))
                 Text(
                     text = "${(progress * 100).toInt()}%",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (goal.isCompleted) IncomeGreen else goalColor
+                    color = if (goal.isCompleted) com.example.admin_ingresos.ui.theme.IncomeGreen else pctColor
                 )
                 Text(
                     text = formatter.format(goal.targetAmount),
