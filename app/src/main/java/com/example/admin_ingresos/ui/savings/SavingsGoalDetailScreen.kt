@@ -134,7 +134,7 @@ fun SavingsGoalDetailScreen(
                         .padding(paddingValues)
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)
+                    contentPadding = PaddingValues(bottom = 0.dp)
                 ) {
                     item {
                         // Header styled like CategoryDetailHeader using the goal's color

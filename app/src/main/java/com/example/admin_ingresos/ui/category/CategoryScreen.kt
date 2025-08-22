@@ -133,7 +133,7 @@ fun CategoryScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = LucideIconMapper.getNavigationIcon("list"),
+                                imageVector = LucideIconMapper.getNavigationIcon("tag"),
                                 contentDescription = "Categorías",
                                 tint = AccentVibrantStart,
                                 modifier = Modifier.size(28.dp)
@@ -149,20 +149,14 @@ fun CategoryScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "Mantén presionado para reordenar",
+                                    text = "Organiza y administra tus categorías y metas de ahorro",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = TextSecondary
                                 )
                             }
                         }
 
-                        IconButton(onClick = { viewModel.showAddEditDialog(Category(name = "", type = uiState.selectedTab)) }) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = "Agregar categoría",
-                                tint = AccentVibrantStart
-                            )
-                        }
+                        // IconButton '+' removed per UX decision: not used anymore
                     }
 
                     // Buscador
@@ -306,8 +300,28 @@ fun CategoryScreen(
 
                     // Contenido principal
                     Column(modifier = Modifier.weight(1f)) {
+                        // Si estamos en Gastos o Ingresos mostrar botón "Nueva" que abre el formulario de categoría
+                        if (!showSavingsSection) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                                Button(
+                                    onClick = {
+                                        // Abrir diálogo de categoría (nuevo)
+                                        viewModel.showAddEditDialog(com.example.admin_ingresos.data.Category(name = "", type = uiState.selectedTab))
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart),
+                                    modifier = Modifier.height(36.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp)
+                                ) {
+                                    Icon(LucideIconMapper.Navigation.add, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(text = "Nueva", color = Color.White, style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+
                         if (showSavingsSection) {
-                            SavingsGoalsSummary(savingsGoalViewModel = savingsGoalViewModel, onOpen = { goalId -> onNavigateToSavingsDetail(goalId) })
+                            SavingsGoalsSummary(savingsGoalViewModel = savingsGoalViewModel, searchQuery = uiState.searchQuery, onOpen = { goalId -> onNavigateToSavingsDetail(goalId) })
                         } else if (uiState.categories.isEmpty() && uiState.searchQuery.isBlank()) {
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -631,8 +645,11 @@ private fun CategoryAddEditDialog(category: Category, viewModel: CategoryViewMod
 }
 
 @Composable
-private fun SavingsGoalsSummary(savingsGoalViewModel: SavingsGoalViewModel, onOpen: (Long) -> Unit) {
+private fun SavingsGoalsSummary(savingsGoalViewModel: SavingsGoalViewModel, searchQuery: String = "", onOpen: (Long) -> Unit) {
     val savingsGoals by savingsGoalViewModel.savingsGoals.collectAsState()
+    val filteredSavings = remember(savingsGoals, searchQuery) {
+        if (searchQuery.isBlank()) savingsGoals else savingsGoals.filter { it.name.contains(searchQuery, ignoreCase = true) }
+    }
     var showAdd by remember { mutableStateOf(false) }
     // Obtain database for transaction queries
     val context = LocalContext.current
@@ -641,16 +658,21 @@ private fun SavingsGoalsSummary(savingsGoalViewModel: SavingsGoalViewModel, onOp
     Column {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(text = "Metas de Ahorro", fontWeight = FontWeight.Bold, color = TextPrimary)
-            Button(onClick = { showAdd = true }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF009688))) {
-                Icon(LucideIconMapper.Navigation.add, contentDescription = null, tint = Color.White)
+            Button(
+                onClick = { showAdd = true },
+                colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart),
+                modifier = Modifier.height(36.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp)
+            ) {
+                Icon(LucideIconMapper.Navigation.add, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Nueva", color = Color.White)
+                Text("Nueva", color = Color.White, style = MaterialTheme.typography.bodySmall)
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        if (savingsGoals.isEmpty()) {
+    if (filteredSavings.isEmpty()) {
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("No tienes metas de ahorro", color = TextSecondary)
                 Spacer(modifier = Modifier.height(8.dp))
@@ -669,7 +691,7 @@ private fun SavingsGoalsSummary(savingsGoalViewModel: SavingsGoalViewModel, onOp
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(bottom = 0.dp)
             ) {
-                items(savingsGoals) { goal ->
+                items(filteredSavings) { goal ->
                     val cardColor = try { Color(android.graphics.Color.parseColor(goal.color)) } catch (_: Exception) { com.example.admin_ingresos.ui.theme.getCategoryColor(goal.name) }
                     val brightBorder = androidx.compose.ui.graphics.lerp(cardColor.copy(alpha = 0.34f), Color.White, 0.12f)
 

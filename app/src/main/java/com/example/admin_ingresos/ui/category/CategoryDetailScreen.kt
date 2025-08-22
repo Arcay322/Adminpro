@@ -127,7 +127,7 @@ fun CategoryDetailScreen(
                         .padding(paddingValues)
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)
+                    contentPadding = PaddingValues(bottom = 0.dp)
                 ) {
                     // Header con el resumen de la categoría y presupuesto
                     item {
