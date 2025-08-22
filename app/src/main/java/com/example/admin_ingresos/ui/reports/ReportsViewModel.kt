@@ -38,6 +38,7 @@ data class ReportData(
     val netSavings: Double = 0.0,
     val expenseByCategory: List<CategoryExpenseShare> = emptyList(),
     val incomeVsExpenseTrend: List<TrendDataPoint> = emptyList(),
+    val transfersGrowth: List<SavingsPoint> = emptyList(),
     val budgetVsActual: List<BudgetComparison> = emptyList()
 )
 
@@ -51,7 +52,13 @@ data class CategoryExpenseShare(
 data class TrendDataPoint(
     val timestamp: Long,
     val income: Double,
-    val expense: Double
+    val expense: Double,
+    val transfers: Double = 0.0
+)
+
+data class SavingsPoint(
+    val timestamp: Long,
+    val amount: Double
 )
 
 data class BudgetComparison(
@@ -258,6 +265,8 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
     // when called without an explicit UI range, assume budgets cover their own ranges; no proration
     val budgetVsActual = calculateBudgetVsActual(transactions.filter { it.type == "Gasto" }, budgets, null)
 
+    val transfersGrowth = calculateCumulativeTransfers(transactions)
+
         return ReportData(
             totalIncome = totalIncome,
             totalExpenses = totalExpenses,
@@ -265,6 +274,7 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
             netSavings = totalIncome - totalExpenses - totalTransfers,
             expenseByCategory = expenseByCategory,
             incomeVsExpenseTrend = incomeVsExpenseTrend,
+            transfersGrowth = transfersGrowth,
             budgetVsActual = budgetVsActual
         )
     }
@@ -355,6 +365,8 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
                 val incomeVsExpenseTrend = calculateIncomeVsExpenseTrend(transactions)
                 val budgetVsActual = calculateBudgetVsActual(transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }, budgets, range)
 
+                val transfersGrowth = calculateCumulativeTransfers(transactions)
+
                 val newReportData = ReportData(
                     totalIncome = totalIncome,
                     totalExpenses = totalExpenses,
@@ -362,6 +374,7 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
                     netSavings = totalIncome - totalExpenses - totalTransfers,
                     expenseByCategory = expenseByCategory,
                     incomeVsExpenseTrend = incomeVsExpenseTrend,
+                    transfersGrowth = transfersGrowth,
                     budgetVsActual = budgetVsActual
                 )
                 _uiState.update { it.copy(isLoading = false, reportData = newReportData) }
@@ -399,7 +412,8 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
             .map { (day, dayTransactions) ->
                 val income = dayTransactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME }.sumOf { it.amount }
                 val expense = dayTransactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE }.sumOf { it.amount }
-                TrendDataPoint(timestamp = day, income = income, expense = expense)
+                val transfers = dayTransactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER }.sumOf { it.amount }
+                TrendDataPoint(timestamp = day, income = income, expense = expense, transfers = transfers)
             }
             .sortedBy { it.timestamp }
     }
@@ -547,6 +561,26 @@ class ReportsViewModel(private val db: AppDatabase) : ViewModel() {
         calendar.set(Calendar.SECOND, 0)
         calendar.set(Calendar.MILLISECOND, 0)
         return calendar.timeInMillis
+    }
+
+    private fun calculateCumulativeTransfers(transactions: List<Transaction>): List<SavingsPoint> {
+        if (transactions.isEmpty()) return emptyList()
+
+        // Group transfers by day, sum, then compute running total ordered by day
+        val transfersByDay = transactions
+            .filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER }
+            .groupBy { getStartOfDay(it.date) }
+            .mapValues { entry -> entry.value.sumOf { it.amount } }
+
+        val days = transfersByDay.keys.sorted()
+        val result = mutableListOf<SavingsPoint>()
+        var running = 0.0
+        for (day in days) {
+            running += transfersByDay[day] ?: 0.0
+            result.add(SavingsPoint(timestamp = day, amount = running))
+        }
+
+        return result
     }
 
     // --- Date Range Helpers ---

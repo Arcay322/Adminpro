@@ -234,6 +234,10 @@ fun ReportsScreen() {
                 }
 
                 item {
+                    SavingsGrowthChart(reportData = uiState.reportData)
+                }
+
+                item {
                     ExpenseByCategoryChart(reportData = uiState.reportData)
                 }
 
@@ -826,7 +830,7 @@ fun IncomeVsExpenseTrendChart(reportData: ReportData) {
             )
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Legend with clearer glyphs inside colored circles
+            // Legend (Ingresos / Gastos)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(modifier = Modifier.size(18.dp).clip(CircleShape).background(IncomeGreen), contentAlignment = Alignment.Center) {
@@ -851,7 +855,8 @@ fun IncomeVsExpenseTrendChart(reportData: ReportData) {
                     .fillMaxWidth()
                     .height(220.dp)
                 ) {
-                    LineChart(data = reportData.incomeVsExpenseTrend, modifier = Modifier.fillMaxSize())
+                    // Force showTransfers=false to keep this chart as Ingresos vs Gastos only
+                    LineChart(data = reportData.incomeVsExpenseTrend, showTransfers = false, modifier = Modifier.fillMaxSize())
                 }
             } else {
                 Text(text = "No hay datos de tendencias para este período.", color = TextSecondary)
@@ -861,7 +866,107 @@ fun IncomeVsExpenseTrendChart(reportData: ReportData) {
 }
 
 @Composable
-fun LineChart(data: List<TrendDataPoint>, modifier: Modifier = Modifier) {
+fun SavingsGrowthChart(reportData: ReportData) {
+    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Crecimiento de tus Ahorros",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            if (reportData.transfersGrowth.isNotEmpty()) {
+                val data = reportData.transfersGrowth
+                val maxVal = (data.maxOfOrNull { it.amount } ?: 1.0).toFloat()
+
+                // Chart + insight are separate composable children so no composable is called from inside Canvas' draw scope
+                Column {
+                    // precompute theme-backed colors outside of Canvas to avoid calling @Composable APIs inside draw lambda
+                    val gridColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+                    val gridLines = 4
+
+                    Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp)
+                    ) {
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            val w = size.width
+                            val h = size.height
+
+                            for (i in 0..gridLines) {
+                                val y = h * (i.toFloat() / gridLines.toFloat())
+                                drawLine(color = gridColor, start = Offset(0f, y), end = Offset(w, y), strokeWidth = 1.dp.toPx())
+                            }
+
+                            val path = Path()
+                            val area = Path()
+                            data.forEachIndexed { idx, p ->
+                                val x = if (data.size > 1) w * (idx.toFloat() / (data.size - 1).toFloat()) else w / 2f
+                                val y = h * (1f - (p.amount.toFloat() / maxVal))
+                                if (idx == 0) {
+                                    path.moveTo(x, y)
+                                    area.moveTo(x, h)
+                                    area.lineTo(x, y)
+                                } else {
+                                    path.lineTo(x, y)
+                                    area.lineTo(x, y)
+                                }
+                            }
+
+                            // close area
+                            area.lineTo(w, h)
+                            area.close()
+
+                            // draw area and line (match weights/alphas)
+                            val savingsColor = Color(0xFF42A5F5)
+                            drawPath(path = area, color = savingsColor.copy(alpha = 0.08f))
+                            drawPath(path = path, color = savingsColor, style = Stroke(width = 2.dp.toPx()))
+
+                            // points
+                            data.forEachIndexed { idx, p ->
+                                val x = if (data.size > 1) w * (idx.toFloat() / (data.size - 1).toFloat()) else w / 2f
+                                val y = h * (1f - (p.amount.toFloat() / maxVal))
+                                drawCircle(color = savingsColor, center = Offset(x, y), radius = 3.dp.toPx())
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // compute insight values here (composable scope)
+                    val last = data.last()
+                    val first = data.first()
+                    val growthPct = if (first.amount == 0.0) Double.NaN else ((last.amount - first.amount) / first.amount) * 100.0
+
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(text = "Saldo actual: ${formatter.format(last.amount)}", color = TextPrimary, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(6.dp))
+                            if (!growthPct.isNaN()) {
+                                val pctText = if (growthPct >= 0) "+${"%.1f".format(growthPct)}%" else "${"%.1f".format(growthPct)}%"
+                                Text(text = "Tu saldo de ahorro ha crecido $pctText desde el inicio del periodo.", color = TextSecondary, fontSize = 12.sp)
+                            } else {
+                                Text(text = "Vas por buen camino para alcanzar tu meta.", color = TextSecondary, fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
+            } else {
+                Text(text = "No hay datos de ahorro para este período.", color = TextSecondary)
+            }
+        }
+    }
+}
+
+@Composable
+fun LineChart(data: List<TrendDataPoint>, showTransfers: Boolean = true, modifier: Modifier = Modifier) {
     val onSurface = MaterialTheme.colorScheme.onSurface
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
     val lastTapX = remember { mutableStateOf<Float?>(null) }
@@ -878,7 +983,7 @@ fun LineChart(data: List<TrendDataPoint>, modifier: Modifier = Modifier) {
         return
     }
 
-    val maxAmount = (data.flatMap { listOf(it.income, it.expense) }.maxOrNull() ?: 1.0).toFloat()
+    val maxAmount = (data.flatMap { listOf(it.income, it.expense) + if (showTransfers) listOf(it.transfers) else emptyList() }.maxOrNull() ?: 1.0).toFloat()
 
     Box(modifier = modifier) {
         Canvas(modifier = Modifier
@@ -903,13 +1008,16 @@ fun LineChart(data: List<TrendDataPoint>, modifier: Modifier = Modifier) {
 
             val pathIncome = Path()
             val pathExpense = Path()
+            val pathTransfers = Path()
             val areaIncome = Path()
             val areaExpense = Path()
+            val areaTransfers = Path()
 
             data.forEachIndexed { index, point ->
                 val x = if (data.size > 1) size.width * (index.toFloat() / (data.size - 1).toFloat()) else size.width / 2f
                 val yIncome = size.height * (1f - (point.income.toFloat() / maxAmount))
                 val yExpense = size.height * (1f - (point.expense.toFloat() / maxAmount))
+                val yTransfers = size.height * (1f - (point.transfers.toFloat() / maxAmount))
 
                 if (index == 0) {
                     pathIncome.moveTo(x, yIncome)
@@ -921,8 +1029,10 @@ fun LineChart(data: List<TrendDataPoint>, modifier: Modifier = Modifier) {
                 } else {
                     pathIncome.lineTo(x, yIncome)
                     pathExpense.lineTo(x, yExpense)
+                    pathTransfers.lineTo(x, yTransfers)
                     areaIncome.lineTo(x, yIncome)
                     areaExpense.lineTo(x, yExpense)
+                    areaTransfers.lineTo(x, yTransfers)
                 }
             }
 
@@ -931,22 +1041,28 @@ fun LineChart(data: List<TrendDataPoint>, modifier: Modifier = Modifier) {
             areaIncome.close()
             areaExpense.lineTo(size.width, size.height)
             areaExpense.close()
+            areaTransfers.lineTo(size.width, size.height)
+            areaTransfers.close()
 
             // draw filled areas (subtle)
             drawPath(path = areaIncome, color = IncomeGreen.copy(alpha = 0.10f))
             drawPath(path = areaExpense, color = ExpenseRed.copy(alpha = 0.10f))
+            if (showTransfers) drawPath(path = areaTransfers, color = Color(0xFF42A5F5).copy(alpha = 0.08f))
 
             // draw lines
             drawPath(path = pathIncome, color = IncomeGreen, style = Stroke(width = 2.dp.toPx()))
             drawPath(path = pathExpense, color = ExpenseRed, style = Stroke(width = 2.dp.toPx()))
+            if (showTransfers) drawPath(path = pathTransfers, color = Color(0xFF42A5F5), style = Stroke(width = 2.dp.toPx()))
 
             // draw points
             data.forEachIndexed { index, point ->
                 val x = if (data.size > 1) size.width * (index.toFloat() / (data.size - 1).toFloat()) else size.width / 2f
                 val yIncome = size.height * (1f - (point.income.toFloat() / maxAmount))
                 val yExpense = size.height * (1f - (point.expense.toFloat() / maxAmount))
+                val yTransfers = size.height * (1f - (point.transfers.toFloat() / maxAmount))
                 drawCircle(color = IncomeGreen, radius = 3.dp.toPx(), center = Offset(x, yIncome))
                 drawCircle(color = ExpenseRed, radius = 3.dp.toPx(), center = Offset(x, yExpense))
+                if (showTransfers) drawCircle(color = Color(0xFF42A5F5), radius = 3.dp.toPx(), center = Offset(x, yTransfers))
             }
 
             // highlight selected index if any
@@ -959,8 +1075,10 @@ fun LineChart(data: List<TrendDataPoint>, modifier: Modifier = Modifier) {
                 // larger circles to highlight
                 val yi = size.height * (1f - (sPoint.income.toFloat() / maxAmount))
                 val ye = size.height * (1f - (sPoint.expense.toFloat() / maxAmount))
+                val yt = size.height * (1f - (sPoint.transfers.toFloat() / maxAmount))
                 drawCircle(onSurface, radius = 6.dp.toPx(), center = Offset(x, yi))
                 drawCircle(onSurface, radius = 6.dp.toPx(), center = Offset(x, ye))
+                if (showTransfers) drawCircle(onSurface, radius = 6.dp.toPx(), center = Offset(x, yt))
             }
         }
 
@@ -982,6 +1100,7 @@ fun LineChart(data: List<TrendDataPoint>, modifier: Modifier = Modifier) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(text = "Ingresos: ${formatter.format(point.income).replace(" ", "\u00A0")}", color = IncomeGreen, fontSize = 12.sp, maxLines = 1)
                         Text(text = "Gastos: ${formatter.format(point.expense).replace(" ", "\u00A0")}", color = ExpenseRed, fontSize = 12.sp, maxLines = 1)
+                        if (showTransfers) Text(text = "Ahorro: ${formatter.format(point.transfers).replace(" ", "\u00A0")}", color = Color(0xFF42A5F5), fontSize = 12.sp, maxLines = 1)
                     }
                 }
             }
