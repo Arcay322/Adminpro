@@ -352,6 +352,7 @@ private fun TimeFilterChips(
 
 @Composable
 private fun DateHeader(date: String) {
+    // Mostrar la fecha con mayor contraste sin necesidad de un contenedor
     Text(
         text = date,
         style = MaterialTheme.typography.titleSmall,
@@ -359,7 +360,6 @@ private fun DateHeader(date: String) {
         color = TextPrimary,
         modifier = Modifier
             .fillMaxWidth()
-            .background(BackgroundEnd.copy(alpha = 0.8f))
             .padding(vertical = 8.dp)
     )
 }
@@ -367,7 +367,15 @@ private fun DateHeader(date: String) {
 @Composable
 private fun TransactionListItem(transaction: Transaction) {
     val formatter = remember { NumberFormat.getCurrencyInstance(Locale("es", "ES")) }
-    val amountColor = if (transaction.type == CategoryType.GASTO.name) ExpenseRed else AccentVibrantStart
+    val isGasto = transaction.type == CategoryType.GASTO.name
+    val isIngreso = transaction.type == CategoryType.INGRESO.name
+    val isAhorro = transaction.type == CategoryType.AHORRO.name
+    val amountColor = when {
+        isGasto -> ExpenseRed
+        isIngreso -> IncomeGreen
+        isAhorro -> Color(0xFF2196F3)
+        else -> AccentVibrantStart
+    }
     val dateFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
 
     Row(
@@ -388,11 +396,20 @@ private fun TransactionListItem(transaction: Transaction) {
             Text(
                 text = dateFormat.format(Date(transaction.date)),
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary.copy(alpha = 0.75f)
             )
         }
+        val absAmount = kotlin.math.abs(transaction.amount)
+        val formatted = formatter.format(absAmount)
+        val sign = when {
+            isGasto -> "-"
+            isIngreso -> "+"
+            else -> ""
+        }
+
         Text(
-            text = formatter.format(transaction.amount),
+            text = "$sign$formatted",
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold,
             color = amountColor
