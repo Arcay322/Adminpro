@@ -858,6 +858,78 @@ fun IncomeVsExpenseTrendChart(reportData: ReportData) {
                     // Force showTransfers=false to keep this chart as Ingresos vs Gastos only
                     LineChart(data = reportData.incomeVsExpenseTrend, showTransfers = false, modifier = Modifier.fillMaxSize())
                 }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Insight card for the income vs expense chart using GlassCard and the tone rules requested
+                val incomeDelta = computeDeltaFromTrend(reportData.incomeVsExpenseTrend) { it.income }
+                val expenseDelta = computeDeltaFromTrend(reportData.incomeVsExpenseTrend) { it.expense }
+                val net = reportData.totalIncome - reportData.totalExpenses
+
+                // Detect simple peaks: find the day with max expense and max income
+                val maxExpensePoint = reportData.incomeVsExpenseTrend.maxByOrNull { it.expense }
+                val avgExpense = if (reportData.incomeVsExpenseTrend.isNotEmpty()) reportData.incomeVsExpenseTrend.map { it.expense }.average() else 0.0
+                val expensePeakDetected = maxExpensePoint != null && avgExpense > 0.0 && maxExpensePoint.expense > avgExpense * 1.5
+
+                val maxIncomePoint = reportData.incomeVsExpenseTrend.maxByOrNull { it.income }
+                val avgIncome = if (reportData.incomeVsExpenseTrend.isNotEmpty()) reportData.incomeVsExpenseTrend.map { it.income }.average() else 0.0
+                val incomePeakDetected = maxIncomePoint != null && avgIncome > 0.0 && maxIncomePoint.income > avgIncome * 1.5
+
+                // choose glass container color: green if net positive, red if net negative
+                val containerColor = if (net >= 0.0) IncomeGreen.copy(alpha = 0.12f) else ExpenseRed.copy(alpha = 0.12f)
+                val borderColor = if (net >= 0.0) IncomeGreen.copy(alpha = 0.28f) else ExpenseRed.copy(alpha = 0.28f)
+
+                GlassCard(modifier = Modifier.padding(top = 8.dp), backgroundColor = containerColor, borderColor = borderColor) {
+                    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = if (net >= 0.0) com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon(com.example.admin_ingresos.data.Transaction.TYPE_INCOME)
+                                else com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon(com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE),
+                                contentDescription = null,
+                                tint = if (net >= 0.0) IncomeGreen else ExpenseRed,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            // keep the rest of the column content under
+                        }
+                        // Paragraph 1: net balance summary
+                        if (net > 0.0) {
+                            Text(text = "¡Excelente! Este mes tus ingresos superaron a tus gastos en S/ ${formatter.format(net)}.", color = TextPrimary, fontWeight = FontWeight.Bold)
+                        } else if (net < 0.0) {
+                            Text(text = "Ten cuidado, tus gastos han superado tus ingresos en S/ ${formatter.format(-net)} este mes.", color = TextPrimary, fontWeight = FontWeight.Bold)
+                        } else {
+                            Text(text = "Ingresos y gastos están equilibrados este mes.", color = TextPrimary, fontWeight = FontWeight.Bold)
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Paragraph 2: peak or delta context (higher contrast for readability). Action sentence highlighted in red if needed.
+                        when {
+                            expensePeakDetected -> {
+                                val topCategory = reportData.expenseByCategory.firstOrNull()?.category?.name ?: "esta categoría"
+                                val dateText = maxExpensePoint?.timestamp?.let { SimpleDateFormat("dd MMM", Locale("es", "PE")).format(Date(it)) } ?: "el periodo"
+                                Text(text = "Tu gasto en $topCategory en $dateText fue el pico más alto de este periodo.", color = TextPrimary, fontSize = 12.sp)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(text = "Considera revisar tus hábitos de gasto.", color = ExpenseRed, fontSize = 12.sp)
+                            }
+                            incomePeakDetected -> {
+                                val dateText = maxIncomePoint?.timestamp?.let { SimpleDateFormat("dd MMM", Locale("es", "PE")).format(Date(it)) } ?: "el periodo"
+                                Text(text = "Tus ingresos fueron más altos en $dateText.", color = TextPrimary, fontSize = 12.sp)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(text = "Revisa si provino de una bonificación u otro ingreso excepcional.", color = IncomeGreen, fontSize = 12.sp)
+                            }
+                            else -> {
+                                if (!incomeDelta.isNaN() && incomeDelta >= 0.0) {
+                                    Text(text = "Ingresos ${calcDeltaText(incomeDelta)} vs periodo anterior", color = IncomeGreen, fontSize = 12.sp)
+                                } else if (!expenseDelta.isNaN()) {
+                                    Text(text = "Gastos ${calcDeltaText(expenseDelta)} vs periodo anterior", color = ExpenseRed, fontSize = 12.sp)
+                                } else {
+                                    Text(text = "Sin cambios significativos en el periodo.", color = TextSecondary, fontSize = 12.sp)
+                                }
+                            }
+                        }
+                    }
+                }
             } else {
                 Text(text = "No hay datos de tendencias para este período.", color = TextSecondary)
             }
@@ -941,22 +1013,32 @@ fun SavingsGrowthChart(reportData: ReportData) {
                     val first = data.first()
                     val growthPct = if (first.amount == 0.0) Double.NaN else ((last.amount - first.amount) / first.amount) * 100.0
 
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                        modifier = Modifier
-                            .padding(top = 8.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(text = "Saldo actual: ${formatter.format(last.amount)}", color = TextPrimary, fontWeight = FontWeight.Bold)
-                            Spacer(modifier = Modifier.height(6.dp))
-                            if (!growthPct.isNaN()) {
-                                val pctText = if (growthPct >= 0) "+${"%.1f".format(growthPct)}%" else "${"%.1f".format(growthPct)}%"
-                                Text(text = "Tu saldo de ahorro ha crecido $pctText desde el inicio del periodo.", color = TextSecondary, fontSize = 12.sp)
-                            } else {
-                                Text(text = "Vas por buen camino para alcanzar tu meta.", color = TextSecondary, fontSize = 12.sp)
+                    GlassCard(
+                            modifier = Modifier
+                                .padding(top = 8.dp),
+                            backgroundColor = Color(0xFF42A5F5).copy(alpha = 0.08f),
+                            borderColor = Color(0xFF42A5F5).copy(alpha = 0.24f)
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon(com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER),
+                                        contentDescription = null,
+                                        tint = Color(0xFF42A5F5),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                }
+                                Text(text = "Saldo actual: ${formatter.format(last.amount)}", color = TextPrimary, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.height(6.dp))
+                                if (!growthPct.isNaN()) {
+                                    val pctText = if (growthPct >= 0) "+${"%.1f".format(growthPct)}%" else "${"%.1f".format(growthPct)}%"
+                                    Text(text = "Tu saldo de ahorro ha crecido $pctText desde el inicio del periodo.", color = TextSecondary, fontSize = 12.sp)
+                                } else {
+                                    Text(text = "Vas por buen camino para alcanzar tu meta.", color = TextSecondary, fontSize = 12.sp)
+                                }
                             }
                         }
-                    }
                 }
             } else {
                 Text(text = "No hay datos de ahorro para este período.", color = TextSecondary)
