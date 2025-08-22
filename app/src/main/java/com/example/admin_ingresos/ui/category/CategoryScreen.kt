@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -175,13 +176,15 @@ fun CategoryScreen(
                     }
 
                     // Buscador
+                    val outline = MaterialTheme.colorScheme.outline
                     TextField(
                         value = uiState.searchQuery,
                         onValueChange = { viewModel.onSearchQueryChanged(it) },
                         label = { Text("Buscar categoría", color = TextSecondary) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 6.dp),
+                            .padding(vertical = 6.dp)
+                            .border(BorderStroke(1.dp, outline), RoundedCornerShape(16.dp)),
                         shape = RoundedCornerShape(16.dp),
                         leadingIcon = {
                             Icon(
