@@ -18,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.runtime.*
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,6 +48,8 @@ import com.example.admin_ingresos.ui.theme.AccentVibrantStart
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,6 +63,8 @@ fun TransactionHistoryScreen(navController: NavController) {
     })
     val uiState by viewModel.uiState.collectAsState()
     var selectedType by remember { mutableStateOf("Todos") }
+    var showExportDialog by remember { mutableStateOf(false) }
+    var paymentMethods by remember { mutableStateOf<List<com.example.admin_ingresos.data.PaymentMethod>>(emptyList()) }
 
     // Filtrar y ordenar transacciones
     val filteredTransactions = remember(uiState.transactions, uiState.searchQuery, uiState.sortOption, selectedType) {
@@ -143,7 +148,8 @@ fun TransactionHistoryScreen(navController: NavController) {
                 item {
                     ModernResultsIndicator(
                         totalResults = filteredTransactions.size,
-                        hasFilters = uiState.searchQuery.isNotBlank() // TODO: Enhance this
+                        hasFilters = uiState.searchQuery.isNotBlank(), // TODO: Enhance this
+                        onExportClick = { showExportDialog = true }
                     )
                 }
             }
@@ -200,6 +206,27 @@ fun TransactionHistoryScreen(navController: NavController) {
                 onConfirm = { updatedTransaction -> viewModel.updateTransaction(updatedTransaction) },
                 onDismiss = { viewModel.hideEditDialog() }
             )
+        }
+
+        // Export dialog
+        if (showExportDialog) {
+            ExportDialog(
+                transactions = filteredTransactions,
+                categories = uiState.categories,
+                paymentMethods = paymentMethods,
+                onDismiss = { showExportDialog = false }
+            )
+        }
+    }
+
+    // Load payment methods once so ExportDialog can use them
+    LaunchedEffect(Unit) {
+        try {
+            paymentMethods = withContext(Dispatchers.IO) {
+                AppDatabaseProvider.getDatabase(context).paymentMethodDao().getAll()
+            }
+        } catch (_: Exception) {
+            // ignore
         }
     }
 }
@@ -958,7 +985,8 @@ fun ModernSearchAndFilters(
 @Composable
 fun ModernResultsIndicator(
     totalResults: Int,
-    hasFilters: Boolean
+    hasFilters: Boolean,
+    onExportClick: () -> Unit
 ) {
     GlassCard {
         Row(
@@ -993,22 +1021,27 @@ fun ModernResultsIndicator(
                 }
             }
             
-            // Export button
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.08f),
-                        CircleShape
-                    ),
-                contentAlignment = Alignment.Center
+            // Export button (clickable)
+            IconButton(
+                onClick = onExportClick,
+                modifier = Modifier.size(40.dp)
             ) {
-                Icon(
-                    imageVector = LucideIconMapper.getNavigationIcon("Download"),
-                    contentDescription = "Exportar",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.08f),
+                            CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = LucideIconMapper.getNavigationIcon("Download"),
+                        contentDescription = "Exportar",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
         }
     }
