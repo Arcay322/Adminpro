@@ -582,7 +582,7 @@ fun ModernHistoryHeader() {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
             Icon(
-                imageVector = LucideIconMapper.Navigation.dollarSign,
+                imageVector = LucideIconMapper.Navigation.transactions,
                 contentDescription = "Transacciones",
                 tint = AccentVibrantStart,
                 modifier = Modifier.size(28.dp)

@@ -4,6 +4,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -17,7 +18,7 @@ sealed class BottomNavItem(
     object Dashboard : BottomNavItem("dashboard", "Inicio", LucideIconMapper.Navigation.home)
     object Budget : BottomNavItem("budget", "Presupuestos", LucideIconMapper.getNavigationIcon("DollarSign"))
     object Categories : BottomNavItem("categories", "Categorías", LucideIconMapper.getNavigationIcon("Tag"))
-    object History : BottomNavItem("history", "Historial", LucideIconMapper.Navigation.transactions)
+    object History : BottomNavItem("history", "Transacciones", LucideIconMapper.Navigation.transactions)
     object Reports : BottomNavItem("reports", "Reportes", LucideIconMapper.Navigation.reports)
 }
 
@@ -49,7 +50,10 @@ fun BottomNavigationBar(navController: NavController) {
                 label = {
                     Text(
                         text = item.title,
-                        style = MaterialTheme.typography.labelSmall
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        softWrap = false
                     )
                 },
                 selected = currentRoute == item.route,

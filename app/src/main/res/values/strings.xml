@@ -15,7 +15,7 @@
     <string name="nav_dashboard">Inicio</string>
     <string name="nav_budget">Presupuestos</string>
     <string name="nav_categories">Categorías</string>
-    <string name="nav_history">Historial</string>
+    <string name="nav_history">Transacciones</string>
     <string name="nav_reports">Reportes</string>
     <string name="nav_settings">Configuración</string>
 
