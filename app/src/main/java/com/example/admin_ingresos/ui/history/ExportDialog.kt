@@ -3,8 +3,8 @@ package com.example.admin_ingresos.ui.history
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -317,9 +317,13 @@ fun ExportDialog(
                 ) {
                     OutlinedButton(
                         onClick = onDismiss,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(22.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp)
                     ) {
-                        Text("Cancelar")
+                        Text(text = "Cancelar", maxLines = 1)
                     }
 
                     // Download button: saves file to device using a CreateDocument launcher
@@ -409,7 +413,11 @@ fun ExportDialog(
                             }
                         },
                         enabled = (exportFormat == ExportFormat.PDF || selectedFields.isNotEmpty()) && !isExporting,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(22.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp)
                     ) {
                         if (isExporting) {
                             CircularProgressIndicator(
@@ -418,13 +426,13 @@ fun ExportDialog(
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                         } else {
+                            // Icon-only button for download (Lucide)
                             Icon(
-                                imageVector = Icons.Default.Download,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
+                                imageVector = LucideIconMapper.Navigation.download,
+                                contentDescription = "Descargar",
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Descargar")
                         }
                     }
 
@@ -495,7 +503,11 @@ fun ExportDialog(
                             }
                         },
                         enabled = (exportFormat == ExportFormat.PDF || selectedFields.isNotEmpty()) && !isExporting,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(22.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp)
                     ) {
                         if (isExporting) {
                             CircularProgressIndicator(
@@ -504,13 +516,13 @@ fun ExportDialog(
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                         } else {
+                            // Icon-only button for share (Material)
                             Icon(
                                 imageVector = Icons.Default.Share,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
+                                contentDescription = "Compartir",
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.onPrimary
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Exportar")
                         }
                     }
                 }
