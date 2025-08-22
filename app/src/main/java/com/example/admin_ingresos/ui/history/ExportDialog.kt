@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -91,9 +92,23 @@ fun ExportDialog(
                             ExportFormat.values().forEach { format ->
                                 FilterChip(
                                     onClick = { exportFormat = format },
-                                    label = { Text(format.displayName) },
+                                    label = {
+                                        Text(
+                                            text = format.displayName,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    },
                                     selected = exportFormat == format,
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(44.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
+                                        labelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                                    )
                                 )
                             }
                         }
