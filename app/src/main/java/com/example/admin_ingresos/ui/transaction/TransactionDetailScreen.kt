@@ -123,11 +123,21 @@ fun TransactionDetailScreen(
                         trendAverage = if (values.isNotEmpty()) values.average() else 0.0
                         // Compare most recent month with average
                         val last = values.lastOrNull() ?: 0.0
-                        trendInsight = when {
-                            trendAverage <= 0.0 -> "Sin datos suficientes para calcular un promedio."
-                            last > trendAverage * 1.1 -> "Tu gasto promedio en ${categoryName ?: "esta categoría"} es de ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(trendAverage)}. ¡Este gasto fue un poco más alto de lo normal!"
-                            last < trendAverage * 0.9 -> "Tu gasto promedio en ${categoryName ?: "esta categoría"} es de ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(trendAverage)}. ¡Este gasto fue más bajo de lo normal!"
-                            else -> "Tu gasto promedio en ${categoryName ?: "esta categoría"} es de ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(trendAverage)}. Este gasto está dentro de lo normal."
+                        // Tailor insight text depending on whether this is a transfer (savings) or expense/income
+                        trendInsight = if (it.type.equals(com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER, ignoreCase = true)) {
+                            when {
+                                trendAverage <= 0.0 -> "Sin datos suficientes para calcular un promedio."
+                                last > trendAverage * 1.1 -> "Has ahorrado más de lo habitual en ${categoryName ?: "esta categoría"}. Promedio: ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(trendAverage)}."
+                                last < trendAverage * 0.9 -> "Has ahorrado menos de lo habitual en ${categoryName ?: "esta categoría"}. Promedio: ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(trendAverage)}."
+                                else -> "Tu ahorro en ${categoryName ?: "esta categoría"} está dentro de lo habitual. Promedio: ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(trendAverage)}."
+                            }
+                        } else {
+                            when {
+                                trendAverage <= 0.0 -> "Sin datos suficientes para calcular un promedio."
+                                last > trendAverage * 1.1 -> "Tu gasto promedio en ${categoryName ?: "esta categoría"} es de ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(trendAverage)}. ¡Este gasto fue un poco más alto de lo normal!"
+                                last < trendAverage * 0.9 -> "Tu gasto promedio en ${categoryName ?: "esta categoría"} es de ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(trendAverage)}. ¡Este gasto fue más bajo de lo normal!"
+                                else -> "Tu gasto promedio en ${categoryName ?: "esta categoría"} es de ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(trendAverage)}. Este gasto está dentro de lo normal."
+                            }
                         }
                     } catch (e: Exception) {
                         // ignore
@@ -150,13 +160,6 @@ fun TransactionDetailScreen(
                             imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.Navigation.edit,
                             contentDescription = "Editar",
                             tint = Color.White
-                        )
-                    }
-                    IconButton(onClick = { /* TODO: eliminar transacción */ }) {
-                        Icon(
-                            imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.Navigation.delete,
-                            contentDescription = "Eliminar",
-                            tint = com.example.admin_ingresos.ui.theme.ExpenseRed
                         )
                     }
                 }
@@ -211,17 +214,24 @@ fun TransactionDetailScreen(
 
                                 // Amount and type row
                                 val formatted = NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(tx.amount)
-                                val amountColor = if (tx.type.equals("Ingreso", ignoreCase = true)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                                val amountColor = when {
+                                    tx.type.equals(com.example.admin_ingresos.data.Transaction.TYPE_INCOME, ignoreCase = true) -> MaterialTheme.colorScheme.primary
+                                    tx.type.equals(com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER, ignoreCase = true) -> Color(0xFF42A5F5)
+                                    else -> MaterialTheme.colorScheme.error
+                                }
 
                                 Text(formatted, style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.ExtraBold), color = amountColor)
 
                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                     Text(java.text.SimpleDateFormat("dd MMM yyyy • HH:mm", Locale("es")).format(java.util.Date(tx.date)), style = MaterialTheme.typography.bodySmall, color = com.example.admin_ingresos.ui.theme.TextSecondary)
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        // Transaction type text and icon aligned together
-                                        Text(tx.type, style = MaterialTheme.typography.labelMedium, color = amountColor)
+                                        // Transaction type label and icon (show 'Ahorro' + piggy for transfers)
+                                        val displayTypeLabel = if (tx.type.equals(com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER, ignoreCase = true)) "Ahorro" else tx.type
+                                        val displayTypeIcon = if (tx.type.equals(com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER, ignoreCase = true)) com.example.admin_ingresos.ui.icons.LucideIconMapper.getSavingsGoalIcon("other") else com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon(tx.type)
+
+                                        Text(displayTypeLabel, style = MaterialTheme.typography.labelMedium, color = amountColor)
                                         Spacer(modifier = Modifier.width(6.dp))
-                                        Icon(imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon(tx.type), contentDescription = null, tint = amountColor, modifier = Modifier.size(18.dp))
+                                        Icon(imageVector = displayTypeIcon, contentDescription = null, tint = amountColor, modifier = Modifier.size(18.dp))
                                     }
                                 }
                             }
@@ -300,7 +310,11 @@ fun TransactionDetailScreen(
                     if (trendLabels.isNotEmpty() && trendValues.isNotEmpty()) {
                         CashFlowCard(modifier = Modifier.fillMaxWidth(), containerColor = bgColor.copy(alpha = 0.18f), borderColor = bgColor.copy(alpha = 0.20f)) {
                             Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                val title = if (tx.type.equals("Ingreso", ignoreCase = true)) "Tu Ingreso en ${categoryName ?: "esta categoría"}" else "Tu Gasto en ${categoryName ?: "esta categoría"}"
+                                val title = when {
+                                    tx.type.equals(com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER, ignoreCase = true) -> "Tu Ahorro en ${categoryName ?: "esta categoría"}"
+                                    tx.type.equals(com.example.admin_ingresos.data.Transaction.TYPE_INCOME, ignoreCase = true) -> "Tu Ingreso en ${categoryName ?: "esta categoría"}"
+                                    else -> "Tu Gasto en ${categoryName ?: "esta categoría"}"
+                                }
                                 Text(title, style = MaterialTheme.typography.titleSmall)
 
                                 // Compute simple KPIs
@@ -336,12 +350,22 @@ fun TransactionDetailScreen(
                                 }
 
                                 // Short, human-friendly insight derived from previous calculation (fallback to existing insight text)
-                                val smartInsight = when {
-                                    avg <= 0.0 -> "Sin datos suficientes para generar un insight."
-                                    pctChange == null -> trendInsight ?: "No hay datos anteriores para comparación."
-                                    pctChange > 10 -> "Atención: este mes tu ${if (tx.type.equals("Ingreso", true)) "ingreso" else "gasto"} en ${categoryName ?: "esta categoría"} aumentó significativamente respecto al mes anterior."
-                                    pctChange < -10 -> "Buen trabajo: este mes tu ${if (tx.type.equals("Ingreso", true)) "ingreso" else "gasto"} en ${categoryName ?: "esta categoría"} disminuyó respecto al mes anterior."
-                                    else -> trendInsight ?: "Este mes está dentro del rango normal para esta categoría."
+                                val smartInsight = if (tx.type.equals(com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER, ignoreCase = true)) {
+                                    when {
+                                        avg <= 0.0 -> "Sin datos suficientes para generar un insight."
+                                        pctChange == null -> "No hay datos anteriores para comparación."
+                                        pctChange > 0 -> "Este mes ahorraste ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(last)} — ${"%.0f".format(pctChange)}% más que el mes anterior."
+                                        pctChange < 0 -> "Este mes ahorraste ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(last)} — ${"%.0f".format(-pctChange)}% menos que el mes anterior."
+                                        else -> "Tu ahorro está estable respecto al periodo anterior."
+                                    }
+                                } else {
+                                    when {
+                                        avg <= 0.0 -> "Sin datos suficientes para generar un insight."
+                                        pctChange == null -> "No hay datos anteriores para comparación."
+                                        pctChange > 10 -> "Atención: este mes tu ${if (tx.type.equals("Ingreso", true)) "ingreso" else "gasto"} en ${categoryName ?: "esta categoría"} aumentó significativamente respecto al mes anterior."
+                                        pctChange < -10 -> "Buen trabajo: este mes tu ${if (tx.type.equals("Ingreso", true)) "ingreso" else "gasto"} en ${categoryName ?: "esta categoría"} disminuyó respecto al mes anterior."
+                                        else -> "Este mes está dentro del rango normal para esta categoría."
+                                    }
                                 }
 
                                 Text(smartInsight, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
