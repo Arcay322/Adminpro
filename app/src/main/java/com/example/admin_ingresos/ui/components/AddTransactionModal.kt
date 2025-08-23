@@ -26,16 +26,8 @@ fun AddTransactionModal(
         ThemedAlertDialog(
             onDismissRequest = onDismiss,
             title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Agregar Transacción", style = MaterialTheme.typography.titleLarge)
-                }
+                // Keep title text only (remove leading add icon to simplify header)
+                Text("Agregar Transacción", style = MaterialTheme.typography.titleLarge)
             },
             text = {
                 Box(modifier = Modifier.fillMaxWidth()) {

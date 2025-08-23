@@ -219,7 +219,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 6.dp, vertical = 12.dp)
     ) {
         // Header minimalista (eliminado para evitar doble título)
         Spacer(modifier = Modifier.height(4.dp))
@@ -232,7 +232,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                 .fillMaxWidth()
                 .padding(vertical = 10.dp)
         ) {
-            Column(Modifier.padding(horizontal = 18.dp, vertical = 14.dp)) {
+                Column(Modifier.padding(horizontal = 4.dp, vertical = 12.dp)) {
                 Text(
                     text = "Tipo de Transacción",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
@@ -292,7 +292,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
         ) {
             Column(
                 Modifier
-                    .padding(horizontal = 14.dp, vertical = 14.dp)
+                    .padding(horizontal = 4.dp, vertical = 12.dp)
                     .fillMaxWidth()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -330,7 +330,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
         ) {
             Column(
                 Modifier
-                    .padding(horizontal = 14.dp, vertical = 14.dp)
+                    .padding(horizontal = 4.dp, vertical = 12.dp)
                     .fillMaxWidth()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -360,7 +360,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
             Box(Modifier.fillMaxWidth()) {
                 Column(
                     Modifier
-                        .padding(horizontal = 14.dp, vertical = 14.dp)
+                        .padding(horizontal = 4.dp, vertical = 12.dp)
                         .fillMaxWidth()
                 ) {
                     Row(
@@ -472,7 +472,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
 
         // Selector sencillo de método de pago (lista estática)
         CashFlowCard(modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(14.dp)) {
+            Column(Modifier.padding(4.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Payment, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                     Spacer(modifier = Modifier.width(8.dp))
@@ -569,7 +569,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
         CashFlowCard(
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(Modifier.padding(10.dp)) {
+            Column(Modifier.padding(4.dp)) {
                 Text("Recibo", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
