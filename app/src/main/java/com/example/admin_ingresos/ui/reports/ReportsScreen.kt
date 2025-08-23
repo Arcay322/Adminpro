@@ -939,9 +939,9 @@ fun IncomeVsExpenseTrendChart(reportData: ReportData) {
                         }
                         // Paragraph 1: net balance summary
                         if (net > 0.0) {
-                            Text(text = "¡Excelente! Este mes tus ingresos superaron a tus gastos en S/ ${formatter.format(net)}.", color = TextPrimary, fontWeight = FontWeight.Bold)
+                            Text(text = "¡Excelente! Este mes tus ingresos superaron a tus gastos en ${formatter.format(net)}.", color = TextPrimary, fontWeight = FontWeight.Bold)
                         } else if (net < 0.0) {
-                            Text(text = "Ten cuidado, tus gastos han superado tus ingresos en S/ ${formatter.format(-net)} este mes.", color = TextPrimary, fontWeight = FontWeight.Bold)
+                            Text(text = "Ten cuidado, tus gastos han superado tus ingresos en ${formatter.format(-net)} este mes.", color = TextPrimary, fontWeight = FontWeight.Bold)
                         } else {
                             Text(text = "Ingresos y gastos están equilibrados este mes.", color = TextPrimary, fontWeight = FontWeight.Bold)
                         }
