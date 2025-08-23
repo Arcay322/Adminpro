@@ -168,7 +168,9 @@ fun MainAppNavigation() {
                             onNavigateToTransactions = { navController.navigate("history") },
                             onNavigateToAddTransaction = { showAddTransactionModal = true },
                             onNavigateToReports = { navController.navigate("reports") },
-                            onNavigateToSettings = { navController.navigate("profile") }
+                            onNavigateToSettings = { navController.navigate("profile") },
+                            onNavigateToBudget = { navController.navigate("budget") },
+                            onNavigateToReportsSection = { section -> navController.navigate("reports/$section") }
                         )
                     }
                     composable("budget") {
@@ -190,6 +192,12 @@ fun MainAppNavigation() {
                     }
                     composable("reports") {
                         ReportsScreen()
+                    }
+
+                    composable(route = "reports/{section}", arguments = listOf(navArgument("section") { type = NavType.StringType })) { backStackEntry ->
+                        val section = backStackEntry.arguments?.getString("section") ?: ""
+                        // Delegate to ReportsScreen and pass the requested initial section
+                        ReportsScreen(initialSection = section)
                     }
 
                     composable("profile") {

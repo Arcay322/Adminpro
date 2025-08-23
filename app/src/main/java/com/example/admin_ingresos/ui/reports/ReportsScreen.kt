@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -59,7 +60,7 @@ import java.util.Locale
 import androidx.compose.ui.window.Dialog
 
 @Composable
-fun ReportsScreen() {
+fun ReportsScreen(initialSection: String = "") {
     val context = LocalContext.current
     val viewModel: ReportsViewModel = viewModel(factory = object : ViewModelProvider.Factory {
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
@@ -174,10 +175,13 @@ fun ReportsScreen() {
                 }
             }
         }
+        val listState = rememberLazyListState()
+
         if (uiState.isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
             LazyColumn(
+                state = listState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -258,6 +262,18 @@ fun ReportsScreen() {
                     SavingsByCategoryChart(reportData = uiState.reportData)
                 }
 
+            }
+        }
+
+        // If caller requested a specific section, scroll to it after the content renders
+        LaunchedEffect(uiState.isLoading, initialSection) {
+            if (!uiState.isLoading && initialSection == "expenseByCategory") {
+                // find the index of the ExpenseByCategoryChart - in this current layout it's the 5th item (0-based) but
+                // to be robust we scroll to a small offset where that item is likely placed.
+                try {
+                    // safe scroll to index 5 (after header, date range, balance, trend, savings)
+                        listState.animateScrollToItem(index = 5)
+                } catch (_: Exception) { }
             }
         }
     }

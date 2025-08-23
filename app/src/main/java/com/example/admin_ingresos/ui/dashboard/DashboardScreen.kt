@@ -45,7 +45,9 @@ fun DashboardScreen(
     onNavigateToTransactions: () -> Unit,
     onNavigateToAddTransaction: () -> Unit,
     onNavigateToReports: () -> Unit,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    onNavigateToBudget: () -> Unit,
+    onNavigateToReportsSection: (String) -> Unit
 ) {
     val context = LocalContext.current
     val db = remember { com.example.admin_ingresos.AppDatabaseProvider.getDatabase(context) }
@@ -68,6 +70,9 @@ fun DashboardScreen(
         }
     })
 
+    // State to show the add-savings-goal dialog from the Quick Actions
+    var showAddGoalTop by remember { mutableStateOf(false) }
+
     var userName by remember { mutableStateOf("Usuario") }
 
     var showNotificationsDialog by remember { mutableStateOf(false) }
@@ -83,6 +88,23 @@ fun DashboardScreen(
         if (!uiState.isLoading) {
             isVisible = true
         }
+    }
+
+    // Show Add Savings Goal dialog when triggered from Quick Actions
+    if (showAddGoalTop) {
+        com.example.admin_ingresos.ui.savings.AddEditSavingsGoalDialog(
+            onConfirm = { name, amount, icon, color ->
+                savingsGoalViewModel.addSavingsGoal(
+                    name = name,
+                    targetAmount = amount,
+                    emoji = icon,
+                    color = color,
+                    description = ""
+                )
+                showAddGoalTop = false
+            },
+            onDismiss = { showAddGoalTop = false }
+        )
     }
 
     // Notifications dialog
@@ -185,22 +207,22 @@ fun DashboardScreen(
                     enter = slideInVertically(initialOffsetY = { it / 3 }) + fadeIn()
                 ) {
                     QuickActionsSection(
-                        onAddTransaction = onNavigateToAddTransaction,
+                        onAddSavingsGoal = { showAddGoalTop = true },
                         onViewTransactions = onNavigateToTransactions,
                         onViewReports = onNavigateToReports,
-                        onViewBudget = { /* TODO: Implementar presupuesto */ }
+                        onViewBudget = onNavigateToBudget
                     )
                 }
             }
 
             // Gráfico de gastos por categoría (solo si hay datos)
-            if (uiState.categoryExpenses.isNotEmpty()) {
+                    if (uiState.categoryExpenses.isNotEmpty()) {
                 item {
                     AnimatedVisibility(
                         visible = !uiState.isLoading,
                         enter = slideInVertically(initialOffsetY = { it / 4 }) + fadeIn()
                     ) {
-                        ExpensesByCategoryChart(categories = uiState.categoryExpenses)
+                        ExpensesByCategoryChart(categories = uiState.categoryExpenses, onNavigateToReportsSection = onNavigateToReportsSection)
                     }
                 }
             }
@@ -287,6 +309,8 @@ fun DashboardScreen(
                     SavingsGoalsSection(savingsGoalViewModel)
                 }
             }
+
+            // (Dialog moved below LazyColumn to keep composable invocation in a @Composable scope)
 
             // Transacciones recientes (solo si hay datos)
             if (uiState.recentTransactions.isNotEmpty()) {
@@ -440,7 +464,7 @@ private fun DashboardHeader(
 
 @Composable
 private fun QuickActionsSection(
-    onAddTransaction: () -> Unit,
+    onAddSavingsGoal: () -> Unit,
     onViewTransactions: () -> Unit,
     onViewReports: () -> Unit,
     onViewBudget: () -> Unit
@@ -466,8 +490,8 @@ private fun QuickActionsSection(
                             QuickActionButton(
                                 icon = LucideIconMapper.Navigation.add,
                                 title = "Agregar",
-                                subtitle = "Transacción",
-                                onClick = onAddTransaction,
+                                subtitle = "Meta",
+                                onClick = onAddSavingsGoal,
                                 gradient = listOf(AccentVibrantStart, AccentVibrantEnd)
                             )
 
@@ -548,7 +572,7 @@ private fun QuickActionButton(
 }
 
 @Composable
-private fun ExpensesByCategoryChart(categories: List<CategoryExpense>) {
+private fun ExpensesByCategoryChart(categories: List<CategoryExpense>, onNavigateToReportsSection: (String) -> Unit) {
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
         backgroundColor = GlassWhite,
@@ -567,7 +591,7 @@ private fun ExpensesByCategoryChart(categories: List<CategoryExpense>) {
                     color = TextPrimary
                 )
 
-                TextButton(onClick = { /* TODO: Ver detalles */ }) {
+                TextButton(onClick = { onNavigateToReportsSection("expenseByCategory") }) {
                     Text(
                         text = "Ver todo",
                         color = AccentVibrantStart,
@@ -593,7 +617,7 @@ private fun ExpensesByCategoryChart(categories: List<CategoryExpense>) {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(categories) { category ->
+                        items(categories) { category ->
                         CategoryLegendItem(
                             category = CategoryData(category.name, category.percentage, category.color),
                             amount = category.amount
@@ -897,8 +921,14 @@ private fun DashboardTransactionItemCard(transaction: DashboardTransaction) {
             }
         }
 
+        val amountText = when {
+            transaction.isIncome -> "+${formatter.format(transaction.amount).replace(" ", "\u00A0")}"
+            transaction.isTransfer -> formatter.format(transaction.amount).replace(" ", "\u00A0")
+            else -> "-${formatter.format(transaction.amount).replace(" ", "\u00A0")}"
+        }
+
         Text(
-            text = "${if (transaction.isIncome) "+" else "-"}${formatter.format(transaction.amount).replace(" ", "\u00A0")}",
+            text = amountText,
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
             color = when {
@@ -992,13 +1022,18 @@ private fun SavingsGoalsSection(savingsGoalViewModel: com.example.admin_ingresos
                 )
 
                 var showAddGoal by remember { mutableStateOf(false) }
-                IconButton(
-                    onClick = { showAddGoal = true }
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Brush.linearGradient(listOf(AccentVibrantStart, AccentVibrantEnd)))
+                        .clickable { showAddGoal = true },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = LucideIconMapper.Navigation.add,
                         contentDescription = "Agregar meta",
-                        tint = AccentVibrantStart,
+                        tint = Color.White,
                         modifier = Modifier.size(20.dp)
                     )
                 }
