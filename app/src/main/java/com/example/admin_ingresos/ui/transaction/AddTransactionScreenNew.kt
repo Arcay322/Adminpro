@@ -425,10 +425,10 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                             pendingCategoryName = newCategoryName.trim()
                             shouldCreateCategory = true
                         }
-                    }, colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart, contentColor = Color.White)) { Text("Crear") }
+                    }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) { Text("Crear") }
                 },
                 dismissButton = {
-                    OutlinedButton(onClick = { showCategoryDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentVibrantStart)) { Text("Cancelar") }
+                    OutlinedButton(onClick = { showCategoryDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) { Text("Cancelar") }
                 }
             )
         }

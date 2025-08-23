@@ -991,13 +991,13 @@ private fun AddCategoryDialog(
                     }
                 },
                 enabled = categoryName.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart, contentColor = Color.White)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
             ) {
                 Text("Agregar")
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentVibrantStart)) {
+            OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) {
                 Text("Cancelar")
             }
         }
@@ -1032,13 +1032,13 @@ private fun AddPaymentMethodDialog(
                     }
                 },
                 enabled = methodName.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart, contentColor = Color.White)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
             ) {
                 Text("Agregar")
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentVibrantStart)) {
+            OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) {
                 Text("Cancelar")
             }
         }

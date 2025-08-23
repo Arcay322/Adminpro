@@ -81,7 +81,7 @@ fun AddEditCategoryDialogFull(
                     }
                 },
                 enabled = name.isNotBlank() && error == null,
-                colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart, contentColor = Color.White)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
             ) {
                 Icon(Icons.Default.Save, contentDescription = null)
                 Spacer(Modifier.width(4.dp))
@@ -89,7 +89,7 @@ fun AddEditCategoryDialogFull(
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentVibrantStart)) { Text("Cancelar") }
+            OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) { Text("Cancelar") }
         }
     )
 }

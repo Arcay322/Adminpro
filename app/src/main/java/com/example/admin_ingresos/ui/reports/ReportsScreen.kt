@@ -284,7 +284,7 @@ fun ReportsScreen() {
                 }
             },
             dismissButton = {
-                OutlinedButton(onClick = { showExportDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentVibrantStart)) { Text("Cancelar") }
+                OutlinedButton(onClick = { showExportDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) { Text("Cancelar") }
             }
         )
     }

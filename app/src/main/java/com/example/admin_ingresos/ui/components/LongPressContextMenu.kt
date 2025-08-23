@@ -332,12 +332,12 @@ fun ContextMenuDialog(
             }
         },
             confirmButton = {
-                Button(onClick = onDismiss, colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart, contentColor = Color.White)) {
+                Button(onClick = onDismiss, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) {
                     Text("OK")
                 }
             },
             dismissButton = {
-                OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentVibrantStart)) {
+                OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) {
                     Text("Cancelar")
                 }
             }
