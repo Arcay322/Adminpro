@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
@@ -122,12 +123,12 @@ fun AddEditSavingsGoalDialog(
                     OutlinedButton(
                         onClick = { iconMenuExpanded = true },
                         modifier = Modifier.fillMaxWidth(),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary)
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentVibrantStart)
                     ) {
                         if (iconKey.isNotBlank()) {
-                            // CAMBIO AQUÍ: Usamos la nueva función
-                            Icon(LucideIconMapper.getSavingsGoalIcon(iconKey), null, tint = AccentVibrantStart)
+                            val iconVector = LucideIconMapper.getSavingsGoalIcon(iconKey)
+                            Icon(iconVector, null, tint = AccentVibrantStart)
                             Spacer(Modifier.width(8.dp))
                             Text(iconSpanishNames[iconKey] ?: iconKey)
                         } else {
@@ -183,12 +184,7 @@ fun AddEditSavingsGoalDialog(
             }
         },
         dismissButton = {
-            OutlinedButton(
-                onClick = onDismiss,
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
-            ) {
-                Text("Cancelar", color = TextPrimary)
-            }
+            OutlinedButton(onClick = onDismiss) { Text("Cancelar", color = AccentVibrantStart) }
         },
         shape = RoundedCornerShape(28.dp),
         modifier = Modifier.border(

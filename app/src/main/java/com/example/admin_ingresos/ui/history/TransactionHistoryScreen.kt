@@ -934,7 +934,7 @@ fun ModernSearchAndFilters(
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Medium
                         ),
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = com.example.admin_ingresos.ui.theme.TextPrimary
                     )
                     
                     LazyRow(
