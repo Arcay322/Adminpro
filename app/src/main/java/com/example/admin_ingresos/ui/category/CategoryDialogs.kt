@@ -19,7 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.admin_ingresos.data.Category
 import androidx.compose.foundation.border
-import com.example.admin_ingresos.ui.theme.AccentVibrantStart
 
 @Composable
 fun AddEditCategoryDialogFull(
@@ -80,8 +79,7 @@ fun AddEditCategoryDialogFull(
                         onConfirm(Category(initial?.id ?: 0, name.trim(), icon, color))
                     }
                 },
-                enabled = name.isNotBlank() && error == null,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
+                enabled = name.isNotBlank() && error == null
             ) {
                 Icon(Icons.Default.Save, contentDescription = null)
                 Spacer(Modifier.width(4.dp))
@@ -89,7 +87,7 @@ fun AddEditCategoryDialogFull(
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) { Text("Cancelar") }
+            OutlinedButton(onClick = onDismiss) { Text("Cancelar") }
         }
     )
 }

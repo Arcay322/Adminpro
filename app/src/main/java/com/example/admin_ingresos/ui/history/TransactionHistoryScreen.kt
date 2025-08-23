@@ -285,16 +285,23 @@ fun DeleteConfirmationDialog(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
             )
         },
-            confirmButton = {
-                Button(onClick = onConfirm, colors = ButtonDefaults.buttonColors(containerColor = com.example.admin_ingresos.ui.theme.ExpenseRed, contentColor = Color.White)) {
-                    Text("Eliminar")
-                }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = com.example.admin_ingresos.ui.theme.AccentVibrantStart)) {
-                    Text("Cancelar")
-                }
-            },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    text = "Eliminar",
+                    color = MaterialTheme.colorScheme.error,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = "Cancelar",
+                    color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f)
+                )
+            }
+        },
         containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
         iconContentColor = com.example.admin_ingresos.ui.theme.TextPrimary,
         titleContentColor = com.example.admin_ingresos.ui.theme.TextPrimary,
@@ -369,9 +376,9 @@ fun EditTransactionDialog(
                             selected = editType == type,
                             onClick = { editType = type },
                             label = { Text(type, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = CashFlowPrimary,
+                                selectedLabelColor = com.example.admin_ingresos.ui.theme.TextOnAccent,
                                 containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.1f),
                                 labelColor = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.8f)
                             )
@@ -383,7 +390,7 @@ fun EditTransactionDialog(
         confirmButton = {
             val updatedAmount = editAmount.toDoubleOrNull()
             val isEnabled = editDescription.isNotBlank() && updatedAmount != null && updatedAmount > 0
-            Button(
+            TextButton(
                 onClick = {
                     if (isEnabled) {
                         val updatedTransaction = transaction.copy(
@@ -394,32 +401,20 @@ fun EditTransactionDialog(
                         onConfirm(updatedTransaction)
                     }
                 },
-                enabled = isEnabled,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
-                modifier = Modifier.widthIn(min = 96.dp)
+                enabled = isEnabled
             ) {
-                Text("Guardar", fontWeight = FontWeight.Bold)
+                Text("Guardar", color = if (isEnabled) CashFlowPrimary else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
-            OutlinedButton(
-                onClick = onDismiss,
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
-            ) {
+            TextButton(onClick = onDismiss) {
                 Text(
                     text = "Cancelar",
-                    color = MaterialTheme.colorScheme.primary
+                    color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f)
                 )
             }
         },
-        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-        shape = RoundedCornerShape(28.dp),
-        modifier = Modifier.border(
-            width = 1.dp,
-            color = Color.White.copy(alpha = 0.2f),
-            shape = RoundedCornerShape(28.dp)
-        )
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
     )
 }
 
@@ -924,8 +919,8 @@ fun ModernSearchAndFilters(
                                     }
                                 },
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                    selectedContainerColor = CashFlowPrimary,
+                                    selectedLabelColor = com.example.admin_ingresos.ui.theme.TextOnAccent,
                                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.1f),
                                     labelColor = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.8f)
                                 )
@@ -976,8 +971,8 @@ fun ModernSearchAndFilters(
                                     }
                                 },
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                    selectedContainerColor = CashFlowPrimary,
+                                    selectedLabelColor = com.example.admin_ingresos.ui.theme.TextOnAccent,
                                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.1f),
                                     labelColor = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.8f)
                                 )

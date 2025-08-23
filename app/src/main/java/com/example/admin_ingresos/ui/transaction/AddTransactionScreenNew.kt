@@ -34,7 +34,6 @@ import kotlinx.coroutines.flow.first
 
 // Import Coil para cargar imágenes en Compose
 import coil.compose.rememberAsyncImagePainter
-import com.example.admin_ingresos.ui.theme.AccentVibrantStart
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -425,10 +424,10 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                             pendingCategoryName = newCategoryName.trim()
                             shouldCreateCategory = true
                         }
-                    }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) { Text("Crear") }
+                    }) { Text("Crear") }
                 },
                 dismissButton = {
-                    OutlinedButton(onClick = { showCategoryDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) { Text("Cancelar") }
+                    OutlinedButton(onClick = { showCategoryDialog = false }) { Text("Cancelar") }
                 }
             )
         }

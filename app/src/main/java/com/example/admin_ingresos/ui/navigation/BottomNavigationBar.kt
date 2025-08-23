@@ -63,7 +63,7 @@ fun BottomNavigationBar(navController: NavController) {
                             // Pop up to the start destination of the graph to
                             // avoid building up a large stack of destinations
                             popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
+                                // intentionally not setting saveState for compatibility
                             }
                             // Avoid multiple copies of the same destination when
                             // reselecting the same item

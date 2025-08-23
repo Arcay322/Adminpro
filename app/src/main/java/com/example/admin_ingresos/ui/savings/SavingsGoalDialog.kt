@@ -124,11 +124,11 @@ fun AddEditSavingsGoalDialog(
                         onClick = { iconMenuExpanded = true },
                         modifier = Modifier.fillMaxWidth(),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentVibrantStart)
                     ) {
                         if (iconKey.isNotBlank()) {
                             val iconVector = LucideIconMapper.getSavingsGoalIcon(iconKey)
-                            Icon(iconVector, null, tint = MaterialTheme.colorScheme.primary)
+                            Icon(iconVector, null, tint = AccentVibrantStart)
                             Spacer(Modifier.width(8.dp))
                             Text(iconSpanishNames[iconKey] ?: iconKey)
                         } else {
@@ -148,8 +148,8 @@ fun AddEditSavingsGoalDialog(
                                     iconMenuExpanded = false
                                 },
                                 leadingIcon = {
-                                    // CAMBIO AQUÍ: Usamos color primario del tema para que el selector adapte su color
-                                    Icon(LucideIconMapper.getSavingsGoalIcon(key), null, tint = MaterialTheme.colorScheme.primary)
+                                    // CAMBIO AQUÍ: Usamos la nueva función
+                                    Icon(LucideIconMapper.getSavingsGoalIcon(key), null, tint = AccentVibrantStart)
                                 }
                             )
                         }
@@ -178,13 +178,13 @@ fun AddEditSavingsGoalDialog(
                     }
                 },
                 enabled = name.isNotBlank() && amount.isNotBlank() && iconKey.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
+                colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart)
             ) {
                 Text(if (isEdit) "Guardar" else "Agregar")
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) { Text("Cancelar") }
+            OutlinedButton(onClick = onDismiss) { Text("Cancelar", color = AccentVibrantStart) }
         },
         shape = RoundedCornerShape(28.dp),
         modifier = Modifier.border(

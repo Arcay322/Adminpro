@@ -29,7 +29,6 @@ import java.text.NumberFormat
 import java.util.*
 import java.io.File
 import com.example.admin_ingresos.ui.components.resolvedMenuContainerColor
-import com.example.admin_ingresos.ui.theme.AccentVibrantStart
 
 // Brand Header Component
 @Composable
@@ -990,14 +989,13 @@ private fun AddCategoryDialog(
                         onAddCategory(categoryName.trim())
                     }
                 },
-                enabled = categoryName.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
+                enabled = categoryName.isNotBlank()
             ) {
                 Text("Agregar")
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) {
+            TextButton(onClick = onDismiss) {
                 Text("Cancelar")
             }
         }
@@ -1031,14 +1029,13 @@ private fun AddPaymentMethodDialog(
                         onAddPaymentMethod(methodName.trim())
                     }
                 },
-                enabled = methodName.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
+                enabled = methodName.isNotBlank()
             ) {
                 Text("Agregar")
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) {
+            TextButton(onClick = onDismiss) {
                 Text("Cancelar")
             }
         }

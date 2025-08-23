@@ -135,7 +135,7 @@ fun ProfileScreen(
                         Text(text = if (editEmail.isNotBlank()) editEmail else "—", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = { imagePicker.launch("image/*") }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) { Text("Cambiar avatar") }
+                            Button(onClick = { imagePicker.launch("image/*") }, colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart)) { Text("Cambiar avatar") }
                             OutlinedButton(onClick = { pickedAvatarUri = null }) { Text("Quitar") }
                         }
                     }
@@ -267,7 +267,7 @@ fun ProfileScreen(
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Text(text = "PIN de seguridad", color = TextPrimary)
-                        Button(onClick = { showPinDialog = true }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) { Text("Configurar PIN") }
+                        Button(onClick = { showPinDialog = true }, colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart)) { Text("Configurar PIN") }
                     }
                 }
             }
@@ -286,7 +286,7 @@ fun ProfileScreen(
                             putExtra(Intent.EXTRA_SUBJECT, "Soporte Adminpro")
                         }
                         ctx.startActivity(intent)
-                    }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) { Text("Contactar soporte") }
+                    }, colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart)) { Text("Contactar soporte") }
                 }
             }
 
@@ -297,7 +297,7 @@ fun ProfileScreen(
                     profileVm.setBackgroundColor(backgroundColorInt)
                     profileVm.saveProfile(editName, editEmail, pickedAvatarUri?.toString(), editCurrency, editDarkMode, editPhone, editBio, editLanguage, editNotificationsEnabled, editFingerprintEnabled, pinInput)
                     coroutineScope.launch { snackbarHostState.showSnackbar("Perfil guardado") }
-                }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) {
+                }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart)) {
                     Text("Guardar")
                 }
                 Spacer(modifier = Modifier.width(12.dp))
@@ -312,13 +312,13 @@ fun ProfileScreen(
 
             if (showDeleteDialog) {
                 ThemedAlertDialog(onDismissRequest = { showDeleteDialog = false }, title = { Text("Confirmar eliminación") }, text = { Text("Esto eliminará tu perfil localmente. ¿Continuar?") }, confirmButton = {
-                    Button(onClick = {
+                    TextButton(onClick = {
                         profileVm.signOut()
                         showDeleteDialog = false
                         onSignOut?.invoke()
-                    }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = Color.White)) { Text("Eliminar") }
+                    }) { Text("Eliminar", color = MaterialTheme.colorScheme.error) }
                 }, dismissButton = {
-                    OutlinedButton(onClick = { showDeleteDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) { Text("Cancelar") }
+                    TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
                 })
             }
 
@@ -326,14 +326,14 @@ fun ProfileScreen(
                 ThemedAlertDialog(onDismissRequest = { showPinDialog = false }, title = { Text("Configurar PIN") }, text = {
                     Column { OutlinedTextField(value = pinInput, onValueChange = { pinInput = it }, label = { Text("PIN (4 dígitos)") }) }
                 }, confirmButton = {
-                    Button(onClick = {
+                    TextButton(onClick = {
                         profileVm.saveProfile(editName, editEmail, pickedAvatarUri?.toString(), editCurrency, editDarkMode, editPhone, editBio, editLanguage, editNotificationsEnabled, editFingerprintEnabled, pinInput)
                         pinInput = ""
                         showPinDialog = false
                         coroutineScope.launch { snackbarHostState.showSnackbar("PIN guardado") }
-                    }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) { Text("Guardar") }
+                    }) { Text("Guardar") }
                 }, dismissButton = {
-                    OutlinedButton(onClick = { showPinDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) { Text("Cancelar") }
+                    TextButton(onClick = { showPinDialog = false }) { Text("Cancelar") }
                 })
             }
         }
