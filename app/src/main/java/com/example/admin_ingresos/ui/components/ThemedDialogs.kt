@@ -39,7 +39,7 @@ fun ThemedAlertDialog(
     textContentColor: Color? = MaterialTheme.colorScheme.onSurface,
     tonalElevation: Dp = 1.dp,
     shape: Shape = MaterialTheme.shapes.medium,
-    borderStroke: BorderStroke? = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)),
+    borderStroke: BorderStroke? = null,
     // Optional full-content lambda used by many call sites that pass a trailing lambda
     content: (@Composable () -> Unit)? = null
 ) {
@@ -62,9 +62,15 @@ fun ThemedAlertDialog(
         baseContainer
     }
 
-    // If caller provided a borderStroke, append it to the modifier; otherwise use the
-    // provided modifier as-is.
-    val finalModifier = if (borderStroke != null) modifier.then(Modifier.border(borderStroke, shape)) else modifier
+    // Determine default border when caller doesn't provide one: in dark mode use a
+    // subtle onSurface stroke; in light mode do not apply a border by default
+    // (caller may pass one via `borderStroke`).
+    val finalBorder = borderStroke ?: if (isDarkTheme) BorderStroke(
+        1.dp,
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+    ) else null
+
+    val finalModifier = if (finalBorder != null) modifier.then(Modifier.border(finalBorder, shape)) else modifier
 
     if (content == null) {
         // Use the standard AlertDialog API when content isn't provided. confirmButton is required
