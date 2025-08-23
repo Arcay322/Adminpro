@@ -86,6 +86,9 @@ class BudgetViewModel(
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
+                // Always create budgets with concrete start/end dates and active state.
+                // The 'asTemplate' toggle only indicates recurrence intent (handled elsewhere),
+                // it must not create inactive budgets with zeroed dates.
                 val insertStart = startDate
                 val insertEnd = startDate + period.durationInMillis
 
@@ -117,7 +120,30 @@ class BudgetViewModel(
                     isActive = true
                 )
 
-                budgetDao.insertBudget(budget)
+                val insertedId = budgetDao.insertBudget(budget)
+
+                // Defensive: ensure the inserted budget is active and has valid dates.
+                // Defensive: ensure the inserted budget is active and has valid dates.
+                val now = System.currentTimeMillis()
+                val insertedBudget = budgetDao.getBudgetById(insertedId.toInt())
+                if (insertedBudget != null) {
+                    var needsUpdate = false
+                    var updated = insertedBudget
+                    if (!insertedBudget.isActive) {
+                        updated = updated.copy(isActive = true)
+                        needsUpdate = true
+                    }
+                    if (insertedBudget.startDate <= 0L || insertedBudget.endDate <= insertedBudget.startDate) {
+                        val newStart = now
+                        val newEnd = now + budget.period.durationInMillis
+                        updated = updated.copy(startDate = newStart, endDate = newEnd)
+                        needsUpdate = true
+                    }
+                    if (needsUpdate) {
+                        updated = updated.copy(updatedAt = now)
+                        budgetDao.updateBudget(updated)
+                    }
+                }
 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,

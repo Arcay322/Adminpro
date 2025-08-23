@@ -80,6 +80,6 @@ Posibles siguientes pasos que puedo implementar
 
 Contacto y contribuciones
 -------------------------
-Si quieres que añada CI, pruebe la compilación o audite migraciones, dime cuál prefieres y lo hago.
+
 
 Licencia: revisa `LICENSES.md` en el repositorio para decisiones de distribución.
