@@ -178,25 +178,5 @@ object SampleDataProvider {
         }
     }
 
-    /**
-     * Asegura que las categorías necesarias para las plantillas de presupuesto existan
-     */
-    suspend fun ensureBudgetTemplateCategories(database: AppDatabase) = withContext(Dispatchers.IO) {
-        val existingCategories = database.categoryDao().getCategoriesList()
-        val requiredCategories = listOf("Alimentación", "Transporte", "Entretenimiento", "Compras")
-
-        requiredCategories.forEach { requiredName ->
-            val exists = existingCategories.any { it.name.equals(requiredName, ignoreCase = true) }
-            if (!exists) {
- val category = when (requiredName) {
- "Alimentación" -> Category(name = "Alimentación", icon = "UtensilsCrossed", color = "#FF6B6B", isFavorite = true)
- "Transporte" -> Category(name = "Transporte", icon = "Car", color = "#4ECDC4", isFavorite = true)
- "Entretenimiento" -> Category(name = "Entretenimiento", icon = "Gamepad2", color = "#45B7D1", isFavorite = false)
- "Compras" -> Category(name = "Compras", icon = "ShoppingCart", color = "#DDA0DD", isFavorite = true)
-                    else -> Category(name = requiredName, icon = "Package", color = "#85C1E9", isFavorite = false)
-                }
-                database.categoryDao().insert(category)
-            }
-        }
-    }
+    // Budget template category helper removed (templates UI removed)
 }
