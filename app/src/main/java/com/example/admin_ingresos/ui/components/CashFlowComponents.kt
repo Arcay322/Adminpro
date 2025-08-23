@@ -140,8 +140,7 @@ fun GlassmorphismBalanceCard(
     ) {
         // Gradient Background
         Card(
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.Transparent
@@ -965,7 +964,7 @@ private fun CategoryChip(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddCategoryDialog(
+fun AddCategoryDialog(
     onDismiss: () -> Unit,
     onAddCategory: (String) -> Unit
 ) {

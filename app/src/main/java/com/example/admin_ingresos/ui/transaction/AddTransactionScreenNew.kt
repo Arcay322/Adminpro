@@ -527,48 +527,25 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
             }
         }
 
-        // Dialog para crear nueva categoría
+        // Dialog para crear nueva categoría: reutilizamos el diálogo completo de Categorías
         if (showCategoryDialog) {
-            ThemedAlertDialog(
-                onDismissRequest = { showCategoryDialog = false },
-                title = { Text("Nueva Categoría") },
-                text = {
-                    Column {
-                        OutlinedTextField(
-                            value = newCategoryName,
-                            onValueChange = { newCategoryName = it },
-                            label = { Text("Nombre de la categoría") },
-                            isError = newCategoryError != null
-                        )
-                        if (newCategoryError != null) Text(
-                            newCategoryError!!,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            if (newCategoryName.isBlank()) {
-                                newCategoryError = "El nombre es requerido"
-                            } else {
-                                pendingCategoryName = newCategoryName.trim()
-                                shouldCreateCategory = true
+            com.example.admin_ingresos.ui.category.DialogScrim(onDismiss = { showCategoryDialog = false }) {
+                com.example.admin_ingresos.ui.category.CategoryAddEditDialogShared(
+                    initial = com.example.admin_ingresos.data.Category(name = "", color = "#4CAF50", icon = "default"),
+                    onConfirm = { newCategory ->
+                        coroutineScope.launch {
+                            try {
+                                val newId = db.categoryDao().insert(newCategory)
+                                selectedCategoryId = newId.toInt()
+                                categoryUpdateTrigger++
+                            } catch (_: Exception) {
                             }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
-                    ) { Text("Crear") }
-                },
-                dismissButton = {
-                    OutlinedButton(
-                        onClick = { showCategoryDialog = false },
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
-                    ) { Text("Cancelar") }
-                }
-            )
+                            showCategoryDialog = false
+                        }
+                    },
+                    onDismiss = { showCategoryDialog = false }
+                )
+            }
         }
 
         // Efecto para crear categoría

@@ -668,9 +668,13 @@ fun CategoryScreen(
                 // Diálogos con Scrim y Estilo Mejorado
                 if (uiState.showAddEditDialog != null) {
                     DialogScrim(onDismiss = { viewModel.hideAddEditDialog() }) {
-                        CategoryAddEditDialog(
-                            category = uiState.showAddEditDialog!!,
-                            viewModel = viewModel
+                        CategoryAddEditDialogShared(
+                            initial = uiState.showAddEditDialog!!,
+                            onConfirm = { updated ->
+                                if (updated.id != 0) viewModel.updateCategory(updated) else viewModel.addCategory(updated)
+                                viewModel.hideAddEditDialog()
+                            },
+                            onDismiss = { viewModel.hideAddEditDialog() }
                         )
                     }
                 }
@@ -753,7 +757,7 @@ fun CategoryScreen(
     }
 
 @Composable
-private fun DialogScrim(
+fun DialogScrim(
     onDismiss: () -> Unit,
     content: @Composable () -> Unit
 ) {

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Palette
@@ -132,4 +133,102 @@ fun SegmentedButton(options: List<String>, selected: String, onSelected: (String
             }
         }
     }
+}
+
+@Composable
+fun CategoryAddEditDialogShared(
+    initial: com.example.admin_ingresos.data.Category,
+    onConfirm: (com.example.admin_ingresos.data.Category) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var name by remember { mutableStateOf(initial.name) }
+    var color by remember { mutableStateOf(initial.color) }
+    var icon by remember { mutableStateOf(initial.icon) }
+    val isEdit = initial.id != 0
+
+    ThemedAlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (isEdit) "Editar Categoría" else "Agregar Categoría") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                Text("Color", style = MaterialTheme.typography.labelMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    val colorOptions = listOf("#4CAF50", "#2196F3", "#FF9800", "#E91E63", "#9C27B0", "#F44336", "#00BCD4", "#FFEB3B")
+                    colorOptions.forEach { option ->
+                        val selected = color.equals(option, ignoreCase = true)
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(Color(android.graphics.Color.parseColor(option)))
+                                .border(
+                                    width = if (selected) 3.dp else 1.dp,
+                                    color = if (selected) com.example.admin_ingresos.ui.theme.AccentVibrantStart else Color.LightGray,
+                                    shape = CircleShape
+                                )
+                                .clickable { color = option }
+                        )
+                    }
+                }
+                Text("Icono", style = MaterialTheme.typography.labelMedium)
+                var iconMenuExpanded by remember { mutableStateOf(false) }
+                Box {
+                    OutlinedButton(
+                        onClick = { iconMenuExpanded = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        val iconOptions = com.example.admin_ingresos.ui.icons.LucideIconMapper.getAvailableCategoryIcons()
+                        val selectedIconOption = iconOptions.find { it.name == icon }
+                        if (selectedIconOption != null) {
+                            val iconVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromEmoji(selectedIconOption.icon)
+                            Icon(iconVector, null, tint = MaterialTheme.colorScheme.primary)
+                            Spacer(Modifier.width(8.dp))
+                            Text(selectedIconOption.description)
+                        } else {
+                            Text("Seleccionar icono")
+                        }
+                    }
+                    DropdownMenu(
+                        expanded = iconMenuExpanded,
+                        onDismissRequest = { iconMenuExpanded = false },
+                        modifier = Modifier.width(260.dp)
+                            .background(com.example.admin_ingresos.ui.components.resolvedMenuContainerColor())
+                            .clip(RoundedCornerShape(12.dp))
+                    ) {
+                        com.example.admin_ingresos.ui.icons.LucideIconMapper.getAvailableCategoryIcons().forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option.description) },
+                                onClick = {
+                                    icon = option.name
+                                    iconMenuExpanded = false
+                                },
+                                leadingIcon = {
+                                    val iconVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromEmoji(option.icon)
+                                    Icon(iconVector, null, tint = MaterialTheme.colorScheme.primary)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val updatedCategory = initial.copy(name = name, color = color, icon = icon)
+                    onConfirm(updatedCategory)
+                },
+                enabled = name.isNotBlank() && color.isNotBlank() && icon.isNotBlank()
+            ) { Text(if (isEdit) "Guardar" else "Agregar") }
+        },
+        dismissButton = { OutlinedButton(onClick = onDismiss) { Text("Cancelar") } },
+        shape = RoundedCornerShape(28.dp),
+        modifier = Modifier.border(
+            width = 1.dp,
+            color = Color.White.copy(alpha = 0.2f),
+            shape = RoundedCornerShape(28.dp)
+        )
+    )
 }
