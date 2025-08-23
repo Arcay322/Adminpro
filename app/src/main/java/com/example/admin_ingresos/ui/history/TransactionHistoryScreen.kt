@@ -285,23 +285,16 @@ fun DeleteConfirmationDialog(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
             )
         },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(
-                    text = "Eliminar",
-                    color = MaterialTheme.colorScheme.error,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(
-                    text = "Cancelar",
-                    color = com.example.admin_ingresos.ui.theme.TextPrimary.copy(alpha = 0.7f)
-                )
-            }
-        },
+            confirmButton = {
+                Button(onClick = onConfirm, colors = ButtonDefaults.buttonColors(containerColor = com.example.admin_ingresos.ui.theme.ExpenseRed, contentColor = Color.White)) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = com.example.admin_ingresos.ui.theme.AccentVibrantStart)) {
+                    Text("Cancelar")
+                }
+            },
         containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
         iconContentColor = com.example.admin_ingresos.ui.theme.TextPrimary,
         titleContentColor = com.example.admin_ingresos.ui.theme.TextPrimary,

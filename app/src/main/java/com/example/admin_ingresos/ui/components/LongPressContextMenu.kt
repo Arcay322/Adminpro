@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.admin_ingresos.data.Transaction
+import com.example.admin_ingresos.ui.theme.AccentVibrantStart
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -330,11 +331,16 @@ fun ContextMenuDialog(
                 }
             }
         },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+            confirmButton = {
+                Button(onClick = onDismiss, colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart, contentColor = Color.White)) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentVibrantStart)) {
+                    Text("Cancelar")
+                }
             }
-        }
     )
 }
 

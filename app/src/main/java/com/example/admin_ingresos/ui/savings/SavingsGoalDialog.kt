@@ -178,13 +178,13 @@ fun AddEditSavingsGoalDialog(
                     }
                 },
                 enabled = name.isNotBlank() && amount.isNotBlank() && iconKey.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart)
+                colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart, contentColor = Color.White)
             ) {
                 Text(if (isEdit) "Guardar" else "Agregar")
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text("Cancelar", color = AccentVibrantStart) }
+            OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentVibrantStart)) { Text("Cancelar") }
         },
         shape = RoundedCornerShape(28.dp),
         modifier = Modifier.border(

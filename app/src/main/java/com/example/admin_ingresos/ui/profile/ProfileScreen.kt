@@ -312,13 +312,13 @@ fun ProfileScreen(
 
             if (showDeleteDialog) {
                 ThemedAlertDialog(onDismissRequest = { showDeleteDialog = false }, title = { Text("Confirmar eliminación") }, text = { Text("Esto eliminará tu perfil localmente. ¿Continuar?") }, confirmButton = {
-                    TextButton(onClick = {
+                    Button(onClick = {
                         profileVm.signOut()
                         showDeleteDialog = false
                         onSignOut?.invoke()
-                    }) { Text("Eliminar", color = MaterialTheme.colorScheme.error) }
+                    }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = Color.White)) { Text("Eliminar") }
                 }, dismissButton = {
-                    TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
+                    OutlinedButton(onClick = { showDeleteDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentVibrantStart)) { Text("Cancelar") }
                 })
             }
 
@@ -326,14 +326,14 @@ fun ProfileScreen(
                 ThemedAlertDialog(onDismissRequest = { showPinDialog = false }, title = { Text("Configurar PIN") }, text = {
                     Column { OutlinedTextField(value = pinInput, onValueChange = { pinInput = it }, label = { Text("PIN (4 dígitos)") }) }
                 }, confirmButton = {
-                    TextButton(onClick = {
+                    Button(onClick = {
                         profileVm.saveProfile(editName, editEmail, pickedAvatarUri?.toString(), editCurrency, editDarkMode, editPhone, editBio, editLanguage, editNotificationsEnabled, editFingerprintEnabled, pinInput)
                         pinInput = ""
                         showPinDialog = false
                         coroutineScope.launch { snackbarHostState.showSnackbar("PIN guardado") }
-                    }) { Text("Guardar") }
+                    }, colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart, contentColor = Color.White)) { Text("Guardar") }
                 }, dismissButton = {
-                    TextButton(onClick = { showPinDialog = false }) { Text("Cancelar") }
+                    OutlinedButton(onClick = { showPinDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentVibrantStart)) { Text("Cancelar") }
                 })
             }
         }

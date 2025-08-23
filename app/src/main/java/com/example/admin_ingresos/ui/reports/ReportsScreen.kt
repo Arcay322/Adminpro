@@ -267,24 +267,24 @@ fun ReportsScreen() {
                         viewModel.exportTransactionsCsv(context)
                         // show overlay while exporting
                         showLoadingOverlay = true
-                    }) { Text("CSV") }
+                    }, colors = ButtonDefaults.textButtonColors(contentColor = AccentVibrantStart)) { Text("CSV") }
                     TextButton(onClick = {
                         showExportDialog = false
                         viewModel.exportTransactionsPdf(context)
                         showLoadingOverlay = true
-                    }) { Text("PDF") }
+                    }, colors = ButtonDefaults.textButtonColors(contentColor = AccentVibrantStart)) { Text("PDF") }
                     TextButton(onClick = {
                         showExportDialog = false
                         viewModel.shareTextSummary(context)
                         // textual share uses chooser; show a subtle loading state briefly
                         showLoadingOverlay = true
-                    }) { Text("Texto") }
+                    }, colors = ButtonDefaults.textButtonColors(contentColor = AccentVibrantStart)) { Text("Texto") }
 
                     // Download options were moved to the dedicated Download dialog
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showExportDialog = false }) { Text("Cancelar") }
+                OutlinedButton(onClick = { showExportDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentVibrantStart)) { Text("Cancelar") }
             }
         )
     }
