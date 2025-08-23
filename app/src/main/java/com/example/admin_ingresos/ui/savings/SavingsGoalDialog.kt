@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.*
 import com.example.admin_ingresos.ui.components.ThemedAlertDialog
+import com.example.admin_ingresos.ui.components.resolvedMenuContainerColor
 
 // Lista de las claves de los iconos para las metas
 private val savingsIconKeys: List<String> = listOf(
@@ -136,7 +137,7 @@ fun AddEditSavingsGoalDialog(
                     DropdownMenu(
                         expanded = iconMenuExpanded,
                         onDismissRequest = { iconMenuExpanded = false },
-                        modifier = Modifier.width(260.dp).background(Color(0xFF33363B))
+                        modifier = Modifier.width(260.dp).background(resolvedMenuContainerColor())
                     ) {
                         savingsIconKeys.forEach { key ->
                             DropdownMenuItem(

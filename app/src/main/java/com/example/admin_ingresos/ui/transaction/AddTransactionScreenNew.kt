@@ -27,6 +27,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.admin_ingresos.ui.components.*
+import com.example.admin_ingresos.ui.components.resolvedMenuContainerColor
 import java.text.NumberFormat
 import java.util.*
 import kotlinx.coroutines.flow.first
@@ -371,7 +372,8 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                         )
                         ExposedDropdownMenu(
                             expanded = expanded,
-                            onDismissRequest = { expanded = false }
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.background(resolvedMenuContainerColor())
                         ) {
                             categories.forEach { category ->
                                 DropdownMenuItem(
@@ -459,7 +461,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
                         Text(selectedMethod?.name ?: "Selecciona un método de pago")
                     }
-                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.background(resolvedMenuContainerColor())) {
                         paymentMethods.forEach { method ->
                             DropdownMenuItem(
                                 text = { Text(method.name) },
@@ -504,7 +506,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("Imagen subida", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.align(Alignment.CenterHorizontally))
                 }
-                DropdownMenu(expanded = showPhotoMenu, onDismissRequest = { showPhotoMenu = false }) {
+                DropdownMenu(expanded = showPhotoMenu, onDismissRequest = { showPhotoMenu = false }, modifier = Modifier.background(resolvedMenuContainerColor())) {
                     DropdownMenuItem(text = { Text("Desde galería") }, onClick = {
                         galleryLauncher.launch("image/*")
                         showPhotoMenu = false

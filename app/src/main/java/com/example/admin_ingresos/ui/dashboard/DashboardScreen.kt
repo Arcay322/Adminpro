@@ -1167,7 +1167,8 @@ fun SavingsGoalCard(
                         }
                         DropdownMenu(
                             expanded = menuExpanded,
-                            onDismissRequest = { menuExpanded = false }
+                            onDismissRequest = { menuExpanded = false },
+                            modifier = Modifier.background(com.example.admin_ingresos.ui.components.resolvedMenuContainerColor())
                         ) {
                             DropdownMenuItem(
                                 text = { Text("Editar") },

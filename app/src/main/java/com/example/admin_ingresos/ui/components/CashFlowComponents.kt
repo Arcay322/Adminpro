@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import java.text.NumberFormat
 import java.util.*
 import java.io.File
+import com.example.admin_ingresos.ui.components.resolvedMenuContainerColor
 
 // Brand Header Component
 @Composable
@@ -874,7 +875,8 @@ fun EnhancedCategorySelector(
                     
                     ExposedDropdownMenu(
                         expanded = expanded,
-                        onDismissRequest = { expanded = false }
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.background(resolvedMenuContainerColor())
                     ) {
                         categories.forEach { category ->
                             DropdownMenuItem(

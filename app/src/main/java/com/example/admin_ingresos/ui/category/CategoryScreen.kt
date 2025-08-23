@@ -73,6 +73,7 @@ import com.example.admin_ingresos.data.model.SavingsGoal
 import com.example.admin_ingresos.ui.components.GlassCard
 import com.example.admin_ingresos.ui.components.GlassmorphismScreen
 import com.example.admin_ingresos.ui.components.ThemedAlertDialog
+import com.example.admin_ingresos.ui.components.resolvedMenuContainerColor
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.AccentVibrantStart
 import com.example.admin_ingresos.ui.theme.ExpenseRed
@@ -408,7 +409,7 @@ fun CategoryScreen(
                                                         expanded = menuExpanded,
                                                         onDismissRequest = { menuExpanded = false },
                                                         modifier = Modifier
-                                                            .background(Color(0xFF2A2D32))
+                                                            .background(resolvedMenuContainerColor())
                                                             .clip(RoundedCornerShape(12.dp))
                                                     ) {
                                                         DropdownMenuItem(
@@ -568,7 +569,7 @@ fun CategoryScreen(
                                                         expanded = menuExpanded,
                                                         onDismissRequest = { menuExpanded = false },
                                                         modifier = Modifier
-                                                            .background(Color(0xFF2A2D32))
+                                                            .background(resolvedMenuContainerColor())
                                                             .clip(RoundedCornerShape(12.dp))
                                                     ) {
                                                         DropdownMenuItem(
@@ -945,7 +946,7 @@ private fun SavingsGoalsSummary(
                                     expanded = menuExpanded,
                                     onDismissRequest = { menuExpanded = false },
                                     modifier = Modifier
-                                        .background(Color(0xFF2A2D32))
+                                        .background(resolvedMenuContainerColor())
                                         .clip(RoundedCornerShape(12.dp))
                                 ) {
                                     DropdownMenuItem(

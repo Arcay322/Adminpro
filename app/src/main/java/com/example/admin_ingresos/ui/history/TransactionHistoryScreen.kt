@@ -41,6 +41,7 @@ import androidx.navigation.NavController
 import com.example.admin_ingresos.AppDatabaseProvider
 import com.example.admin_ingresos.data.Transaction
 import com.example.admin_ingresos.ui.components.*
+import com.example.admin_ingresos.ui.components.resolvedMenuContainerColor
 import com.example.admin_ingresos.ui.components.GlassmorphismScreen
 import com.example.admin_ingresos.ui.components.ThemedAlertDialog
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
@@ -555,7 +556,8 @@ fun ModernTransactionItem(
 
                 DropdownMenu(
                     expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false }
+                    onDismissRequest = { menuExpanded = false },
+                    modifier = Modifier.background(resolvedMenuContainerColor())
                 ) {
                     DropdownMenuItem(text = { Text("Editar") }, onClick = {
                         menuExpanded = false

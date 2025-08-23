@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.admin_ingresos.viewmodel.SavingsGoalViewModel
+import com.example.admin_ingresos.ui.components.resolvedMenuContainerColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,7 +101,7 @@ fun AddSavingsGoalScreen(
             DropdownMenu(
                 expanded = false,
                 onDismissRequest = {},
-                modifier = Modifier.width(120.dp)
+                modifier = Modifier.width(120.dp).background(resolvedMenuContainerColor())
             ) {
                 DropdownMenuItem(text = { Text("Baja") }, onClick = { priority = 0 })
                 DropdownMenuItem(text = { Text("Media") }, onClick = { priority = 1 })

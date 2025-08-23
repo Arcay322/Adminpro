@@ -16,6 +16,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.window.Dialog
 import androidx.compose.material3.Surface
 import androidx.compose.material3.CardDefaults
+import com.example.admin_ingresos.ui.theme.GlassWhite
 
 /**
  * Wrapper to ensure all alert dialogs use the MaterialTheme background (surface) so they
@@ -104,5 +105,32 @@ fun ThemedAlertDialog(
                 content()
             }
         }
+    }
+}
+
+/**
+ * Resolve a container color suitable for dropdown/overflow menus.
+ * - In light mode we want menus to match the glassy card/dialog tint (GlassWhite).
+ * - In dark mode we reuse the dialog resolution logic: make a solid, slightly blended
+ *   container so menus don't appear translucent over the dark background.
+ */
+@Composable
+fun resolvedMenuContainerColor(containerColor: Color? = null): Color {
+    val base = containerColor ?: MaterialTheme.colorScheme.surface
+    val isDarkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
+
+    // Use the same resolution strategy as dialogs:
+    // - If the base surface is translucent and we're in dark mode, return a
+    //   slightly lightened, solid color (blend background->surface).
+    // - In light mode, preserve the hue but make it fully opaque so menus
+    //   match dialog backgrounds (e.g., white becomes opaque white).
+    return if (base.alpha < 1f) {
+        if (isDarkTheme) {
+            lerp(MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.surface, 0.08f)
+        } else {
+            base.copy(alpha = 1f)
+        }
+    } else {
+        base
     }
 }

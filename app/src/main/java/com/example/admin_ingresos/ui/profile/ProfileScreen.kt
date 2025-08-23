@@ -40,6 +40,7 @@ import com.example.admin_ingresos.ui.components.GlassmorphismScreen
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.*
 import com.example.admin_ingresos.ui.components.ThemedAlertDialog
+import com.example.admin_ingresos.ui.components.resolvedMenuContainerColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.luminance
 
@@ -346,7 +347,7 @@ private fun DropdownMenuDemo(options: List<String>, selected: String, onSelected
     var expanded by remember { mutableStateOf(false) }
     Box {
         Button(onClick = { expanded = true }) { Text(selected) }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.background(resolvedMenuContainerColor())) {
             options.forEach { opt ->
                 DropdownMenuItem(text = { Text(opt) }, onClick = { onSelected(opt); expanded = false })
             }
