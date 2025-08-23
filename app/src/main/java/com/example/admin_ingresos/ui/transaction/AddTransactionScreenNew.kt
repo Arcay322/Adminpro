@@ -233,7 +233,9 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
         CashFlowCard(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 10.dp)
+                .padding(vertical = 10.dp),
+            containerColor = Color.Transparent,
+            borderColor = Color.Transparent
         ) {
                 Column(Modifier.padding(horizontal = 8.dp, vertical = 12.dp)) {
                 Text(
@@ -291,7 +293,9 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
 
         // Monto con icono
         CashFlowCard(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            containerColor = Color.Transparent,
+            borderColor = Color.Transparent
         ) {
             Column(
                 Modifier
@@ -329,7 +333,9 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
 
         // Descripción
         CashFlowCard(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            containerColor = Color.Transparent,
+            borderColor = Color.Transparent
         ) {
             Column(
                 Modifier
@@ -358,7 +364,9 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
 
         // Selector de categoría
         CashFlowCard(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            containerColor = Color.Transparent,
+            borderColor = Color.Transparent
         ) {
             Box(Modifier.fillMaxWidth()) {
                 Column(
@@ -482,8 +490,8 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Selector sencillo de método de pago (lista estática)
-        CashFlowCard(modifier = Modifier.fillMaxWidth()) {
+    // Selector sencillo de método de pago (lista estática)
+    CashFlowCard(modifier = Modifier.fillMaxWidth(), containerColor = Color.Transparent, borderColor = Color.Transparent) {
             Column(Modifier.padding(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Payment, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
@@ -586,7 +594,9 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
 
         // Adjuntar foto de recibo
         CashFlowCard(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            containerColor = Color.Transparent,
+            borderColor = Color.Transparent
         ) {
             Column(Modifier.padding(8.dp)) {
                 Text("Recibo", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
