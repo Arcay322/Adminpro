@@ -559,7 +559,7 @@ fun ModernTransactionItem(
                     onDismissRequest = { menuExpanded = false },
                     modifier = Modifier.background(resolvedMenuContainerColor())
                 ) {
-                    DropdownMenuItem(text = { Text("Editar") }, onClick = {
+                    DropdownMenuItem(text = { Text("Editar", color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) Color.White else Color.Black) }, onClick = {
                         menuExpanded = false
                         onEdit()
                     }, leadingIcon = { Icon(LucideIconMapper.getNavigationIcon("Edit"), null) })

@@ -573,15 +573,15 @@ fun CategoryScreen(
                                                             .clip(RoundedCornerShape(12.dp))
                                                     ) {
                                                         DropdownMenuItem(
-                                                            text = { Text("Editar", color = AccentVibrantStart) },
+                                                            text = { Text("Editar", color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) Color.White else Color.Black) },
                                                             onClick = {
                                                                 menuExpanded = false
                                                                 viewModel.showAddEditDialog(category)
                                                             },
-                                                            leadingIcon = { Icon(LucideIconMapper.Navigation.edit, null, tint = AccentVibrantStart) }
+                                                            leadingIcon = { Icon(LucideIconMapper.Navigation.edit, null, tint = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) Color.White else Color.Black) }
                                                         )
                                                         DropdownMenuItem(
-                                                            text = { Text("Archivar", color = ExpenseRed) },
+                                                            text = { Text("Archivar", color = MaterialTheme.colorScheme.error) },
                                                             onClick = {
                                                                 menuExpanded = false
                                                                 viewModel.showArchiveDialog(category)
@@ -589,7 +589,7 @@ fun CategoryScreen(
                                                             leadingIcon = { Icon(LucideIconMapper.getNavigationIcon("Archive"), null, tint = ExpenseRed) }
                                                         )
                                                         DropdownMenuItem(
-                                                            text = { Text("Eliminar", color = ExpenseRed) },
+                                                            text = { Text("Eliminar", color = MaterialTheme.colorScheme.error) },
                                                             onClick = {
                                                                 menuExpanded = false
                                                                 viewModel.hideAddEditDialog()
@@ -881,6 +881,8 @@ private fun SavingsGoalsSummary(
         if (searchQuery.isBlank()) savingsGoals else savingsGoals.filter { it.name.contains(searchQuery, ignoreCase = true) }
     }
     var showAdd by remember { mutableStateOf(false) }
+    var editGoal by remember { mutableStateOf<com.example.admin_ingresos.data.model.SavingsGoal?>(null) }
+    var showEditDialog by remember { mutableStateOf(false) }
     // Obtain database for transaction queries
     val context = LocalContext.current
     val db = remember { AppDatabaseProvider.getDatabase(context) }
@@ -951,20 +953,21 @@ private fun SavingsGoalsSummary(
                                         .clip(RoundedCornerShape(12.dp))
                                 ) {
                                     DropdownMenuItem(
-                                        text = { Text("Editar", color = AccentVibrantStart) },
-                                        onClick = {
-                                            menuExpanded = false
-                                            // Could open an edit savings dialog here
-                                        },
-                                        leadingIcon = { Icon(LucideIconMapper.Navigation.edit, null, tint = AccentVibrantStart) }
-                                    )
+                                            text = { Text("Editar", color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) Color.White else Color.Black) },
+                                            onClick = {
+                                                menuExpanded = false
+                                                editGoal = goal
+                                                showEditDialog = true
+                                            },
+                                            leadingIcon = { Icon(LucideIconMapper.Navigation.edit, null, tint = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) Color.White else Color.Black) }
+                                        )
                                     DropdownMenuItem(
-                                        text = { Text("Eliminar", color = ExpenseRed) },
+                                        text = { Text("Eliminar", color = MaterialTheme.colorScheme.error) },
                                         onClick = {
                                             menuExpanded = false
                                             onDelete(goal)
                                         },
-                                        leadingIcon = { Icon(LucideIconMapper.Navigation.delete, null, tint = ExpenseRed) }
+                                        leadingIcon = { Icon(LucideIconMapper.Navigation.delete, null, tint = MaterialTheme.colorScheme.error) }
                                     )
                                 }
                             }
@@ -1034,6 +1037,27 @@ private fun SavingsGoalsSummary(
                     showAdd = false
                 },
                 onDismiss = { showAdd = false }
+            )
+        }
+        if (showEditDialog && editGoal != null) {
+            com.example.admin_ingresos.ui.savings.AddEditSavingsGoalDialog(
+                initialName = editGoal!!.name,
+                initialAmount = editGoal!!.targetAmount.toString(),
+                initialColor = editGoal!!.color,
+                initialIcon = editGoal!!.emoji,
+                onConfirm = { name, amount, icon, color ->
+                    savingsGoalViewModel.updateSavingsGoal(
+                        editGoal!!.copy(
+                            name = name,
+                            targetAmount = amount,
+                            emoji = icon,
+                            color = color
+                        )
+                    )
+                    showEditDialog = false
+                    editGoal = null
+                },
+                onDismiss = { showEditDialog = false; editGoal = null }
             )
         }
     }

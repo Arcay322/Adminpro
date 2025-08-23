@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -1171,16 +1172,16 @@ fun SavingsGoalCard(
                             modifier = Modifier.background(com.example.admin_ingresos.ui.components.resolvedMenuContainerColor())
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Editar") },
-                                leadingIcon = { Icon(LucideIconMapper.Navigation.edit, null, tint = AccentVibrantStart) },
+                                text = { Text("Editar", color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) Color.White else Color.Black) },
+                                leadingIcon = { Icon(LucideIconMapper.Navigation.edit, null, tint = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) Color.White else Color.Black) },
                                 onClick = {
                                     menuExpanded = false
                                     onEdit?.invoke()
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Eliminar") },
-                                leadingIcon = { Icon(LucideIconMapper.Navigation.delete, null, tint = ExpenseRed) },
+                                text = { Text("Eliminar", color = MaterialTheme.colorScheme.error) },
+                                leadingIcon = { Icon(LucideIconMapper.Navigation.delete, null, tint = MaterialTheme.colorScheme.error) },
                                 onClick = {
                                     menuExpanded = false
                                     showDeleteConfirmDialog = true
