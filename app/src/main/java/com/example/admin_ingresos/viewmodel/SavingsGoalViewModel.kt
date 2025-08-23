@@ -167,7 +167,7 @@ class SavingsGoalViewModel(private val database: AppDatabase) : ViewModel() {
                         amount = amount,
                         type = com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER,
                         categoryId = savingsCategoryId,
-                        description = "Aporte de ahorro a $goalName",
+                        description = "Aporte a $goalName",
                         date = java.util.Date().time,
                         paymentMethodId = null,
                         goalId = goalId
