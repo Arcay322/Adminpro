@@ -86,12 +86,8 @@ class BudgetViewModel(
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-                val (insertStart, insertEnd) = if (asTemplate) {
-                    // Template budgets stored with zeroed dates to indicate recurrence
-                    Pair(0L, 0L)
-                } else {
-                    Pair(startDate, startDate + period.durationInMillis)
-                }
+                val insertStart = startDate
+                val insertEnd = startDate + period.durationInMillis
 
                 // Check for overlapping budgets
                 // Only check overlapping if this is a concrete budget (not a template)
@@ -111,12 +107,14 @@ class BudgetViewModel(
                     return@launch
                 }
 
+
                 val budget = Budget(
                     categoryId = categoryId,
                     amount = amount,
                     period = period,
                     startDate = insertStart,
-                    endDate = insertEnd
+                    endDate = insertEnd,
+                    isActive = true
                 )
 
                 budgetDao.insertBudget(budget)
@@ -185,7 +183,28 @@ class BudgetViewModel(
     fun activateBudget(budgetId: Int) {
         viewModelScope.launch {
             try {
-                budgetDao.activateBudget(budgetId)
+                // If this budget is a template (stored with startDate==0 and endDate==0),
+                // activating it should set a real start/end window so it becomes visible
+                // to the "current" queries that filter by startDate <= now <= endDate.
+                val existing = budgetDao.getBudgetById(budgetId)
+                val now = System.currentTimeMillis()
+                if (existing != null) {
+                    val toUpdate = if (existing.startDate == 0L && existing.endDate == 0L) {
+                        existing.copy(
+                            startDate = now,
+                            endDate = now + existing.period.durationInMillis,
+                            isActive = true,
+                            updatedAt = now
+                        )
+                    } else {
+                        existing.copy(isActive = true, updatedAt = now)
+                    }
+                    budgetDao.updateBudget(toUpdate)
+                } else {
+                    // Fallback: try the simple activate path
+                    budgetDao.activateBudget(budgetId)
+                }
+
                 loadBudgetProgress()
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
