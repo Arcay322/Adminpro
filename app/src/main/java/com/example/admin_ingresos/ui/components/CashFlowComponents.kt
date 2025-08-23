@@ -1427,7 +1427,7 @@ fun ReceiptPhotoCard(
     
     // Image options dialog when photo exists
     if (showImageOptions) {
-        AlertDialog(
+        ThemedAlertDialog(
             onDismissRequest = { showImageOptions = false },
             title = { Text("Cambiar foto") },
             text = { Text("¿Cómo quieres cambiar la foto?") },
@@ -1471,7 +1471,7 @@ fun TransactionSuccessDialog(
     onDismiss: () -> Unit
 ) {
     if (isVisible) {
-        AlertDialog(
+        ThemedAlertDialog(
             onDismissRequest = onDismiss,
             icon = {
                 Card(

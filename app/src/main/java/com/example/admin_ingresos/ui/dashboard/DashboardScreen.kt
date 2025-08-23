@@ -1,5 +1,4 @@
 package com.example.admin_ingresos.ui.dashboard
-
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -1263,8 +1262,18 @@ private fun AddMoneyDialog(
     onDismiss: () -> Unit
 ) {
     var amountText by remember { mutableStateOf("") }
-    AlertDialog(
+    ThemedAlertDialog(
         onDismissRequest = onDismiss,
+        title = { Text("Agregar dinero a la meta") },
+        text = {
+            OutlinedTextField(
+                value = amountText,
+                onValueChange = { amountText = it },
+                label = { Text("Monto") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true
+            )
+        },
         confirmButton = {
             Button(
                 onClick = {
@@ -1277,18 +1286,9 @@ private fun AddMoneyDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancelar") }
-        },
-        title = { Text("Agregar dinero a la meta") },
-        text = {
-            OutlinedTextField(
-                value = amountText,
-                onValueChange = { amountText = it },
-                label = { Text("Monto") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true
-            )
         }
     )
+
 }
 
 @Composable

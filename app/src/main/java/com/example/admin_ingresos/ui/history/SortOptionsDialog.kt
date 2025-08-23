@@ -13,6 +13,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.admin_ingresos.data.SortOption
+import com.example.admin_ingresos.ui.components.ThemedAlertDialog
 
 @Composable
 fun SortButton(
@@ -53,7 +54,7 @@ fun SortOptionsDialog(
     onSortOptionSelected: (SortOption) -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    ThemedAlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(

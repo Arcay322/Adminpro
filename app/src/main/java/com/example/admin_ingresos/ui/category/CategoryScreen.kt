@@ -72,6 +72,7 @@ import com.example.admin_ingresos.data.CategoryType
 import com.example.admin_ingresos.data.model.SavingsGoal
 import com.example.admin_ingresos.ui.components.GlassCard
 import com.example.admin_ingresos.ui.components.GlassmorphismScreen
+import com.example.admin_ingresos.ui.components.ThemedAlertDialog
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.AccentVibrantStart
 import com.example.admin_ingresos.ui.theme.ExpenseRed
@@ -676,7 +677,7 @@ fun CategoryScreen(
                 if (uiState.showArchiveDialog != null) {
                     val categoryToArchive = uiState.showArchiveDialog!!
                     DialogScrim(onDismiss = { viewModel.hideArchiveDialog() }) {
-                        AlertDialog(
+                        ThemedAlertDialog(
                             onDismissRequest = { viewModel.hideArchiveDialog() },
                             title = { Text("Archivar categoría") },
                             text = { Text("¿Seguro que deseas archivar la categoría '${categoryToArchive.name}'?") },
@@ -688,7 +689,6 @@ fun CategoryScreen(
                             },
                             dismissButton = { OutlinedButton(onClick = { viewModel.hideArchiveDialog() }) { Text("Cancelar") } },
                             shape = RoundedCornerShape(28.dp),
-                            containerColor = Color(0xFF2A2D32),
                             modifier = Modifier.border(
                                 width = 1.dp,
                                 color = Color.White.copy(alpha = 0.2f),
@@ -704,7 +704,7 @@ fun CategoryScreen(
                 if (categoryToDelete != null) {
                     val cat = categoryToDelete!!
                     DialogScrim(onDismiss = { categoryToDelete = null }) {
-                        AlertDialog(
+                        ThemedAlertDialog(
                             onDismissRequest = { categoryToDelete = null },
                             title = { Text("Eliminar categoría") },
                             text = { Text("¿Seguro que deseas eliminar la categoría '${cat.name}' y todas sus transacciones? Esta acción no se puede deshacer.") },
@@ -719,7 +719,6 @@ fun CategoryScreen(
                             },
                             dismissButton = { OutlinedButton(onClick = { categoryToDelete = null }) { Text("Cancelar") } },
                             shape = RoundedCornerShape(20.dp),
-                            containerColor = Color(0xFF2A2D32),
                             modifier = Modifier.border(width = 1.dp, color = Color.White.copy(alpha = 0.2f), shape = RoundedCornerShape(20.dp))
                         )
                     }
@@ -729,7 +728,7 @@ fun CategoryScreen(
                 if (savingsToDelete != null) {
                     val goal = savingsToDelete!!
                     DialogScrim(onDismiss = { savingsToDelete = null }) {
-                        AlertDialog(
+                        ThemedAlertDialog(
                             onDismissRequest = { savingsToDelete = null },
                             title = { Text("Eliminar meta de ahorro") },
                             text = { Text("¿Seguro que deseas eliminar la meta '${goal.name}' y todas sus transacciones relacionadas? Esta acción no se puede deshacer.") },
@@ -744,7 +743,6 @@ fun CategoryScreen(
                             },
                             dismissButton = { OutlinedButton(onClick = { savingsToDelete = null }) { Text("Cancelar") } },
                             shape = RoundedCornerShape(20.dp),
-                            containerColor = Color(0xFF2A2D32),
                             modifier = Modifier.border(width = 1.dp, color = Color.White.copy(alpha = 0.2f), shape = RoundedCornerShape(20.dp))
                         )
                     }

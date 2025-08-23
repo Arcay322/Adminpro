@@ -42,6 +42,7 @@ import com.example.admin_ingresos.AppDatabaseProvider
 import com.example.admin_ingresos.data.Transaction
 import com.example.admin_ingresos.ui.components.*
 import com.example.admin_ingresos.ui.components.GlassmorphismScreen
+import com.example.admin_ingresos.ui.components.ThemedAlertDialog
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.CashFlowPrimary
 import com.example.admin_ingresos.ui.theme.AccentVibrantStart
@@ -268,7 +269,7 @@ fun DeleteConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    ThemedAlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
@@ -318,7 +319,7 @@ fun EditTransactionDialog(
     var editAmount by remember { mutableStateOf(transaction.amount.toString()) }
     var editType by remember { mutableStateOf(transaction.type) }
 
-    AlertDialog(
+    ThemedAlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(

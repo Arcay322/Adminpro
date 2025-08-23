@@ -39,6 +39,7 @@ import com.example.admin_ingresos.ui.components.GlassCard
 import com.example.admin_ingresos.ui.components.GlassmorphismScreen
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.*
+import com.example.admin_ingresos.ui.components.ThemedAlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.luminance
 
@@ -309,7 +310,7 @@ fun ProfileScreen(
             // Save feedback handled via Scaffold snackbarHostState
 
             if (showDeleteDialog) {
-                AlertDialog(onDismissRequest = { showDeleteDialog = false }, title = { Text("Confirmar eliminación") }, text = { Text("Esto eliminará tu perfil localmente. ¿Continuar?") }, confirmButton = {
+                ThemedAlertDialog(onDismissRequest = { showDeleteDialog = false }, title = { Text("Confirmar eliminación") }, text = { Text("Esto eliminará tu perfil localmente. ¿Continuar?") }, confirmButton = {
                     TextButton(onClick = {
                         profileVm.signOut()
                         showDeleteDialog = false
@@ -321,7 +322,7 @@ fun ProfileScreen(
             }
 
             if (showPinDialog) {
-                AlertDialog(onDismissRequest = { showPinDialog = false }, title = { Text("Configurar PIN") }, text = {
+                ThemedAlertDialog(onDismissRequest = { showPinDialog = false }, title = { Text("Configurar PIN") }, text = {
                     Column { OutlinedTextField(value = pinInput, onValueChange = { pinInput = it }, label = { Text("PIN (4 dígitos)") }) }
                 }, confirmButton = {
                     TextButton(onClick = {

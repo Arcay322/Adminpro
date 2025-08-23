@@ -400,7 +400,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
 
         // Dialog para crear nueva categoría
         if (showCategoryDialog) {
-            AlertDialog(
+            ThemedAlertDialog(
                 onDismissRequest = { showCategoryDialog = false },
                 title = { Text("Nueva Categoría") },
                 text = {
@@ -555,7 +555,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
             }
         }
         if (showSuccessMessage) {
-            AlertDialog(
+            ThemedAlertDialog(
                 onDismissRequest = { showSuccessMessage = false },
                 icon = {
                     Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF4CAF50), modifier = Modifier.size(48.dp))

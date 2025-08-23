@@ -259,7 +259,7 @@ fun ContextMenuDialog(
     onActionSelected: (ContextMenuAction) -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    ThemedAlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(

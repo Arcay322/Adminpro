@@ -49,6 +49,7 @@ import com.example.admin_ingresos.AppDatabaseProvider
 import com.example.admin_ingresos.ui.components.GlassCard
 import com.example.admin_ingresos.ui.components.GlassmorphismScreen
 import com.example.admin_ingresos.ui.components.MainBalanceCards
+import com.example.admin_ingresos.ui.components.ThemedAlertDialog
 import com.example.admin_ingresos.ui.dashboard.CategoryData
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.*
@@ -254,7 +255,7 @@ fun ReportsScreen() {
 
     // Export dialog
     if (showExportDialog) {
-        AlertDialog(
+        ThemedAlertDialog(
             onDismissRequest = { showExportDialog = false },
             title = { Text("Exportar Reporte") },
             text = { Text("Selecciona el formato para exportar las transacciones del periodo seleccionado.") },
@@ -290,7 +291,7 @@ fun ReportsScreen() {
 
     // Download dialog (separate from export/share dialog)
     if (showDownloadDialog) {
-        AlertDialog(
+        ThemedAlertDialog(
             onDismissRequest = { showDownloadDialog = false },
             title = { Text("Descargar Reporte") },
             text = {
@@ -626,7 +627,7 @@ fun DateRangeDialog(onDismiss: () -> Unit, onConfirm: (DateRange) -> Unit) {
     var error by remember { mutableStateOf<String?>(null) }
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = MaterialTheme.shapes.medium, color = Color(0xFF222227)) {
+        Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surface) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(text = "Rango personalizado", style = MaterialTheme.typography.titleMedium, color = TextPrimary)
 

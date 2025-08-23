@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.AlertDialog
 import com.example.admin_ingresos.ui.transaction.AddTransactionScreenNew
+import com.example.admin_ingresos.ui.components.ThemedAlertDialog
 
 @Composable
 fun AddTransactionModal(
@@ -22,7 +23,7 @@ fun AddTransactionModal(
     onTransactionAdded: () -> Unit
 ) {
     if (show) {
-        AlertDialog(
+        ThemedAlertDialog(
             onDismissRequest = onDismiss,
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {

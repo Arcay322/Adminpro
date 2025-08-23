@@ -20,6 +20,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.*
+import com.example.admin_ingresos.ui.components.ThemedAlertDialog
 
 // Lista de las claves de los iconos para las metas
 private val savingsIconKeys: List<String> = listOf(
@@ -65,7 +66,7 @@ fun AddEditSavingsGoalDialog(
     var nameError by remember { mutableStateOf<String?>(null) }
     var amountError by remember { mutableStateOf<String?>(null) }
 
-    AlertDialog(
+    ThemedAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (isEdit) "Editar meta de ahorro" else "Agregar meta de ahorro", color = TextPrimary) },
         text = {
@@ -159,7 +160,7 @@ fun AddEditSavingsGoalDialog(
                     Text(amountError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
             }
-        },
+    },
         confirmButton = {
             Button(
                 onClick = {
@@ -189,7 +190,6 @@ fun AddEditSavingsGoalDialog(
             }
         },
         shape = RoundedCornerShape(28.dp),
-        containerColor = Color(0xFF2A2D32),
         modifier = Modifier.border(
             width = 1.dp,
             color = Color.White.copy(alpha = 0.2f),

@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.admin_ingresos.data.*
 import kotlinx.coroutines.launch
+import com.example.admin_ingresos.ui.components.ThemedAlertDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,7 +123,7 @@ fun ExportDialog(
     var exportFormat by remember { mutableStateOf(ExportFormat.CSV) }
     var isExporting by remember { mutableStateOf(false) }
     
-    AlertDialog(
+    ThemedAlertDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.fillMaxHeight(0.8f)
     ) {

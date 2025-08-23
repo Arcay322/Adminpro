@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import com.example.admin_ingresos.ui.components.ThemedAlertDialog
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,7 +33,7 @@ fun AddEditCategoryDialogFull(
     var icon by remember { mutableStateOf(initial?.icon ?: "default") }
     var error by remember { mutableStateOf<String?>(null) }
 
-    AlertDialog(
+    ThemedAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (initial == null || initial.id == 0) "Agregar categoría" else "Editar categoría") },
         text = {
