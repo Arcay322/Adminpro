@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.lifecycle.ViewModelProvider
 import com.example.admin_ingresos.ui.history.DateRange
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -183,7 +184,7 @@ fun ReportsScreen() {
             ) {
                 item {
                     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = LucideIconMapper.Navigation.reports,
                                 contentDescription = "Reportes",
@@ -197,6 +198,14 @@ fun ReportsScreen() {
                                     style = MaterialTheme.typography.headlineLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = TextPrimary
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Analiza tus ingresos, gastos y ahorros por periodo",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextSecondary,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -253,106 +262,148 @@ fun ReportsScreen() {
         }
     }
 
-    // Export dialog
-    if (showExportDialog) {
+    // Download dialog
+    if (showDownloadDialog) {
         ThemedAlertDialog(
-            onDismissRequest = { showExportDialog = false },
-            title = { Text("Exportar Reporte") },
-            text = { Text("Selecciona el formato para exportar las transacciones del periodo seleccionado.") },
-            confirmButton = {
-                Row {
-                    // Export and share (existing behaviour)
-                    TextButton(onClick = {
-                        showExportDialog = false
-                        viewModel.exportTransactionsCsv(context)
-                        // show overlay while exporting
-                        showLoadingOverlay = true
-                    }, colors = ButtonDefaults.textButtonColors(contentColor = AccentVibrantStart)) { Text("CSV") }
-                    TextButton(onClick = {
-                        showExportDialog = false
-                        viewModel.exportTransactionsPdf(context)
-                        showLoadingOverlay = true
-                    }, colors = ButtonDefaults.textButtonColors(contentColor = AccentVibrantStart)) { Text("PDF") }
-                    TextButton(onClick = {
-                        showExportDialog = false
-                        viewModel.shareTextSummary(context)
-                        // textual share uses chooser; show a subtle loading state briefly
-                        showLoadingOverlay = true
-                    }, colors = ButtonDefaults.textButtonColors(contentColor = AccentVibrantStart)) { Text("Texto") }
+            onDismissRequest = { showDownloadDialog = false },
+            shape = RoundedCornerShape(28.dp),
+            borderStroke = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)),
+            content = {
+                Column(modifier = Modifier.fillMaxWidth().widthIn(min = 320.dp).padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Column {
+                        Text(text = "Descargar Reporte", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = TextPrimary)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(text = "Selecciona la resolución y formato para la descarga.", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                    }
 
-                    // Download options were moved to the dedicated Download dialog
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)) {
+                        Button(
+                            onClick = {
+                                showDownloadDialog = false
+                                isDownloadPending = true
+                                pendingDownloadMime = "text/csv"
+                                viewModel.exportTransactionsCsv(context)
+                                showLoadingOverlay = true
+                            },
+                            modifier = Modifier.widthIn(min = 76.dp),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                        ) { Text("CSV", maxLines = 1, softWrap = false) }
+
+                        Button(
+                            onClick = {
+                                showDownloadDialog = false
+                                isDownloadPending = true
+                                pendingDownloadMime = "application/pdf"
+                                viewModel.exportTransactionsPdf(context)
+                                showLoadingOverlay = true
+                            },
+                            modifier = Modifier.widthIn(min = 76.dp),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                        ) { Text("PDF", maxLines = 1, softWrap = false) }
+
+                        Button(
+                            onClick = {
+                                showDownloadDialog = false
+                                showLoadingOverlay = true
+                                coroutineScope.launch {
+                                    try {
+                                        val transactions = viewModel.getAllTransactionsForCurrentRange()
+                                        val categories = viewModel.getCategories()
+                                        val paymentMethods = viewModel.getPaymentMethods()
+                                        val exportResult = com.example.admin_ingresos.data.ExportService(context).exportTransactionsToXlsx(transactions, categories, paymentMethods)
+                                        if (exportResult.uri != null) {
+                                            pendingDownloadSourceUri = exportResult.uri
+                                            isDownloadPending = true
+                                            pendingDownloadMime = xlsxMime
+                                            createXlsxLauncher.launch("reporte_${System.currentTimeMillis()}.xlsx")
+                                        } else {
+                                            coroutineScope.launch { snackbarHostState.showSnackbar("Error al generar Excel") }
+                                        }
+                                    } catch (e: Exception) {
+                                        coroutineScope.launch { snackbarHostState.showSnackbar("Error: ${e.message}") }
+                                    } finally {
+                                        showLoadingOverlay = false
+                                    }
+                                }
+                            },
+                            modifier = Modifier.widthIn(min = 76.dp),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                        ) { Text("Excel", maxLines = 1, softWrap = false) }
+                    }
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        OutlinedButton(onClick = { showDownloadDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) {
+                            Text("Cerrar")
+                        }
+                    }
                 }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { showExportDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) { Text("Cancelar") }
             }
         )
     }
 
-    // Download dialog (separate from export/share dialog)
-    if (showDownloadDialog) {
+    // Export dialog (share / quick export)
+    if (showExportDialog) {
         ThemedAlertDialog(
-            onDismissRequest = { showDownloadDialog = false },
-            title = { Text("Descargar Reporte") },
-            text = {
-                Column {
-                    Text("Selecciona el formato para descargar las transacciones del periodo seleccionado.")
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Button(onClick = {
-                        showDownloadDialog = false
-                        isDownloadPending = true
-                        pendingDownloadMime = "text/csv"
-                        viewModel.exportTransactionsCsv(context)
-                        showLoadingOverlay = true
-                    }) {
-                        Text("Descargar CSV")
+            onDismissRequest = { showExportDialog = false },
+            shape = RoundedCornerShape(28.dp),
+            borderStroke = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)),
+            content = {
+                Column(modifier = Modifier.fillMaxWidth().widthIn(min = 320.dp).padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Column {
+                        Text(text = "Compartir Reporte", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = TextPrimary)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(text = "Selecciona el formato para exportar las transacciones del periodo seleccionado.", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)) {
+                        Button(
+                            onClick = {
+                                showExportDialog = false
+                                viewModel.exportTransactionsCsv(context)
+                                showLoadingOverlay = true
+                            },
+                            modifier = Modifier.widthIn(min = 76.dp),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                        ) { Text("CSV", maxLines = 1, softWrap = false) }
 
-                    Button(onClick = {
-                        showDownloadDialog = false
-                        isDownloadPending = true
-                        pendingDownloadMime = "application/pdf"
-                        viewModel.exportTransactionsPdf(context)
-                        showLoadingOverlay = true
-                    }) {
-                        Text("Descargar PDF")
+                        Button(
+                            onClick = {
+                                showExportDialog = false
+                                viewModel.exportTransactionsPdf(context)
+                                showLoadingOverlay = true
+                            },
+                            modifier = Modifier.widthIn(min = 76.dp),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                        ) { Text("PDF", maxLines = 1, softWrap = false) }
+
+                        Button(
+                            onClick = {
+                                showExportDialog = false
+                                viewModel.shareTextSummary(context)
+                            },
+                            modifier = Modifier.widthIn(min = 76.dp),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                        ) { Text("Texto", maxLines = 1, softWrap = false) }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Button(onClick = {
-                        showDownloadDialog = false
-                        showLoadingOverlay = true
-                        coroutineScope.launch {
-                            try {
-                                val transactions = viewModel.getAllTransactionsForCurrentRange()
-                                val categories = viewModel.getCategories()
-                                val paymentMethods = viewModel.getPaymentMethods()
-                                val exportResult = com.example.admin_ingresos.data.ExportService(context).exportTransactionsToXlsx(transactions, categories, paymentMethods)
-                                if (exportResult.uri != null) {
-                                    pendingDownloadSourceUri = exportResult.uri
-                                    isDownloadPending = true
-                                    pendingDownloadMime = xlsxMime
-                                    createXlsxLauncher.launch("reporte_${System.currentTimeMillis()}.xlsx")
-                                } else {
-                                    coroutineScope.launch { snackbarHostState.showSnackbar("Error al generar Excel") }
-                                }
-                            } catch (e: Exception) {
-                                coroutineScope.launch { snackbarHostState.showSnackbar("Error: ${e.message}") }
-                            } finally {
-                                showLoadingOverlay = false
-                            }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        OutlinedButton(onClick = { showExportDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) {
+                            Text("Cancelar")
                         }
-                    }) {
-                        Text("Descargar Excel")
                     }
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = { showDownloadDialog = false }) { Text("Cerrar") }
             }
         )
     }
