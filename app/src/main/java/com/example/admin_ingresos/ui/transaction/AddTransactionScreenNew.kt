@@ -130,13 +130,17 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
     var newPaymentMethodError by remember { mutableStateOf<String?>(null) }
 
     var categoryUpdateTrigger by remember { mutableStateOf(0) }
-    val categories by produceState(
-        initialValue = emptyList<com.example.admin_ingresos.data.Category>(),
-        db,
-        categoryUpdateTrigger
-    ) {
-        value = db.categoryDao().getAllCategories().first()
-    }
+    // Mostrar sólo categorías activas del tipo seleccionado
+    val categories by remember(type, categoryUpdateTrigger) {
+        db.categoryDao().getActiveCategoriesByType(
+            when (type) {
+                "Ingreso" -> com.example.admin_ingresos.data.CategoryType.INGRESO.name
+                "Gasto" -> com.example.admin_ingresos.data.CategoryType.GASTO.name
+                "Ahorro" -> com.example.admin_ingresos.data.CategoryType.AHORRO.name
+                else -> com.example.admin_ingresos.data.CategoryType.GASTO.name
+            }
+        )
+    }.collectAsState(initial = emptyList())
     // Use Flow-backed state so the list updates automatically when the DB changes
     val paymentMethods by db.paymentMethodDao().getAllFlow().collectAsState(initial = emptyList())
 
@@ -535,7 +539,14 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     onConfirm = { newCategory ->
                         coroutineScope.launch {
                             try {
-                                val newId = db.categoryDao().insert(newCategory)
+                                val mappedType = when (type) {
+                                    "Ingreso" -> com.example.admin_ingresos.data.CategoryType.INGRESO
+                                    "Gasto" -> com.example.admin_ingresos.data.CategoryType.GASTO
+                                    "Ahorro" -> com.example.admin_ingresos.data.CategoryType.AHORRO
+                                    else -> com.example.admin_ingresos.data.CategoryType.GASTO
+                                }
+                                val toInsert = newCategory.copy(type = mappedType)
+                                val newId = db.categoryDao().insert(toInsert)
                                 selectedCategoryId = newId.toInt()
                                 categoryUpdateTrigger++
                             } catch (_: Exception) {
@@ -551,8 +562,14 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
         // Efecto para crear categoría
         LaunchedEffect(shouldCreateCategory, pendingCategoryName) {
             if (shouldCreateCategory && pendingCategoryName.isNotBlank()) {
+                val mappedType = when (type) {
+                    "Ingreso" -> com.example.admin_ingresos.data.CategoryType.INGRESO
+                    "Gasto" -> com.example.admin_ingresos.data.CategoryType.GASTO
+                    "Ahorro" -> com.example.admin_ingresos.data.CategoryType.AHORRO
+                    else -> com.example.admin_ingresos.data.CategoryType.GASTO
+                }
                 val newId = db.categoryDao()
-                    .insert(com.example.admin_ingresos.data.Category(name = pendingCategoryName))
+                    .insert(com.example.admin_ingresos.data.Category(name = pendingCategoryName, type = mappedType))
                 selectedCategoryId = newId.toInt()
                 categoryUpdateTrigger++ // Forzar recomposición y actualización visual
                 showCategoryDialog = false
