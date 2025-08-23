@@ -5,7 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -15,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -232,7 +235,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                 .fillMaxWidth()
                 .padding(vertical = 10.dp)
         ) {
-                Column(Modifier.padding(horizontal = 4.dp, vertical = 12.dp)) {
+                Column(Modifier.padding(horizontal = 8.dp, vertical = 12.dp)) {
                 Text(
                     text = "Tipo de Transacción",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
@@ -292,7 +295,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
         ) {
             Column(
                 Modifier
-                    .padding(horizontal = 4.dp, vertical = 12.dp)
+                    .padding(horizontal = 8.dp, vertical = 12.dp)
                     .fillMaxWidth()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -330,7 +333,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
         ) {
             Column(
                 Modifier
-                    .padding(horizontal = 4.dp, vertical = 12.dp)
+                    .padding(horizontal = 8.dp, vertical = 12.dp)
                     .fillMaxWidth()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -360,7 +363,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
             Box(Modifier.fillMaxWidth()) {
                 Column(
                     Modifier
-                        .padding(horizontal = 4.dp, vertical = 12.dp)
+                        .padding(horizontal = 8.dp, vertical = 12.dp)
                         .fillMaxWidth()
                 ) {
                     Row(
@@ -411,13 +414,22 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     }
                     if (categoryError != null) Text(categoryError!!, color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                 }
-                IconButton(
-                    onClick = { showCategoryDialog = true },
+                Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(top = 8.dp, end = 8.dp)
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
+                        .clickable { showCategoryDialog = true },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Nueva categoría", tint = MaterialTheme.colorScheme.primary)
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Nueva categoría",
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(14.dp)
+                    )
                 }
             }
         }
@@ -472,7 +484,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
 
         // Selector sencillo de método de pago (lista estática)
         CashFlowCard(modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(4.dp)) {
+            Column(Modifier.padding(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Payment, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                     Spacer(modifier = Modifier.width(8.dp))
@@ -489,12 +501,19 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     // Add new payment method button
-                    IconButton(onClick = {
-                        newPaymentMethodName = ""
-                        newPaymentMethodError = null
-                        showAddPaymentMethodDialog = true
-                    }) {
-                        Icon(imageVector = Icons.Default.Add, contentDescription = "Agregar método de pago", tint = MaterialTheme.colorScheme.primary)
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .clickable {
+                                newPaymentMethodName = ""
+                                newPaymentMethodError = null
+                                showAddPaymentMethodDialog = true
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "Agregar método de pago", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(14.dp))
                     }
                 }
 
@@ -569,7 +588,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
         CashFlowCard(
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(Modifier.padding(4.dp)) {
+            Column(Modifier.padding(8.dp)) {
                 Text("Recibo", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
