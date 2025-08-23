@@ -10,8 +10,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import com.example.admin_ingresos.ui.theme.GlassmorphicCard
+// removed direct GlassmorphicCard import; use CashFlowCard from components for dialog cards
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,6 +52,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
     var selectedCategoryId by remember { mutableStateOf<Int?>(null) }
     var categoryError by remember { mutableStateOf<String?>(null) }
     var selectedPaymentMethodId by remember { mutableStateOf<Int?>(null) }
+    var selectedPaymentMethodName by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var showSuccessMessage by remember { mutableStateOf(false) }
     var receiptPhotoUri by remember { mutableStateOf<String?>(null) }
@@ -105,14 +108,19 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
     var newCategoryName by remember { mutableStateOf("") }
     var newCategoryError by remember { mutableStateOf<String?>(null) }
     var showPhotoMenu by remember { mutableStateOf(false) }
+    var showAddPaymentMethodDialog by remember { mutableStateOf(false) }
+    var newPaymentMethodName by remember { mutableStateOf("") }
+    var newPaymentMethodError by remember { mutableStateOf<String?>(null) }
 
     var categoryUpdateTrigger by remember { mutableStateOf(0) }
     val categories by produceState(initialValue = emptyList<com.example.admin_ingresos.data.Category>(), db, categoryUpdateTrigger) {
         value = db.categoryDao().getAllCategories().first()
     }
-    val paymentMethods by produceState(initialValue = emptyList<com.example.admin_ingresos.data.PaymentMethod>(), db) {
-        value = db.paymentMethodDao().getAll()
-    }
+    // Use Flow-backed state so the list updates automatically when the DB changes
+    val paymentMethods by db.paymentMethodDao().getAllFlow().collectAsState(initial = emptyList())
+
+    // Coroutine scope for DB operations triggered from UI actions
+    val coroutineScope = rememberCoroutineScope()
 
     // Validaciones
     fun validateAmount(value: String): String? {
@@ -146,12 +154,10 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
 
 
     // Estados para disparar efectos secundarios
-    var shouldSave by remember { mutableStateOf(false) }
-    var pendingTransaction by remember { mutableStateOf<com.example.admin_ingresos.data.Transaction?>(null) }
     var shouldCreateCategory by remember { mutableStateOf(false) }
     var pendingCategoryName by remember { mutableStateOf("") }
 
-    // Guardar transacción: solo cambia el estado
+    // Guardar transacción: resolver/crear método de pago si hace falta y luego insertar
     fun handleSave() {
         if (!isFormValid) return
         isLoading = true
@@ -163,26 +169,41 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
             else -> type
         }
 
-        pendingTransaction = com.example.admin_ingresos.data.Transaction(
-            amount = amount.toDouble(),
-            type = internalType,
-            categoryId = selectedCategoryId!!,
-            description = description.trim(),
-            date = System.currentTimeMillis(),
-            paymentMethodId = selectedPaymentMethodId,
-            receiptPhotoUri = receiptPhotoUri
-        )
-        shouldSave = true
-    }
+        coroutineScope.launch {
+            // Resolver paymentMethodId: prefer selectedPaymentMethodId, si es null y hay un nombre, buscar por nombre o crear
+            var resolvedPaymentMethodId: Int? = selectedPaymentMethodId
+            try {
+                if (resolvedPaymentMethodId == null && !selectedPaymentMethodName.isNullOrBlank()) {
+                    val methods = db.paymentMethodDao().getAll()
+                    val found = methods.find { it.name.equals(selectedPaymentMethodName, ignoreCase = true) }
+                        if (found != null) {
+                            resolvedPaymentMethodId = found.id
+                        } else {
+                            val newId = db.paymentMethodDao().insert(com.example.admin_ingresos.data.PaymentMethod(name = selectedPaymentMethodName!!))
+                            resolvedPaymentMethodId = newId.toInt()
+                        }
+                }
 
-    // Efecto para guardar la transacción
-    LaunchedEffect(shouldSave, pendingTransaction) {
-        if (shouldSave && pendingTransaction != null) {
-            db.transactionDao().insert(pendingTransaction!!)
-            showSuccessMessage = true
-            isLoading = false
-            shouldSave = false
-            pendingTransaction = null
+                val tx = com.example.admin_ingresos.data.Transaction(
+                    amount = amount.toDouble(),
+                    type = internalType,
+                    categoryId = selectedCategoryId!!,
+                    description = description.trim(),
+                    date = System.currentTimeMillis(),
+                    paymentMethodId = resolvedPaymentMethodId,
+                    receiptPhotoUri = receiptPhotoUri
+                )
+
+                db.transactionDao().insert(tx)
+                showSuccessMessage = true
+            } catch (e: Exception) {
+                // opcional: mostrar snackbar o manejar error
+            } finally {
+                isLoading = false
+                // cerrar modal después de un breve delay (coincidir con comportamiento previo)
+                kotlinx.coroutines.delay(1200)
+                onSave()
+            }
         }
     }
 
@@ -206,7 +227,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
         Spacer(modifier = Modifier.height(10.dp))
 
         // Tipo de transacción (chips visuales)
-        GlassmorphicCard(
+        CashFlowCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 10.dp)
@@ -266,7 +287,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
         Spacer(modifier = Modifier.height(10.dp))
 
         // Monto con icono
-        GlassmorphicCard(
+        CashFlowCard(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
@@ -304,7 +325,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
         Spacer(modifier = Modifier.height(10.dp))
 
         // Descripción
-        GlassmorphicCard(
+        CashFlowCard(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
@@ -333,7 +354,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
         Spacer(modifier = Modifier.height(10.dp))
 
         // Selector de categoría
-        GlassmorphicCard(
+        CashFlowCard(
             modifier = Modifier.fillMaxWidth()
         ) {
             Box(Modifier.fillMaxWidth()) {
@@ -449,30 +470,95 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Selector de método de pago
-        if (paymentMethods.isNotEmpty()) {
-            GlassmorphicCard(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(Modifier.padding(10.dp)) {
+        // Selector sencillo de método de pago (lista estática)
+        CashFlowCard(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(14.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Payment, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text("Método de pago", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    var expanded by remember { mutableStateOf(false) }
-                    val selectedMethod = paymentMethods.find { it.id == selectedPaymentMethodId }
-                    OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text(selectedMethod?.name ?: "Selecciona un método de pago")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Opciones: preferir los métodos guardados en DB; si no hay, usar estáticos
+                val staticMethods = listOf("Efectivo", "Paypal", "Tarjeta de crédito", "Tarjeta de débito", "Transferencia")
+                var payMenuExpanded by remember { mutableStateOf(false) }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedButton(onClick = { payMenuExpanded = true }, modifier = Modifier.weight(1f)) {
+                        Text(selectedPaymentMethodName ?: "Selecciona un método de pago")
                     }
-                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.background(resolvedMenuContainerColor())) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    // Add new payment method button
+                    IconButton(onClick = {
+                        newPaymentMethodName = ""
+                        newPaymentMethodError = null
+                        showAddPaymentMethodDialog = true
+                    }) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "Agregar método de pago", tint = MaterialTheme.colorScheme.primary)
+                    }
+                }
+
+                DropdownMenu(expanded = payMenuExpanded, onDismissRequest = { payMenuExpanded = false }, modifier = Modifier.background(resolvedMenuContainerColor())) {
+                    if (paymentMethods.isNotEmpty()) {
                         paymentMethods.forEach { method ->
-                            DropdownMenuItem(
-                                text = { Text(method.name) },
-                                onClick = {
-                                    selectedPaymentMethodId = method.id
-                                    expanded = false
-                                }
-                            )
+                            DropdownMenuItem(text = { Text(method.name) }, onClick = {
+                                selectedPaymentMethodName = method.name
+                                selectedPaymentMethodId = method.id
+                                payMenuExpanded = false
+                            })
+                        }
+                    } else {
+                        staticMethods.forEach { method ->
+                            DropdownMenuItem(text = { Text(method) }, onClick = {
+                                selectedPaymentMethodName = method
+                                selectedPaymentMethodId = null
+                                payMenuExpanded = false
+                            })
                         }
                     }
+                }
+
+                // Dialog para agregar nuevo método de pago desde el formulario
+                if (showAddPaymentMethodDialog) {
+                    ThemedAlertDialog(
+                        onDismissRequest = { showAddPaymentMethodDialog = false },
+                        title = { Text("Nuevo método de pago") },
+                        text = {
+                            Column {
+                                OutlinedTextField(
+                                    value = newPaymentMethodName,
+                                    onValueChange = { newPaymentMethodName = it },
+                                    label = { Text("Nombre del método") },
+                                    isError = newPaymentMethodError != null,
+                                    singleLine = true
+                                )
+                                if (newPaymentMethodError != null) Text(newPaymentMethodError!!, color = MaterialTheme.colorScheme.error)
+                            }
+                        },
+                        confirmButton = {
+                            Button(onClick = {
+                                if (newPaymentMethodName.isBlank()) {
+                                    newPaymentMethodError = "El nombre es requerido"
+                                    return@Button
+                                }
+                                // Insertar y seleccionar
+                                coroutineScope.launch {
+                                    try {
+                                        val existing = db.paymentMethodDao().getAll().find { it.name.equals(newPaymentMethodName, ignoreCase = true) }
+                                        val id = if (existing != null) existing.id else db.paymentMethodDao().insert(com.example.admin_ingresos.data.PaymentMethod(name = newPaymentMethodName)).toInt()
+                                        selectedPaymentMethodId = id
+                                        selectedPaymentMethodName = newPaymentMethodName
+                                    } catch (_: Exception) { }
+                                    showAddPaymentMethodDialog = false
+                                }
+                            }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) {
+                                Text("Crear")
+                            }
+                        },
+                        dismissButton = {
+                            OutlinedButton(onClick = { showAddPaymentMethodDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) { Text("Cancelar") }
+                        }
+                    )
                 }
             }
         }
@@ -480,7 +566,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
         Spacer(modifier = Modifier.height(10.dp))
 
         // Adjuntar foto de recibo
-        GlassmorphicCard(
+        CashFlowCard(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(Modifier.padding(10.dp)) {
@@ -526,37 +612,14 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Botones de acción
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            OutlinedButton(
-                onClick = onCancel,
-                modifier = Modifier.weight(1f).height(48.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                )
-            ) { Text("Cancelar") }
-            Button(
-                onClick = { handleSave() },
-                modifier = Modifier.weight(1f).height(48.dp),
-                enabled = isFormValid && !isLoading,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text("Guardar")
-                }
-            }
-        }
+        // Botones de acción (estandarizados)
+        ActionButtons(
+            isFormValid = isFormValid,
+            isLoading = isLoading,
+            onSave = { handleSave() },
+            onCancel = onCancel,
+            modifier = Modifier.fillMaxWidth()
+        )
         if (showSuccessMessage) {
             ThemedAlertDialog(
                 onDismissRequest = { showSuccessMessage = false },
@@ -695,7 +758,7 @@ fun DescriptionInputCard(
     onDescriptionChange: (String) -> Unit,
     error: String?
 ) {
-    GlassmorphicCard(
+    CashFlowCard(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
