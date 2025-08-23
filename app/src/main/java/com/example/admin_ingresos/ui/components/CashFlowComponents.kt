@@ -968,7 +968,7 @@ private fun AddCategoryDialog(
 ) {
     var categoryName by remember { mutableStateOf("") }
     
-    AlertDialog(
+    ThemedAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Nueva Categoría") },
         text = {
@@ -1008,7 +1008,7 @@ private fun AddPaymentMethodDialog(
 ) {
     var methodName by remember { mutableStateOf("") }
     
-    AlertDialog(
+    ThemedAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Nuevo Método de Pago") },
         text = {
