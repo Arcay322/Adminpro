@@ -322,13 +322,13 @@ fun CategoryScreen(
                                         // Abrir diálogo de categoría (nuevo)
                                         viewModel.showAddEditDialog(com.example.admin_ingresos.data.Category(name = "", type = uiState.selectedTab))
                                     },
-                                    colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
                                     modifier = Modifier.height(36.dp),
                                     contentPadding = PaddingValues(horizontal = 12.dp)
                                 ) {
-                                    Icon(LucideIconMapper.Navigation.add, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                                    Icon(LucideIconMapper.Navigation.add, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text(text = "Nueva", color = Color.White, style = MaterialTheme.typography.bodySmall)
+                                    Text(text = "Nueva", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                             Spacer(modifier = Modifier.height(8.dp))
@@ -892,13 +892,13 @@ private fun SavingsGoalsSummary(
             Text(text = "Metas de Ahorro", fontWeight = FontWeight.Bold, color = TextPrimary)
             Button(
                 onClick = { showAdd = true },
-                colors = ButtonDefaults.buttonColors(containerColor = AccentVibrantStart),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
                 modifier = Modifier.height(36.dp),
                 contentPadding = PaddingValues(horizontal = 12.dp)
             ) {
-                Icon(LucideIconMapper.Navigation.add, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                Icon(LucideIconMapper.Navigation.add, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Nueva", color = Color.White, style = MaterialTheme.typography.bodySmall)
+                Text("Nueva", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.bodySmall)
             }
         }
 
