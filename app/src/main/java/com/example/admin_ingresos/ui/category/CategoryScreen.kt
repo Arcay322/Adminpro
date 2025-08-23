@@ -782,7 +782,7 @@ private fun CategoryAddEditDialog(category: Category, viewModel: CategoryViewMod
     var icon by remember(category.id) { mutableStateOf(category.icon) }
     val isEdit = category.id != 0
 
-    AlertDialog(
+    ThemedAlertDialog(
         onDismissRequest = { viewModel.hideAddEditDialog() },
         title = { Text(if (isEdit) "Editar Categoría" else "Agregar Categoría") },
         text = {
@@ -829,6 +829,8 @@ private fun CategoryAddEditDialog(category: Category, viewModel: CategoryViewMod
                         expanded = iconMenuExpanded,
                         onDismissRequest = { iconMenuExpanded = false },
                         modifier = Modifier.width(260.dp)
+                            .background(resolvedMenuContainerColor())
+                            .clip(RoundedCornerShape(12.dp))
                     ) {
                         LucideIconMapper.getAvailableCategoryIcons().forEach { option ->
                             DropdownMenuItem(
@@ -846,7 +848,7 @@ private fun CategoryAddEditDialog(category: Category, viewModel: CategoryViewMod
                     }
                 }
             }
-        },
+    },
         confirmButton = {
             Button(
                 onClick = {
@@ -857,9 +859,8 @@ private fun CategoryAddEditDialog(category: Category, viewModel: CategoryViewMod
                 enabled = name.isNotBlank() && color.isNotBlank() && icon.isNotBlank()
             ) { Text(if (isEdit) "Guardar" else "Agregar") }
         },
-        dismissButton = { OutlinedButton(onClick = { viewModel.hideAddEditDialog() }) { Text("Cancelar") } },
-        shape = RoundedCornerShape(28.dp),
-        containerColor = Color(0xFF2A2D32),
+    dismissButton = { OutlinedButton(onClick = { viewModel.hideAddEditDialog() }) { Text("Cancelar") } },
+    shape = RoundedCornerShape(28.dp),
         modifier = Modifier.border(
             width = 1.dp,
             color = Color.White.copy(alpha = 0.2f),
