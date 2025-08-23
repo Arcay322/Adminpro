@@ -438,9 +438,18 @@ fun DateRangeSelector(selectedPreset: DateRangePreset, onPresetSelected: (DateRa
                     }
                 },
                 leadingIcon = {
-                    Icon(imageVector = presetIcon, contentDescription = null, tint = if (selected) AccentVibrantStart else TextSecondary, modifier = Modifier.size(14.dp))
+                    Icon(
+                        imageVector = presetIcon,
+                        contentDescription = null,
+                        tint = if (selected) MaterialTheme.colorScheme.primary else TextSecondary,
+                        modifier = Modifier.size(14.dp)
+                    )
                 },
-                label = { Text(preset.displayName) }
+                label = { Text(preset.displayName) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
         }
     }
