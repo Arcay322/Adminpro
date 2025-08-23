@@ -281,7 +281,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     Button(
                         onClick = { type = "Ingreso" },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (type == "Ingreso") IncomeGreen else MaterialTheme.colorScheme.surfaceVariant
+                            containerColor = if (type == "Ingreso") AccentVibrantStart else MaterialTheme.colorScheme.surfaceVariant
                         ),
                         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                         modifier = Modifier

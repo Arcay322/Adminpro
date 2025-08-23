@@ -508,7 +508,7 @@ fun DateRangeSelector(selectedPreset: DateRangePreset, onPresetSelected: (DateRa
                     Icon(
                         imageVector = presetIcon,
                         contentDescription = null,
-                        tint = if (selected) MaterialTheme.colorScheme.primary else TextSecondary,
+                        tint = if (selected) MaterialTheme.colorScheme.onPrimary else TextSecondary,
                         modifier = Modifier.size(14.dp)
                     )
                 },
