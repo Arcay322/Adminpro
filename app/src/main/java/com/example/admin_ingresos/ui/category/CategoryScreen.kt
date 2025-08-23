@@ -812,13 +812,14 @@ private fun CategoryAddEditDialog(category: Category, viewModel: CategoryViewMod
                 Box {
                     OutlinedButton(
                         onClick = { iconMenuExpanded = true },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
                     ) {
                         val iconOptions = LucideIconMapper.getAvailableCategoryIcons()
                         val selectedIconOption = iconOptions.find { it.name == icon }
                         if (selectedIconOption != null) {
                             val iconVector = LucideIconMapper.getIconFromEmoji(selectedIconOption.icon)
-                            Icon(iconVector, null, tint = AccentVibrantStart)
+                            Icon(iconVector, null, tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(8.dp))
                             Text(selectedIconOption.description)
                         } else {
@@ -841,7 +842,7 @@ private fun CategoryAddEditDialog(category: Category, viewModel: CategoryViewMod
                                 },
                                 leadingIcon = {
                                     val iconVector = LucideIconMapper.getIconFromEmoji(option.icon)
-                                    Icon(iconVector, null, tint = AccentVibrantStart)
+                                    Icon(iconVector, null, tint = MaterialTheme.colorScheme.primary)
                                 }
                             )
                         }

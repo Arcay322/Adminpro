@@ -124,11 +124,11 @@ fun AddEditSavingsGoalDialog(
                         onClick = { iconMenuExpanded = true },
                         modifier = Modifier.fillMaxWidth(),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentVibrantStart)
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
                     ) {
                         if (iconKey.isNotBlank()) {
                             val iconVector = LucideIconMapper.getSavingsGoalIcon(iconKey)
-                            Icon(iconVector, null, tint = AccentVibrantStart)
+                            Icon(iconVector, null, tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(8.dp))
                             Text(iconSpanishNames[iconKey] ?: iconKey)
                         } else {
@@ -148,8 +148,8 @@ fun AddEditSavingsGoalDialog(
                                     iconMenuExpanded = false
                                 },
                                 leadingIcon = {
-                                    // CAMBIO AQUÍ: Usamos la nueva función
-                                    Icon(LucideIconMapper.getSavingsGoalIcon(key), null, tint = AccentVibrantStart)
+                                    // CAMBIO AQUÍ: Usamos color primario del tema para que el selector adapte su color
+                                    Icon(LucideIconMapper.getSavingsGoalIcon(key), null, tint = MaterialTheme.colorScheme.primary)
                                 }
                             )
                         }
