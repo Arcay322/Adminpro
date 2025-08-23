@@ -610,7 +610,7 @@ fun TypeSelectorCard(
 }
 
 @Composable
-private fun TypeOptionCard(
+fun TypeOptionCard(
     text: String,
     icon: ImageVector,
     selected: Boolean,
@@ -1224,28 +1224,40 @@ fun ActionButtons(
     onCancel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    CashFlowCard(modifier = modifier) {
+    CashFlowCard(
+        modifier = modifier,
+        containerColor = Color.Transparent,
+        borderColor = Color.Transparent
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OutlinedButton(
                 onClick = onCancel,
                 modifier = Modifier.weight(1f),
-                enabled = !isLoading
+                enabled = !isLoading,
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("Cancelar")
+                Text(
+                    text = "Cancelar",
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
             }
-            
+
             Button(
                 onClick = onSave,
                 modifier = Modifier.weight(1f),
                 enabled = isFormValid && !isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
-                )
+                ),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
@@ -1255,7 +1267,12 @@ fun ActionButtons(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
-                Text("Guardar")
+                Text(
+                    text = "Guardar",
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
             }
         }
     }

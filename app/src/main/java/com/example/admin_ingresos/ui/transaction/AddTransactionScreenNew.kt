@@ -30,6 +30,7 @@ import java.text.SimpleDateFormat
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.admin_ingresos.ui.components.*
 import com.example.admin_ingresos.ui.components.resolvedMenuContainerColor
@@ -40,6 +41,7 @@ import kotlinx.coroutines.flow.first
 // Import Coil para cargar imágenes en Compose
 import coil.compose.rememberAsyncImagePainter
 import com.example.admin_ingresos.ui.theme.AccentVibrantStart
+import com.example.admin_ingresos.ui.theme.IncomeGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,7 +74,9 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                 context.packageName + ".fileprovider",
                 file
             )
-        } catch (e: Exception) { null }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     // Copia el contenido de una Uri (p. ej. de la galería) a un fichero en files/receipts y devuelve la Uri provista por FileProvider
@@ -88,24 +92,34 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     }
                 }
             }
-            androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".fileprovider", destFile)
-        } catch (e: Exception) { null }
+            androidx.core.content.FileProvider.getUriForFile(
+                context,
+                context.packageName + ".fileprovider",
+                destFile
+            )
+        } catch (e: Exception) {
+            null
+        }
     }
 
     // Launcher para galería
-    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri != null) {
-            // Copiar la imagen seleccionada a almacenamiento privado de la app para que la URI sea persistente
-            val saved = try {
-                saveUriToAppStorage(context, uri)
-            } catch (e: Exception) { null }
-            receiptPhotoUri = saved?.toString() ?: uri.toString()
+    val galleryLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            if (uri != null) {
+                // Copiar la imagen seleccionada a almacenamiento privado de la app para que la URI sea persistente
+                val saved = try {
+                    saveUriToAppStorage(context, uri)
+                } catch (e: Exception) {
+                    null
+                }
+                receiptPhotoUri = saved?.toString() ?: uri.toString()
+            }
         }
-    }
     // Launcher para cámara
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success: Boolean ->
-        if (success && cameraImageUri != null) receiptPhotoUri = cameraImageUri.toString()
-    }
+    val cameraLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success: Boolean ->
+            if (success && cameraImageUri != null) receiptPhotoUri = cameraImageUri.toString()
+        }
 
     var showCategoryDialog by remember { mutableStateOf(false) }
     var newCategoryName by remember { mutableStateOf("") }
@@ -116,7 +130,11 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
     var newPaymentMethodError by remember { mutableStateOf<String?>(null) }
 
     var categoryUpdateTrigger by remember { mutableStateOf(0) }
-    val categories by produceState(initialValue = emptyList<com.example.admin_ingresos.data.Category>(), db, categoryUpdateTrigger) {
+    val categories by produceState(
+        initialValue = emptyList<com.example.admin_ingresos.data.Category>(),
+        db,
+        categoryUpdateTrigger
+    ) {
         value = db.categoryDao().getAllCategories().first()
     }
     // Use Flow-backed state so the list updates automatically when the DB changes
@@ -135,6 +153,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
             else -> null
         }
     }
+
     fun validateDescription(value: String): String? {
         return when {
             value.isBlank() -> "La descripción es requerida"
@@ -143,6 +162,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
             else -> null
         }
     }
+
     fun validateCategory(categoryId: Int?): String? {
         return if (categoryId == null) "Selecciona una categoría" else null
     }
@@ -178,13 +198,19 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
             try {
                 if (resolvedPaymentMethodId == null && !selectedPaymentMethodName.isNullOrBlank()) {
                     val methods = db.paymentMethodDao().getAll()
-                    val found = methods.find { it.name.equals(selectedPaymentMethodName, ignoreCase = true) }
-                        if (found != null) {
-                            resolvedPaymentMethodId = found.id
-                        } else {
-                            val newId = db.paymentMethodDao().insert(com.example.admin_ingresos.data.PaymentMethod(name = selectedPaymentMethodName!!))
-                            resolvedPaymentMethodId = newId.toInt()
-                        }
+                    val found = methods.find {
+                        it.name.equals(
+                            selectedPaymentMethodName,
+                            ignoreCase = true
+                        )
+                    }
+                    if (found != null) {
+                        resolvedPaymentMethodId = found.id
+                    } else {
+                        val newId = db.paymentMethodDao()
+                            .insert(com.example.admin_ingresos.data.PaymentMethod(name = selectedPaymentMethodName!!))
+                        resolvedPaymentMethodId = newId.toInt()
+                    }
                 }
 
                 val tx = com.example.admin_ingresos.data.Transaction(
@@ -237,7 +263,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
             containerColor = Color.Transparent,
             borderColor = Color.Transparent
         ) {
-                Column(Modifier.padding(horizontal = 8.dp, vertical = 12.dp)) {
+            Column(Modifier.padding(horizontal = 8.dp, vertical = 12.dp)) {
                 Text(
                     text = "Tipo de Transacción",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
@@ -251,39 +277,65 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     Button(
                         onClick = { type = "Ingreso" },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (type == "Ingreso") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                            containerColor = if (type == "Ingreso") IncomeGreen else MaterialTheme.colorScheme.surfaceVariant
                         ),
-                        modifier = Modifier.weight(1f).height(38.dp),
-                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(36.dp)
                     ) {
-                        Icon(Icons.Default.TrendingUp, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Ingreso", fontSize = MaterialTheme.typography.bodyMedium.fontSize)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.TrendingUp,
+                                contentDescription = null,
+                                tint = if (type == "Ingreso") Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Ingreso",
+                                color = if (type == "Ingreso") Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                        }
                     }
+
                     Button(
                         onClick = { type = "Gasto" },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (type == "Gasto") Color(0xFFE57373) else MaterialTheme.colorScheme.surfaceVariant
                         ),
-                        modifier = Modifier.weight(1f).height(38.dp),
-                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(36.dp)
                     ) {
-                        Icon(Icons.Default.TrendingDown, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Gasto", fontSize = MaterialTheme.typography.bodyMedium.fontSize)
-                    }
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Button(
-                        onClick = { type = "Ahorro" },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (type == "Ahorro") Color(0xFF42A5F5) else MaterialTheme.colorScheme.surfaceVariant
-                        ),
-                        modifier = Modifier.weight(1f).height(38.dp),
-                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
-                    ) {
-                        Icon(Icons.Default.Savings, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Ahorro", fontSize = MaterialTheme.typography.bodyMedium.fontSize)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.TrendingDown,
+                                contentDescription = null,
+                                tint = if (type == "Gasto") Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Gasto",
+                                color = if (type == "Gasto") Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 }
             }
@@ -303,9 +355,18 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     .fillMaxWidth()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.AttachMoney, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                    Icon(
+                        Icons.Default.AttachMoney,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Monto", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
+                    Text(
+                        "Monto",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlinedTextField(
@@ -322,8 +383,10 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = if (type == "Ingreso") Color(0xFF4CAF50) else Color(0xFFE57373),
-                        focusedLabelColor = if (type == "Ingreso") Color(0xFF4CAF50) else Color(0xFFE57373)
+                        focusedBorderColor = if (type == "Ingreso") IncomeGreen else Color(
+                            0xFFE57373
+                        ),
+                        focusedLabelColor = if (type == "Ingreso") IncomeGreen else Color(0xFFE57373)
                     )
                 )
             }
@@ -343,9 +406,18 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     .fillMaxWidth()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Description, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                    Icon(
+                        Icons.Default.Description,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Descripción", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
+                    Text(
+                        "Descripción",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlinedTextField(
@@ -378,9 +450,18 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(Icons.Default.Category, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                        Icon(
+                            Icons.Default.Category,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Categoría", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
+                        Text(
+                            "Categoría",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                     Spacer(modifier = Modifier.height(10.dp))
                     // Selector de categoría con ExposedDropdownMenuBox
@@ -420,7 +501,11 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                             }
                         }
                     }
-                    if (categoryError != null) Text(categoryError!!, color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                    if (categoryError != null) Text(
+                        categoryError!!,
+                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
                 Box(
                     modifier = Modifier
@@ -455,21 +540,33 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                             label = { Text("Nombre de la categoría") },
                             isError = newCategoryError != null
                         )
-                        if (newCategoryError != null) Text(newCategoryError!!, color = MaterialTheme.colorScheme.error)
+                        if (newCategoryError != null) Text(
+                            newCategoryError!!,
+                            color = MaterialTheme.colorScheme.error
+                        )
                     }
                 },
                 confirmButton = {
-                    Button(onClick = {
-                        if (newCategoryName.isBlank()) {
-                            newCategoryError = "El nombre es requerido"
-                        } else {
-                            pendingCategoryName = newCategoryName.trim()
-                            shouldCreateCategory = true
-                        }
-                    }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) { Text("Crear") }
+                    Button(
+                        onClick = {
+                            if (newCategoryName.isBlank()) {
+                                newCategoryError = "El nombre es requerido"
+                            } else {
+                                pendingCategoryName = newCategoryName.trim()
+                                shouldCreateCategory = true
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) { Text("Crear") }
                 },
                 dismissButton = {
-                    OutlinedButton(onClick = { showCategoryDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) { Text("Cancelar") }
+                    OutlinedButton(
+                        onClick = { showCategoryDialog = false },
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                    ) { Text("Cancelar") }
                 }
             )
         }
@@ -477,7 +574,8 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
         // Efecto para crear categoría
         LaunchedEffect(shouldCreateCategory, pendingCategoryName) {
             if (shouldCreateCategory && pendingCategoryName.isNotBlank()) {
-                val newId = db.categoryDao().insert(com.example.admin_ingresos.data.Category(name = pendingCategoryName))
+                val newId = db.categoryDao()
+                    .insert(com.example.admin_ingresos.data.Category(name = pendingCategoryName))
                 selectedCategoryId = newId.toInt()
                 categoryUpdateTrigger++ // Forzar recomposición y actualización visual
                 showCategoryDialog = false
@@ -490,27 +588,145 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-    // Selector sencillo de método de pago (lista estática)
-    CashFlowCard(modifier = Modifier.fillMaxWidth(), containerColor = Color.Transparent, borderColor = Color.Transparent) {
-            Column(Modifier.padding(8.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Payment, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Método de pago", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Opciones: preferir los métodos guardados en DB; si no hay, usar estáticos
-                val staticMethods = listOf("Efectivo", "Paypal", "Tarjeta de crédito", "Tarjeta de débito", "Transferencia")
-                var payMenuExpanded by remember { mutableStateOf(false) }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedButton(onClick = { payMenuExpanded = true }, modifier = Modifier.weight(1f)) {
-                        Text(selectedPaymentMethodName ?: "Selecciona un método de pago")
+        // Selector sencillo de método de pago (lista estática)
+        CashFlowCard(
+            modifier = Modifier.fillMaxWidth(),
+            containerColor = Color.Transparent,
+            borderColor = Color.Transparent
+        ) {
+            Box(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(8.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Payment,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Método de pago",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    // Add new payment method button
-                    Box(
-                        modifier = Modifier
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Opciones: preferir los métodos guardados en DB; si no hay, usar estáticos
+                    val staticMethods = listOf(
+                        "Efectivo",
+                        "Paypal",
+                        "Tarjeta de crédito",
+                        "Tarjeta de débito",
+                        "Transferencia"
+                    )
+                    var payMenuExpanded by remember { mutableStateOf(false) }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedButton(
+                            onClick = { payMenuExpanded = true },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(selectedPaymentMethodName ?: "Selecciona un método de pago")
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+
+                    DropdownMenu(
+                        expanded = payMenuExpanded,
+                        onDismissRequest = { payMenuExpanded = false },
+                        modifier = Modifier.background(resolvedMenuContainerColor())
+                    ) {
+                        if (paymentMethods.isNotEmpty()) {
+                            paymentMethods.forEach { method ->
+                                DropdownMenuItem(text = { Text(method.name) }, onClick = {
+                                    selectedPaymentMethodName = method.name
+                                    selectedPaymentMethodId = method.id
+                                    payMenuExpanded = false
+                                })
+                            }
+                        } else {
+                            staticMethods.forEach { method ->
+                                DropdownMenuItem(text = { Text(method) }, onClick = {
+                                    selectedPaymentMethodName = method
+                                    selectedPaymentMethodId = null
+                                    payMenuExpanded = false
+                                })
+                            }
+                        }
+                    }
+
+                    // Dialog para agregar nuevo método de pago desde el formulario
+                    if (showAddPaymentMethodDialog) {
+                        ThemedAlertDialog(
+                            onDismissRequest = { showAddPaymentMethodDialog = false },
+                            title = { Text("Nuevo método de pago") },
+                            text = {
+                                Column {
+                                    OutlinedTextField(
+                                        value = newPaymentMethodName,
+                                        onValueChange = { newPaymentMethodName = it },
+                                        label = { Text("Nombre del método") },
+                                        isError = newPaymentMethodError != null,
+                                        singleLine = true
+                                    )
+                                    if (newPaymentMethodError != null) Text(
+                                        newPaymentMethodError!!,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            },
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        if (newPaymentMethodName.isBlank()) {
+                                            newPaymentMethodError = "El nombre es requerido"
+                                            return@Button
+                                        }
+                                        // Insertar y seleccionar
+                                        coroutineScope.launch {
+                                            try {
+                                                val existing = db.paymentMethodDao().getAll().find {
+                                                    it.name.equals(
+                                                        newPaymentMethodName,
+                                                        ignoreCase = true
+                                                    )
+                                                }
+                                                val id =
+                                                    if (existing != null) existing.id else db.paymentMethodDao()
+                                                        .insert(
+                                                            com.example.admin_ingresos.data.PaymentMethod(
+                                                                name = newPaymentMethodName
+                                                            )
+                                                        ).toInt()
+                                                selectedPaymentMethodId = id
+                                                selectedPaymentMethodName = newPaymentMethodName
+                                            } catch (_: Exception) {
+                                            }
+                                            showAddPaymentMethodDialog = false
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                ) {
+                                    Text("Crear")
+                                }
+                            },
+                            dismissButton = {
+                                OutlinedButton(
+                                    onClick = { showAddPaymentMethodDialog = false },
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                                ) { Text("Cancelar") }
+                            }
+                        )
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                            .padding(top = 8.dp, end = 8.dp)
                             .size(24.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.primary)
@@ -521,298 +737,269 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(imageVector = Icons.Default.Add, contentDescription = "Agregar método de pago", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(14.dp))
-                    }
-                }
-
-                DropdownMenu(expanded = payMenuExpanded, onDismissRequest = { payMenuExpanded = false }, modifier = Modifier.background(resolvedMenuContainerColor())) {
-                    if (paymentMethods.isNotEmpty()) {
-                        paymentMethods.forEach { method ->
-                            DropdownMenuItem(text = { Text(method.name) }, onClick = {
-                                selectedPaymentMethodName = method.name
-                                selectedPaymentMethodId = method.id
-                                payMenuExpanded = false
-                            })
-                        }
-                    } else {
-                        staticMethods.forEach { method ->
-                            DropdownMenuItem(text = { Text(method) }, onClick = {
-                                selectedPaymentMethodName = method
-                                selectedPaymentMethodId = null
-                                payMenuExpanded = false
-                            })
-                        }
-                    }
-                }
-
-                // Dialog para agregar nuevo método de pago desde el formulario
-                if (showAddPaymentMethodDialog) {
-                    ThemedAlertDialog(
-                        onDismissRequest = { showAddPaymentMethodDialog = false },
-                        title = { Text("Nuevo método de pago") },
-                        text = {
-                            Column {
-                                OutlinedTextField(
-                                    value = newPaymentMethodName,
-                                    onValueChange = { newPaymentMethodName = it },
-                                    label = { Text("Nombre del método") },
-                                    isError = newPaymentMethodError != null,
-                                    singleLine = true
-                                )
-                                if (newPaymentMethodError != null) Text(newPaymentMethodError!!, color = MaterialTheme.colorScheme.error)
-                            }
-                        },
-                        confirmButton = {
-                            Button(onClick = {
-                                if (newPaymentMethodName.isBlank()) {
-                                    newPaymentMethodError = "El nombre es requerido"
-                                    return@Button
-                                }
-                                // Insertar y seleccionar
-                                coroutineScope.launch {
-                                    try {
-                                        val existing = db.paymentMethodDao().getAll().find { it.name.equals(newPaymentMethodName, ignoreCase = true) }
-                                        val id = if (existing != null) existing.id else db.paymentMethodDao().insert(com.example.admin_ingresos.data.PaymentMethod(name = newPaymentMethodName)).toInt()
-                                        selectedPaymentMethodId = id
-                                        selectedPaymentMethodName = newPaymentMethodName
-                                    } catch (_: Exception) { }
-                                    showAddPaymentMethodDialog = false
-                                }
-                            }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) {
-                                Text("Crear")
-                            }
-                        },
-                        dismissButton = {
-                            OutlinedButton(onClick = { showAddPaymentMethodDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) { Text("Cancelar") }
-                        }
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Adjuntar foto de recibo
-        CashFlowCard(
-            modifier = Modifier.fillMaxWidth(),
-            containerColor = Color.Transparent,
-            borderColor = Color.Transparent
-        ) {
-            Column(Modifier.padding(8.dp)) {
-                Text("Recibo", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
-                Spacer(modifier = Modifier.height(6.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Adjuntar foto o recibo", modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    TextButton(onClick = { showPhotoMenu = true }) {
-                        Icon(Icons.Default.AddAPhoto, contentDescription = "Adjuntar foto")
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Adjuntar")
-                    }
-                }
-                if (receiptPhotoUri != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    androidx.compose.foundation.Image(
-                        painter = rememberAsyncImagePainter(receiptPhotoUri),
-                        contentDescription = "Recibo adjunto",
-                        modifier = Modifier
-                            .size(80.dp)
-                            .align(Alignment.CenterHorizontally)
-                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("Imagen subida", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.align(Alignment.CenterHorizontally))
-                }
-                DropdownMenu(expanded = showPhotoMenu, onDismissRequest = { showPhotoMenu = false }, modifier = Modifier.background(resolvedMenuContainerColor())) {
-                    DropdownMenuItem(text = { Text("Desde galería") }, onClick = {
-                        galleryLauncher.launch("image/*")
-                        showPhotoMenu = false
-                    })
-                    DropdownMenuItem(text = { Text("Tomar foto") }, onClick = {
-                        val uri = createImageFile()
-                        if (uri != null) {
-                            cameraImageUri = uri
-                            cameraLauncher.launch(uri)
-                        }
-                        showPhotoMenu = false
-                    })
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Botones de acción (estandarizados)
-        ActionButtons(
-            isFormValid = isFormValid,
-            isLoading = isLoading,
-            onSave = { handleSave() },
-            onCancel = onCancel,
-            modifier = Modifier.fillMaxWidth()
-        )
-        if (showSuccessMessage) {
-            ThemedAlertDialog(
-                onDismissRequest = { showSuccessMessage = false },
-                icon = {
-                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF4CAF50), modifier = Modifier.size(48.dp))
-                },
-                title = { Text("¡Transacción guardada!") },
-                text = { Text("La transacción se agregó correctamente.") },
-                confirmButton = {
-                    Button(onClick = { showSuccessMessage = false }) {
-                        Text("Aceptar")
-                    }
-                }
-            )
-        }
-    }
-}
-
-
-@Composable
-fun TypeChip(
-    type: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    color: Color,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        onClick = { onClick() },
-        modifier = modifier.height(60.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) color else MaterialTheme.colorScheme.surfaceVariant
-        ),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = type,
-                tint = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = type,
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.Medium
-                ),
-                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-fun AmountInputCard(
-    amount: String,
-    onAmountChange: (String) -> Unit,
-    error: String?,
-    type: String
-) {
-    CashFlowCard {
-        Column {
-            Text(
-                text = "Monto",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-
-            OutlinedTextField(
-                value = amount,
-                onValueChange = { newValue ->
-                    // Only allow numbers and decimal point
-                    if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
-                        onAmountChange(newValue)
-                    }
-                },
-                label = { Text("0.00") },
-                prefix = {
-                    Text(
-                        text = "$",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = if (type == "Ingreso") Color(0xFF4CAF50) else Color(0xFFE57373)
-                    )
-                },
-                isError = error != null,
-                supportingText = error?.let { { Text(it) } },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = if (type == "Ingreso") Color(0xFF4CAF50) else Color(0xFFE57373),
-                    focusedLabelColor = if (type == "Ingreso") Color(0xFF4CAF50) else Color(0xFFE57373)
-                )
-            )
-
-            // Quick amount buttons
-            if (amount.isEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    listOf("10000", "50000", "100000", "500000").forEach { quickAmount ->
-                        FilterChip(
-                            onClick = { onAmountChange(quickAmount) },
-                            label = {
-                                Text(
-                                    text = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
-                                        .format(quickAmount.toDouble()),
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-                            },
-                            selected = false,
-                            modifier = Modifier.weight(1f)
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Agregar método de pago",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(14.dp)
                         )
                     }
                 }
             }
-        }
-    }
-}
 
-@Composable
-fun DescriptionInputCard(
-    description: String,
-    onDescriptionChange: (String) -> Unit,
-    error: String?
-) {
-    CashFlowCard(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            Modifier
-                .padding(horizontal = 14.dp, vertical = 14.dp)
-                .fillMaxWidth()
-        ) {
-            Text(
-                text = "Descripción",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-            OutlinedTextField(
-                value = description,
-                onValueChange = onDescriptionChange,
-                label = { Text("Ej: Compra de supermercado") },
-                isError = error != null,
-                supportingText = error?.let { { Text(it) } },
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Adjuntar foto de recibo
+            CashFlowCard(
                 modifier = Modifier.fillMaxWidth(),
-                maxLines = 3
+                containerColor = Color.Transparent,
+                borderColor = Color.Transparent
+            ) {
+                Column(Modifier.padding(8.dp)) {
+                    Text(
+                        "Recibo",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "Adjuntar foto o recibo",
+                            modifier = Modifier.weight(1f),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        TextButton(onClick = { showPhotoMenu = true }) {
+                            Icon(Icons.Default.AddAPhoto, contentDescription = "Adjuntar foto")
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Adjuntar")
+                        }
+                    }
+                    if (receiptPhotoUri != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        androidx.compose.foundation.Image(
+                            painter = rememberAsyncImagePainter(receiptPhotoUri),
+                            contentDescription = "Recibo adjunto",
+                            modifier = Modifier
+                                .size(80.dp)
+                                .align(Alignment.CenterHorizontally)
+                                .background(
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                    RoundedCornerShape(8.dp)
+                                )
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            "Imagen subida",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showPhotoMenu,
+                        onDismissRequest = { showPhotoMenu = false },
+                        modifier = Modifier.background(resolvedMenuContainerColor())
+                    ) {
+                        DropdownMenuItem(text = { Text("Desde galería") }, onClick = {
+                            galleryLauncher.launch("image/*")
+                            showPhotoMenu = false
+                        })
+                        DropdownMenuItem(text = { Text("Tomar foto") }, onClick = {
+                            val uri = createImageFile()
+                            if (uri != null) {
+                                cameraImageUri = uri
+                                cameraLauncher.launch(uri)
+                            }
+                            showPhotoMenu = false
+                        })
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Botones de acción (estandarizados)
+            ActionButtons(
+                isFormValid = isFormValid,
+                isLoading = isLoading,
+                onSave = { handleSave() },
+                onCancel = onCancel,
+                modifier = Modifier.fillMaxWidth()
             )
+            if (showSuccessMessage) {
+                ThemedAlertDialog(
+                    onDismissRequest = { showSuccessMessage = false },
+                    icon = {
+                        Icon(
+                            Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = Color(0xFF4CAF50),
+                            modifier = Modifier.size(48.dp)
+                        )
+                    },
+                    title = { Text("¡Transacción guardada!") },
+                    text = { Text("La transacción se agregó correctamente.") },
+                    confirmButton = {
+                        Button(onClick = { showSuccessMessage = false }) {
+                            Text("Aceptar")
+                        }
+                    }
+                )
+            }
         }
     }
-}
+
+
+    @Composable
+    fun TypeChip(
+        type: String,
+        isSelected: Boolean,
+        onClick: () -> Unit,
+        color: Color,
+        icon: androidx.compose.ui.graphics.vector.ImageVector,
+        modifier: Modifier = Modifier
+    ) {
+        Card(
+            onClick = { onClick() },
+            modifier = modifier.height(60.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = if (isSelected) color else MaterialTheme.colorScheme.surfaceVariant
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = type,
+                    tint = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = type,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+
+    @Composable
+    fun AmountInputCard(
+        amount: String,
+        onAmountChange: (String) -> Unit,
+        error: String?,
+        type: String
+    ) {
+        CashFlowCard {
+            Column {
+                Text(
+                    text = "Monto",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                OutlinedTextField(
+                    value = amount,
+                    onValueChange = { newValue ->
+                        // Only allow numbers and decimal point
+                        if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
+                            onAmountChange(newValue)
+                        }
+                    },
+                    label = { Text("0.00") },
+                    prefix = {
+                        Text(
+                            text = "$",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = if (type == "Ingreso") IncomeGreen else Color(0xFFE57373)
+                        )
+                    },
+                    isError = error != null,
+                    supportingText = error?.let { { Text(it) } },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = if (type == "Ingreso") Color(0xFF4CAF50) else Color(
+                            0xFFE57373
+                        ),
+                        focusedLabelColor = if (type == "Ingreso") Color(0xFF4CAF50) else Color(
+                            0xFFE57373
+                        )
+                    )
+                )
+
+                // Quick amount buttons
+                if (amount.isEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf("10000", "50000", "100000", "500000").forEach { quickAmount ->
+                            FilterChip(
+                                onClick = { onAmountChange(quickAmount) },
+                                label = {
+                                    Text(
+                                        text = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
+                                            .format(quickAmount.toDouble()),
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                },
+                                selected = false,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun DescriptionInputCard(
+        description: String,
+        onDescriptionChange: (String) -> Unit,
+        error: String?
+    ) {
+        CashFlowCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                Modifier
+                    .padding(horizontal = 14.dp, vertical = 14.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = "Descripción",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = onDescriptionChange,
+                    label = { Text("Ej: Compra de supermercado") },
+                    isError = error != null,
+                    supportingText = error?.let { { Text(it) } },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 3
+                )
+            }
+        }
+    }
+
 
