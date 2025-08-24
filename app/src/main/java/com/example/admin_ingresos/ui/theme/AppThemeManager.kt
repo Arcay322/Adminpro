@@ -14,12 +14,20 @@ object AppThemeManager {
     private val _backgroundColor = MutableStateFlow(Color(0xFF000000).toArgb())
     val backgroundColor: StateFlow<Int> = _backgroundColor
 
+    // user-selected primary color (stored as ARGB int)
+    private val _primaryColor = MutableStateFlow(Color(0xFF00FFA3).toArgb())
+    val primaryColor: StateFlow<Int> = _primaryColor
+
     // allow forcing a light mode independent of color luminance
     private val _forceLight = MutableStateFlow(false)
     val forceLight: StateFlow<Boolean> = _forceLight
 
     fun setBackgroundColor(argb: Int) {
         _backgroundColor.value = argb
+    }
+
+    fun setPrimaryColor(argb: Int) {
+        _primaryColor.value = argb
     }
 
     fun setForceLight(value: Boolean) {

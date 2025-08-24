@@ -20,6 +20,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"
         private const val KEY_BUDGET_ALERTS_ENABLED = "budget_alerts_enabled"
         private const val KEY_SAMPLE_DATA_IMPORTED = "sample_data_imported"
+    private const val KEY_PRIMARY_COLOR = "primary_color"
     }
     
     var isOnboardingCompleted: Boolean
@@ -65,4 +66,8 @@ class PreferencesManager(context: Context) {
     fun clearAll() {
         sharedPreferences.edit().clear().apply()
     }
+
+    var primaryColor: Int
+        get() = sharedPreferences.getInt(KEY_PRIMARY_COLOR, 0xFF00FFA3.toInt())
+        set(value) = sharedPreferences.edit().putInt(KEY_PRIMARY_COLOR, value).apply()
 }

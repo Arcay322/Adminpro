@@ -52,6 +52,10 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private val _backgroundColor = MutableStateFlow(prefs.getInt("background_color", BackgroundStart.toArgb()))
     val backgroundColor: StateFlow<Int> = _backgroundColor
 
+    // Primary color preference
+    private val _primaryColor = MutableStateFlow(prefs.getInt("primary_color", com.example.admin_ingresos.ui.theme.AccentVibrantStart.toArgb()))
+    val primaryColor: StateFlow<Int> = _primaryColor
+
     private val _forceLight = MutableStateFlow(prefs.getBoolean("force_light_mode", false))
     val forceLight: StateFlow<Boolean> = _forceLight
 
@@ -121,6 +125,14 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     _backgroundColor.value = colorInt
     // Push immediately to the global theme manager so UI updates without restart
     AppThemeManager.setBackgroundColor(colorInt)
+    }
+
+    fun setPrimaryColor(colorInt: Int) {
+        val editor = prefs.edit()
+        editor.putInt("primary_color", colorInt)
+        editor.commit()
+        _primaryColor.value = colorInt
+        AppThemeManager.setPrimaryColor(colorInt)
     }
 
     fun setForceLightMode(value: Boolean) {

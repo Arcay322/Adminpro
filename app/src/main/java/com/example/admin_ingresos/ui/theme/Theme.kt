@@ -137,32 +137,38 @@ fun CashFlowTheme(
     }
 
     // Update global legacy tokens so existing UI that references them updates immediately
-    // Glass and text tokens map to values from the active color scheme
-    GlassWhite = colorScheme.surface.copy(alpha = 0.18f)
-    GlassWhiteSubtle = colorScheme.surface.copy(alpha = 0.10f)
-    GlassWhiteStrong = colorScheme.surface.copy(alpha = 0.22f)
-    GlassBlur = colorScheme.surface.copy(alpha = 0.06f)
+    // Remap only the primary token from the user preference so components that read
+    // MaterialTheme.colorScheme.primary use the selected color while preserving
+    // onPrimary and the light/dark contrast logic.
+    val appPrimaryInt by AppThemeManager.primaryColor.collectAsState()
+    val appPrimaryColor = Color(appPrimaryInt)
+    val remappedColorScheme = colorScheme.copy(primary = appPrimaryColor)
 
-    GlassBorder = colorScheme.outline
-    GlassBorderSubtle = colorScheme.outline.copy(alpha = 0.6f)
+    GlassWhite = remappedColorScheme.surface.copy(alpha = 0.18f)
+    GlassWhiteSubtle = remappedColorScheme.surface.copy(alpha = 0.10f)
+    GlassWhiteStrong = remappedColorScheme.surface.copy(alpha = 0.22f)
+    GlassBlur = remappedColorScheme.surface.copy(alpha = 0.06f)
 
-    TextPrimary = colorScheme.onBackground
-    TextSecondary = colorScheme.onSurfaceVariant
-    TextOnAccent = colorScheme.onPrimary
+    GlassBorder = remappedColorScheme.outline
+    GlassBorderSubtle = remappedColorScheme.outline.copy(alpha = 0.6f)
 
-    SurfaceGlass = colorScheme.surface
-    SurfaceVariant = colorScheme.surfaceVariant
-    Background = colorScheme.background
-    OnSurface = colorScheme.onSurface
-    OnSurfaceVariant = colorScheme.onSurfaceVariant
-    OnBackground = colorScheme.onBackground
+    TextPrimary = remappedColorScheme.onBackground
+    TextSecondary = remappedColorScheme.onSurfaceVariant
+    TextOnAccent = remappedColorScheme.onPrimary
+
+    SurfaceGlass = remappedColorScheme.surface
+    SurfaceVariant = remappedColorScheme.surfaceVariant
+    Background = remappedColorScheme.background
+    OnSurface = remappedColorScheme.onSurface
+    OnSurfaceVariant = remappedColorScheme.onSurfaceVariant
+    OnBackground = remappedColorScheme.onBackground
 
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
             // Use provided background color for status & navigation bars when available
-            val bg = (backgroundColor ?: colorScheme.background).toArgb()
+            val bg = (backgroundColor ?: remappedColorScheme.background).toArgb()
             window.statusBarColor = bg
             window.navigationBarColor = bg
             val insetsController = WindowCompat.getInsetsController(window, view)
@@ -177,7 +183,7 @@ fun CashFlowTheme(
     }
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = remappedColorScheme,
         typography = CashFlowTypography,
         shapes = CashFlowShapes,
         content = content

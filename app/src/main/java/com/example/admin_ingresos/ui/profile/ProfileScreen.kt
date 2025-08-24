@@ -27,6 +27,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -116,14 +117,31 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.width(48.dp))
             }
 
-            // Avatar & basic info
+            // Avatar & basic info (improved layout + edit badge)
             GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhiteStrong, cornerRadius = 20.dp) {
                 Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(88.dp).clip(CircleShape).background(Brush.linearGradient(listOf(AccentVibrantStart, AccentVibrantEnd))), contentAlignment = Alignment.Center) {
-                        if (pickedAvatarUri != null) {
-                            Image(painter = rememberAsyncImagePainter(pickedAvatarUri), contentDescription = null, modifier = Modifier.size(80.dp).clip(CircleShape), contentScale = ContentScale.Crop)
-                        } else {
-                Icon(LucideIconMapper.Navigation.profile, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
+                    Box(modifier = Modifier.size(88.dp)) {
+                        Box(modifier = Modifier
+                            .size(88.dp)
+                            .clip(CircleShape)
+                            .background(Brush.linearGradient(listOf(AccentVibrantStart, AccentVibrantEnd))), contentAlignment = Alignment.Center) {
+                            if (pickedAvatarUri != null) {
+                                Image(painter = rememberAsyncImagePainter(pickedAvatarUri), contentDescription = "Avatar del usuario", modifier = Modifier.size(80.dp).clip(CircleShape), contentScale = ContentScale.Crop)
+                            } else {
+                                Icon(LucideIconMapper.Navigation.profile, contentDescription = "Avatar por defecto", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(44.dp))
+                            }
+                        }
+
+                        // Edit overlay (camera) - concise badge to change avatar
+                        IconButton(
+                            onClick = { imagePicker.launch("image/*") },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .size(28.dp)
+                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f), shape = CircleShape)
+                                .border(width = 1.dp, color = MaterialTheme.colorScheme.outline, shape = CircleShape)
+                        ) {
+                            Icon(LucideIconMapper.Navigation.upload, contentDescription = "Cambiar avatar", tint = MaterialTheme.colorScheme.onSurface)
                         }
                     }
 
@@ -253,6 +271,45 @@ fun ProfileScreen(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     // single theme switch above controls global mode; force-light removed to avoid confusion
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "Color de tema", color = MaterialTheme.colorScheme.onBackground)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    val primaryColorInt by profileVm.primaryColor.collectAsState()
+                    val primaryOptions = listOf(
+                        AccentVibrantStart,
+                        AccentVibrantMid,
+                        AccentVibrantEnd,
+                        Color(0xFF00BFA5), // teal
+                        Color(0xFF2196F3), // blue
+                        Color(0xFF4CAF50), // green
+                        Color(0xFFFFC107), // amber
+                        Color(0xFFFF5722), // deep orange
+                        Color(0xFFE91E63), // pink
+                        Color(0xFF9C27B0), // purple
+                        Color(0xFF795548), // brown
+                        Color(0xFF607D8B), // blue grey
+                        Color(0xFFFFEB3B), // yellow
+                        Color(0xFF00BCD4)  // cyan
+                    )
+
+                    // Color swatches
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        primaryOptions.forEach { p ->
+                            val pInt = p.toArgb()
+                            val selectedPrimary = pInt == primaryColorInt
+                            Box(modifier = Modifier
+                                .size(if (selectedPrimary) 48.dp else 40.dp)
+                                .clip(CircleShape)
+                                .background(p)
+                                .clickable { profileVm.setPrimaryColor(pInt) }
+                                .then(if (selectedPrimary) Modifier.border(width = 2.dp, color = AccentVibrantStart, shape = CircleShape) else Modifier)
+                            ) {
+                                if (selectedPrimary) Icon(LucideIconMapper.Navigation.check, contentDescription = null, tint = if (p.luminance() > 0.5f) Color.Black else Color.White, modifier = Modifier.align(Alignment.Center))
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
 
