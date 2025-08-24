@@ -162,10 +162,20 @@ fun ProfileScreen(
                 }
             }
 
-            // Account details
+            // Account details (header with icon for clarity)
             GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhite, cornerRadius = 16.dp) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(text = "Cuenta", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = LucideIconMapper.Navigation.profile,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Cuenta", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
+                    }
+
                     OutlinedTextField(
                         value = editName,
                         onValueChange = { editName = it },
@@ -193,10 +203,20 @@ fun ProfileScreen(
                 }
             }
 
-            // Preferences
+            // Preferences (compact header with icon)
             GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhite, cornerRadius = 16.dp) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(text = "Preferencias", style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = LucideIconMapper.getNavigationIcon("Settings"),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Preferencias", style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+                    }
+
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Column {
                             Text(text = "Moneda: $editCurrency", color = MaterialTheme.colorScheme.onBackground)
@@ -212,7 +232,6 @@ fun ProfileScreen(
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Text(text = "Modo oscuro", color = MaterialTheme.colorScheme.onBackground)
                         Switch(checked = darkMode, onCheckedChange = {
-                            // update ViewModel and persist immediately so preferences remain after app restart
                             profileVm.setDarkMode(it)
                             editDarkMode = it
                         }, colors = SwitchDefaults.colors(checkedThumbColor = AccentVibrantStart))
@@ -232,22 +251,28 @@ fun ProfileScreen(
                 }
             }
 
-            // Personalización - Color de fondo
+            // Personalización - Color de fondo (compact header with icon)
             GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhite, cornerRadius = 16.dp) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(text = "Personalización", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = LucideIconMapper.getIconFromEmoji("🎨"),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Personalización", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
+                    }
+
                     Text(text = "Color de fondo", color = MaterialTheme.colorScheme.onBackground)
                     Spacer(modifier = Modifier.height(8.dp))
-                    // Background palettes split by recommended usage: dark-mode friendly and light-mode friendly
                     Text(text = "Colores de fondo — oscuros (recomendado para modo oscuro)", color = MaterialTheme.colorScheme.onBackground)
                     Spacer(modifier = Modifier.height(6.dp))
                     val darkSwatches = listOf(
                         Color(0xFF000000), Color(0xFF05060a), Color(0xFF0B1220), Color(0xFF111827), Color(0xFF141925),
                         Color(0xFF1F2937), Color(0xFF23303D), Color(0xFF2B3442), Color(0xFF3A3F47), Color(0xFF4B5563),
-                        // slightly tinted dark colors (deep variants so they read as background)
-                        Color(0xFF2B0B0B), // deep maroon
-                        Color(0xFF1B1822), // deep purple
-                        Color(0xFF0B2133)  // deep teal
+                        Color(0xFF2B0B0B), Color(0xFF1B1822), Color(0xFF0B2133)
                     )
 
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
@@ -274,10 +299,7 @@ fun ProfileScreen(
                     val lightSwatches = listOf(
                         Color(0xFFFFFFFF), Color(0xFFF8FAFC), Color(0xFFF1F5F9), Color(0xFFE6EEF6), Color(0xFFFDF2F8),
                         Color(0xFFFFFBF0), Color(0xFFFFFBF7), Color(0xFFF7FEE7), Color(0xFFFDFCE7), Color(0xFFF3F4F6),
-                        // soft tinted light variants for colored backgrounds but still light
-                        Color(0xFFFFF1F2), // light rose
-                        Color(0xFFF2F8FF), // light blue
-                        Color(0xFFF2FFF7)  // light mint
+                        Color(0xFFFFF1F2), Color(0xFFF2F8FF), Color(0xFFF2FFF7)
                     )
 
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
@@ -298,12 +320,9 @@ fun ProfileScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    // single theme switch above controls global mode; force-light removed to avoid confusion
-                    Spacer(modifier = Modifier.height(8.dp))
                     Text(text = "Color de tema", color = MaterialTheme.colorScheme.onBackground)
                     Spacer(modifier = Modifier.height(6.dp))
                     val primaryColorInt by profileVm.primaryColor.collectAsState()
-                    // Expanded primary palette with many options
                     val primaryOptions = listOf(
                         Color(0xFF0EA5A4), Color(0xFF06B6D4), Color(0xFF00BFA5), Color(0xFF06B6D4), Color(0xFF2196F3),
                         Color(0xFF2563EB), Color(0xFF3B82F6), Color(0xFF6366F1), Color(0xFF7C3AED), Color(0xFF8B5CF6),
@@ -334,10 +353,19 @@ fun ProfileScreen(
                 }
             }
 
-            // Security
+            // Security (header with icon)
             GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhite, cornerRadius = 16.dp) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(text = "Seguridad", style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = LucideIconMapper.getIconFromEmoji("🛡️"),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Seguridad", style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+                    }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Text(text = "Huella dactilar", color = TextPrimary)
                         val fpEnabled = editFingerprintEnabled
@@ -345,33 +373,44 @@ fun ProfileScreen(
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Text(text = "PIN de seguridad", color = TextPrimary)
-                        Button(onClick = { showPinDialog = true }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) { Text("Configurar PIN") }
+                                Button(onClick = { showPinDialog = true }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) {
+                                    Text("Configurar PIN")
+                                }
                     }
                 }
             }
 
-            // Help & Support
+            // Help & Support (compact header + icon)
             GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhite, cornerRadius = 16.dp) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(text = "Ayuda y soporte", style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = LucideIconMapper.Navigation.info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Ayuda y soporte", style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+                    }
                     Text(text = "Preguntas frecuentes", color = TextPrimary)
                     Spacer(modifier = Modifier.height(8.dp))
                     val ctx = LocalContext.current
                     Button(onClick = {
-                        // Open mail app for contact
                         val intent = Intent(Intent.ACTION_SENDTO).apply {
                             data = Uri.parse("mailto:support@example.com")
                             putExtra(Intent.EXTRA_SUBJECT, "Soporte Adminpro")
                         }
                         ctx.startActivity(intent)
-                    }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) { Text("Contactar soporte") }
+                    }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) {
+                        Text("Contactar soporte")
+                    }
                 }
             }
 
-            // Actions
+            // Actions (icons + clearer spacing)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Button(onClick = {
-                    // Persist selected background color as part of profile save
                     profileVm.setBackgroundColor(backgroundColorInt)
                     profileVm.saveProfile(editName, editEmail, pickedAvatarUri?.toString(), editCurrency, editDarkMode, editPhone, editBio, editLanguage, editNotificationsEnabled, editFingerprintEnabled, pinInput)
                     coroutineScope.launch { snackbarHostState.showSnackbar("Perfil guardado") }
