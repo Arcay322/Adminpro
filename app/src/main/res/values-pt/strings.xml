@@ -77,4 +77,21 @@
     <string name="profile_saved">Perfil salvo</string>
     <string name="confirm_delete_profile">Confirmar exclusão</string>
     <string name="delete_profile_message">Isto removerá seu perfil localmente. Continuar?</string>
+    <string name="profile_customization">Personalização</string>
+    <string name="profile_background_color">Cor de fundo</string>
+    <string name="profile_dark_themes">Temas escuros</string>
+    <string name="profile_light_themes">Temas claros</string>
+    <string name="profile_theme_color">Cor do tema</string>
+    <string name="profile_security">Segurança</string>
+    <string name="profile_user_avatar">Avatar do usuário</string>
+    <string name="profile_default_avatar">Avatar padrão</string>
+    <string name="profile_change_avatar">Alterar avatar</string>
+    <string name="profile_remove_avatar">Remover avatar</string>
+    <string name="profile_empty_placeholder">—</string>
+    <string name="profile_fingerprint">Impressão digital</string>
+    <string name="profile_pin">PIN de segurança</string>
+    <string name="profile_configure_pin">Configurar PIN</string>
+    <string name="profile_help_support">Ajuda e suporte</string>
+    <string name="profile_faq">Perguntas frequentes</string>
+    <string name="profile_contact_support">Contactar suporte</string>
 </resources>

@@ -77,4 +77,21 @@
     <string name="profile_saved">Profile saved</string>
     <string name="confirm_delete_profile">Confirm deletion</string>
     <string name="delete_profile_message">This will remove your profile locally. Continue?</string>
+    <string name="profile_customization">Customization</string>
+    <string name="profile_background_color">Background color</string>
+    <string name="profile_dark_themes">Dark themes</string>
+    <string name="profile_light_themes">Light themes</string>
+    <string name="profile_theme_color">Theme color</string>
+    <string name="profile_security">Security</string>
+    <string name="profile_user_avatar">User avatar</string>
+    <string name="profile_default_avatar">Default avatar</string>
+    <string name="profile_change_avatar">Change avatar</string>
+    <string name="profile_remove_avatar">Remove avatar</string>
+    <string name="profile_empty_placeholder">—</string>
+    <string name="profile_fingerprint">Fingerprint</string>
+    <string name="profile_pin">Security PIN</string>
+    <string name="profile_configure_pin">Configure PIN</string>
+    <string name="profile_help_support">Help &amp; support</string>
+    <string name="profile_faq">FAQ</string>
+    <string name="profile_contact_support">Contact support</string>
 </resources>

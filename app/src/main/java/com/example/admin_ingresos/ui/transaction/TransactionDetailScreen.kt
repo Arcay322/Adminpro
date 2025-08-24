@@ -127,16 +127,16 @@ fun TransactionDetailScreen(
                         trendInsight = if (it.type.equals(com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER, ignoreCase = true)) {
                             when {
                                 trendAverage <= 0.0 -> "Sin datos suficientes para calcular un promedio."
-                                last > trendAverage * 1.1 -> "Has ahorrado más de lo habitual en ${categoryName ?: "esta categoría"}. Promedio: ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(trendAverage)}."
-                                last < trendAverage * 0.9 -> "Has ahorrado menos de lo habitual en ${categoryName ?: "esta categoría"}. Promedio: ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(trendAverage)}."
-                                else -> "Tu ahorro en ${categoryName ?: "esta categoría"} está dentro de lo habitual. Promedio: ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(trendAverage)}."
+                                last > trendAverage * 1.1 -> "Has ahorrado más de lo habitual en ${categoryName ?: "esta categoría"}. Promedio: ${com.example.admin_ingresos.data.CurrencyUtils.format(trendAverage, context)}."
+                                last < trendAverage * 0.9 -> "Has ahorrado menos de lo habitual en ${categoryName ?: "esta categoría"}. Promedio: ${com.example.admin_ingresos.data.CurrencyUtils.format(trendAverage, context)}."
+                                else -> "Tu ahorro en ${categoryName ?: "esta categoría"} está dentro de lo habitual. Promedio: ${com.example.admin_ingresos.data.CurrencyUtils.format(trendAverage, context)}."
                             }
                         } else {
                             when {
                                 trendAverage <= 0.0 -> "Sin datos suficientes para calcular un promedio."
-                                last > trendAverage * 1.1 -> "Tu gasto promedio en ${categoryName ?: "esta categoría"} es de ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(trendAverage)}. ¡Este gasto fue un poco más alto de lo normal!"
-                                last < trendAverage * 0.9 -> "Tu gasto promedio en ${categoryName ?: "esta categoría"} es de ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(trendAverage)}. ¡Este gasto fue más bajo de lo normal!"
-                                else -> "Tu gasto promedio en ${categoryName ?: "esta categoría"} es de ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(trendAverage)}. Este gasto está dentro de lo normal."
+                                last > trendAverage * 1.1 -> "Tu gasto promedio en ${categoryName ?: "esta categoría"} es de ${com.example.admin_ingresos.data.CurrencyUtils.format(trendAverage, context)}. ¡Este gasto fue un poco más alto de lo normal!"
+                                last < trendAverage * 0.9 -> "Tu gasto promedio en ${categoryName ?: "esta categoría"} es de ${com.example.admin_ingresos.data.CurrencyUtils.format(trendAverage, context)}. ¡Este gasto fue más bajo de lo normal!"
+                                else -> "Tu gasto promedio en ${categoryName ?: "esta categoría"} es de ${com.example.admin_ingresos.data.CurrencyUtils.format(trendAverage, context)}. Este gasto está dentro de lo normal."
                             }
                         }
                     } catch (e: Exception) {
@@ -213,7 +213,7 @@ fun TransactionDetailScreen(
                                 Text(categoryName ?: "Sin categoría", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = com.example.admin_ingresos.ui.theme.TextPrimary)
 
                                 // Amount and type row
-                                val formatted = NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(tx.amount)
+                                val formatted = com.example.admin_ingresos.data.CurrencyUtils.format(tx.amount, context)
                                 val amountColor = when {
                                     tx.type.equals(com.example.admin_ingresos.data.Transaction.TYPE_INCOME, ignoreCase = true) -> MaterialTheme.colorScheme.primary
                                     tx.type.equals(com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER, ignoreCase = true) -> Color(0xFF42A5F5)
@@ -327,7 +327,7 @@ fun TransactionDetailScreen(
                                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                     Column {
                                         Text("Último mes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Text(NumberFormat.getCurrencyInstance(Locale("es", "CO")).apply { maximumFractionDigits = 0 }.format(last), style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
+                                        Text(com.example.admin_ingresos.data.CurrencyUtils.format(last, context, maxFractionDigits = 0), style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
                                     }
 
                                     Column(horizontalAlignment = Alignment.End) {
@@ -345,7 +345,7 @@ fun TransactionDetailScreen(
                                         }
 
                                         Spacer(modifier = Modifier.height(6.dp))
-                                        Text("Promedio: ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).apply { maximumFractionDigits = 0 }.format(avg)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text("Promedio: ${com.example.admin_ingresos.data.CurrencyUtils.format(avg, context, maxFractionDigits = 0)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
 
@@ -354,8 +354,8 @@ fun TransactionDetailScreen(
                                     when {
                                         avg <= 0.0 -> "Sin datos suficientes para generar un insight."
                                         pctChange == null -> "No hay datos anteriores para comparación."
-                                        pctChange > 0 -> "Este mes ahorraste ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(last)} — ${"%.0f".format(pctChange)}% más que el mes anterior."
-                                        pctChange < 0 -> "Este mes ahorraste ${NumberFormat.getCurrencyInstance(Locale("es", "CO")).format(last)} — ${"%.0f".format(-pctChange)}% menos que el mes anterior."
+                                        pctChange > 0 -> "Este mes ahorraste ${com.example.admin_ingresos.data.CurrencyUtils.format(last, context)} — ${"%.0f".format(pctChange)}% más que el mes anterior."
+                                        pctChange < 0 -> "Este mes ahorraste ${com.example.admin_ingresos.data.CurrencyUtils.format(last, context)} — ${"%.0f".format(-pctChange)}% menos que el mes anterior."
                                         else -> "Tu ahorro está estable respecto al periodo anterior."
                                     }
                                 } else {

@@ -201,7 +201,7 @@ fun ProfileScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.Default.ArrowBack,
-                            contentDescription = "Volver",
+                            contentDescription = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.back),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -243,14 +243,14 @@ fun ProfileScreen(
                                 if (pickedAvatarUri != null) {
                                     Image(
                                         painter = rememberAsyncImagePainter(pickedAvatarUri),
-                                        contentDescription = "Avatar del usuario",
+                                        contentDescription = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_user_avatar),
                                         modifier = Modifier.size(92.dp).clip(CircleShape),
                                         contentScale = ContentScale.Crop
                                     )
                                 } else {
                                     Icon(
                                         LucideIconMapper.Navigation.profile,
-                                        contentDescription = "Avatar por defecto",
+                                        contentDescription = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_default_avatar),
                                         tint = MaterialTheme.colorScheme.onPrimary,
                                         modifier = Modifier.size(44.dp)
                                     )
@@ -275,7 +275,7 @@ fun ProfileScreen(
                             ) {
                                 Icon(
                                     LucideIconMapper.Navigation.upload,
-                                    contentDescription = "Cambiar avatar",
+                                    contentDescription = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_change_avatar),
                                     tint = MaterialTheme.colorScheme.onSurface
                                 )
                             }
@@ -299,7 +299,7 @@ fun ProfileScreen(
                                 ) {
                                     Icon(
                                         LucideIconMapper.Navigation.delete,
-                                        contentDescription = "Quitar avatar",
+                                        contentDescription = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_remove_avatar),
                                         tint = MaterialTheme.colorScheme.error
                                     )
                                 }
@@ -311,13 +311,13 @@ fun ProfileScreen(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
-                                text = if (editName.isNotBlank()) editName else "Usuario",
+                                text = if (editName.isNotBlank()) editName else androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.app_name),
                                 style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.onBackground,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = if (editEmail.isNotBlank()) editEmail else "—",
+                                text = if (editEmail.isNotBlank()) editEmail else androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_empty_placeholder),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -344,7 +344,7 @@ fun ProfileScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Cuenta",
+                                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.nav_dashboard),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onBackground,
                                 fontWeight = FontWeight.SemiBold
@@ -354,7 +354,7 @@ fun ProfileScreen(
                         OutlinedTextField(
                             value = editName,
                             onValueChange = { editName = it },
-                            label = { Text("Nombre") },
+                            label = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.categories_name)) },
                             singleLine = true,
                             colors = TextFieldDefaults.outlinedTextFieldColors(containerColor = Color.Transparent),
                             textStyle = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary)
@@ -362,7 +362,7 @@ fun ProfileScreen(
                         OutlinedTextField(
                             value = editEmail,
                             onValueChange = { editEmail = it },
-                            label = { Text("Correo electrónico") },
+                            label = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_description)) },
                             singleLine = true,
                             colors = TextFieldDefaults.outlinedTextFieldColors(containerColor = Color.Transparent),
                             textStyle = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary)
@@ -370,7 +370,7 @@ fun ProfileScreen(
                         OutlinedTextField(
                             value = editPhone,
                             onValueChange = { editPhone = it },
-                            label = { Text("Teléfono") },
+                            label = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_date)) },
                             singleLine = true,
                             colors = TextFieldDefaults.outlinedTextFieldColors(containerColor = Color.Transparent),
                             textStyle = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary)
@@ -397,7 +397,7 @@ fun ProfileScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Preferencias",
+                                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.settings_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = TextPrimary,
                                 fontWeight = FontWeight.SemiBold
@@ -414,7 +414,7 @@ fun ProfileScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Moneda: $editCurrency",
+                                    text = "${androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.settings_currency)}: $editCurrency",
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                                 DropdownMenuDemo(
@@ -442,13 +442,13 @@ fun ProfileScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Idioma: $editLanguage",
+                                    text = "${androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.onboarding_next)}: $editLanguage",
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                                 DropdownMenuDemo(
                                     options = listOf("es", "en", "pt", "fr", "de"),
                                     selected = editLanguage,
-                                    onSelected = { editLanguage = it })
+                                    onSelected = { selection -> editLanguage = selection })
                             }
                         }
                         Row(
@@ -457,7 +457,7 @@ fun ProfileScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Modo oscuro",
+                                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.settings_theme),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Switch(
@@ -483,7 +483,7 @@ fun ProfileScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "cambia a un fondo oscuro antes de activar",
+                                    text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.loading),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -501,7 +501,7 @@ fun ProfileScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "Cambia a un fondo claro antes de desactivar.",
+                                    text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.loading),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -513,7 +513,7 @@ fun ProfileScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Notificaciones",
+                                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.settings_notifications),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Switch(
@@ -542,7 +542,7 @@ fun ProfileScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Personalización",
+                                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_customization),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onBackground,
                                 fontWeight = FontWeight.SemiBold
@@ -550,12 +550,12 @@ fun ProfileScreen(
                         }
 
                         Text(
-                            text = "Color de fondo",
+                            text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_background_color),
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Temas oscuros",
+                            text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_dark_themes),
                             color = MaterialTheme.colorScheme.onBackground,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -619,7 +619,7 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "Temas claros",
+                            text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_light_themes),
                             color = MaterialTheme.colorScheme.onBackground,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -679,7 +679,7 @@ fun ProfileScreen(
                             }
                         }
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = "Color de tema", color = MaterialTheme.colorScheme.onBackground)
+                        Text(text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_theme_color), color = MaterialTheme.colorScheme.onBackground)
                         Spacer(modifier = Modifier.height(6.dp))
                         val primaryColorInt by profileVm.primaryColor.collectAsState()
                         val primaryOptions = listOf(
@@ -775,7 +775,7 @@ fun ProfileScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Seguridad",
+                                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_security),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = TextPrimary,
                                 fontWeight = FontWeight.SemiBold
@@ -786,7 +786,7 @@ fun ProfileScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = "Huella dactilar", color = TextPrimary)
+                            Text(text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_fingerprint), color = TextPrimary)
                             val fpEnabled = editFingerprintEnabled
                             Switch(
                                 checked = fpEnabled,
@@ -799,7 +799,7 @@ fun ProfileScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = "PIN de seguridad", color = TextPrimary)
+                            Text(text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_pin), color = TextPrimary)
                             Button(
                                 onClick = { showPinDialog = true },
                                 colors = ButtonDefaults.buttonColors(
@@ -807,7 +807,7 @@ fun ProfileScreen(
                                     contentColor = MaterialTheme.colorScheme.onPrimary
                                 )
                             ) {
-                                Text("Configurar PIN")
+                                Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_configure_pin))
                             }
                         }
                     }
@@ -832,13 +832,13 @@ fun ProfileScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Ayuda y soporte",
+                                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_help_support),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = TextPrimary,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
-                        Text(text = "Preguntas frecuentes", color = TextPrimary)
+                        Text(text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_faq), color = TextPrimary)
                         Spacer(modifier = Modifier.height(8.dp))
                         val ctx = LocalContext.current
                         Button(
@@ -854,7 +854,7 @@ fun ProfileScreen(
                                 contentColor = MaterialTheme.colorScheme.onPrimary
                             )
                         ) {
-                            Text("Contactar soporte")
+                            Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_contact_support))
                         }
                     }
                 }
@@ -889,7 +889,7 @@ fun ProfileScreen(
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         )
                     ) {
-                        Text("Guardar")
+                        Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.save))
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     OutlinedButton(
@@ -899,7 +899,7 @@ fun ProfileScreen(
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
                     ) {
-                        Text("Eliminar cuenta")
+                        Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.delete))
                     }
                 }
 
@@ -910,7 +910,7 @@ fun ProfileScreen(
                         onDismissRequest = { showDeleteDialog = false },
                         title = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.confirm_delete_profile)) },
                         text = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.delete_profile_message)) },
-                        confirmButton = {
+                            confirmButton = {
                             Button(
                                 onClick = {
                                     profileVm.signOut()
@@ -921,26 +921,26 @@ fun ProfileScreen(
                                     containerColor = MaterialTheme.colorScheme.error,
                                     contentColor = Color.White
                                 )
-                            ) { Text("Eliminar") }
+                            ) { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.delete)) }
                         },
-                        dismissButton = {
+                            dismissButton = {
                             OutlinedButton(
                                 onClick = { showDeleteDialog = false },
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
-                            ) { Text("Cancelar") }
+                            ) { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.cancel)) }
                         })
                 }
 
                 if (showPinDialog) {
                     ThemedAlertDialog(
                         onDismissRequest = { showPinDialog = false },
-                        title = { Text("Configurar PIN") },
+                        title = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.onboarding_get_started)) },
                         text = {
                             Column {
                                 OutlinedTextField(
                                     value = pinInput,
                                     onValueChange = { pinInput = it },
-                                    label = { Text("PIN (4 dígitos)") })
+                                    label = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_amount)) })
                             }
                         },
                         confirmButton = {
@@ -975,7 +975,7 @@ fun ProfileScreen(
                                     containerColor = MaterialTheme.colorScheme.primary,
                                     contentColor = MaterialTheme.colorScheme.onPrimary
                                 )
-                            ) { Text("Guardar") }
+                            ) { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.save)) }
                         },
                         dismissButton = {
                             OutlinedButton(

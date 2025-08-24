@@ -950,10 +950,9 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                                 onClick = { onAmountChange(quickAmount) },
                                 label = {
                                     Text(
-                                        text = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
-                                            .format(quickAmount.toDouble()),
-                                        style = MaterialTheme.typography.bodySmall
-                                    )
+                                                text = com.example.admin_ingresos.data.CurrencyUtils.format(quickAmount.toDouble(), LocalContext.current),
+                                                style = MaterialTheme.typography.bodySmall
+                                            )
                                 },
                                 selected = false,
                                 modifier = Modifier.weight(1f)

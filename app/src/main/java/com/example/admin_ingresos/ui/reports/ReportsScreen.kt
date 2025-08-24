@@ -1061,7 +1061,8 @@ fun IncomeVsExpenseTrendChart(reportData: ReportData) {
 
 @Composable
 fun SavingsGrowthChart(reportData: ReportData) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+    // use centralized currency formatter
+    val formatter = com.example.admin_ingresos.data.CurrencyUtils.getCurrencyFormatter(LocalContext.current)
 
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -1216,7 +1217,8 @@ fun LineChart(data: List<TrendDataPoint>, showTransfers: Boolean = true, modifie
     val selectedIndex = remember { mutableStateOf(-1) }
     val canvasWidth = remember { mutableStateOf(0f) }
     val density = LocalDensity.current
-    val formatter = remember { java.text.NumberFormat.getCurrencyInstance(Locale("es", "PE")) }
+    val context = LocalContext.current
+    val formatter = remember(context) { com.example.admin_ingresos.data.CurrencyUtils.getCurrencyFormatter(context) }
     val sdf = remember { SimpleDateFormat("dd MMM", Locale("es", "PE")) }
 
     if (data.isEmpty()) {
@@ -1353,7 +1355,7 @@ fun LineChart(data: List<TrendDataPoint>, showTransfers: Boolean = true, modifie
 
 @Composable
 fun TendenciasInsights(reportData: ReportData) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+    val formatter = com.example.admin_ingresos.data.CurrencyUtils.getCurrencyFormatter(LocalContext.current)
 
     Column {
         // compute simple deltas from the trend (last vs previous point). Falls back to 0.
