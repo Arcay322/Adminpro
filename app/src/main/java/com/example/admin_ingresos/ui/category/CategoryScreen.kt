@@ -475,7 +475,7 @@ fun CategoryScreen(
 
                                                     val amountColor = if (category.type == CategoryType.GASTO) ExpenseRed else AccentVibrantStart
                                                     Text(
-                                                        text = "$${String.format("%.2f", stats?.totalAmount ?: 0.0)}",
+                                                        text = com.example.admin_ingresos.data.CurrencyUtils.format(stats?.totalAmount ?: 0.0, LocalContext.current),
                                                         style = MaterialTheme.typography.bodySmall,
                                                         color = amountColor,
                                                         fontWeight = FontWeight.SemiBold,
@@ -646,7 +646,7 @@ fun CategoryScreen(
 
                                                     val amountColor = if (category.type == CategoryType.GASTO) ExpenseRed else AccentVibrantStart
                                                     Text(
-                                                        text = "$${String.format("%.2f", stats?.totalAmount ?: 0.0)}",
+                                                        text = com.example.admin_ingresos.data.CurrencyUtils.format(stats?.totalAmount ?: 0.0, LocalContext.current),
                                                         style = MaterialTheme.typography.bodySmall,
                                                         color = amountColor, // Color aplicado
                                                         fontWeight = FontWeight.SemiBold,
@@ -1021,7 +1021,7 @@ private fun SavingsGoalsSummary(
                                 )
 
                                 Text(
-                                    text = "$${String.format("%.2f", txSum)}",
+                                    text = com.example.admin_ingresos.data.CurrencyUtils.format(txSum, LocalContext.current),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = AccentVibrantStart,
                                     fontWeight = FontWeight.SemiBold,

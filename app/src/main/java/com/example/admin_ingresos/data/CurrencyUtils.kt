@@ -6,14 +6,38 @@ import java.util.Currency
 import java.util.Locale
 
 object CurrencyUtils {
+    private fun localeForCurrency(code: String): Locale = when (code.uppercase()) {
+        "PEN" -> Locale("es", "PE")
+        "USD" -> Locale.US
+        "EUR" -> Locale("es", "ES")
+        "GBP" -> Locale("en", "GB")
+        "JPY" -> Locale("ja", "JP")
+        "INR" -> Locale("en", "IN")
+        "BRL" -> Locale("pt", "BR")
+        "MXN" -> Locale("es", "MX")
+        "CAD" -> Locale("en", "CA")
+        "AUD" -> Locale("en", "AU")
+        "CNY" -> Locale("zh", "CN")
+        "CHF" -> Locale("de", "CH")
+        else -> Locale.getDefault()
+    }
     fun getCurrencyFormatter(context: Context): NumberFormat {
         val prefs = PreferencesManager(context)
         val code = prefs.currency.ifBlank { "USD" }
-        val formatter = NumberFormat.getCurrencyInstance()
+        // Try to choose a Locale that corresponds to the currency so NumberFormat
+        // can render the appropriate symbol (for example PEN -> "S/").
+        val locale = localeForCurrency(code)
+
+        val formatter = try {
+            NumberFormat.getCurrencyInstance(locale)
+        } catch (e: Exception) {
+            NumberFormat.getCurrencyInstance()
+        }
+
         try {
             formatter.currency = Currency.getInstance(code)
         } catch (e: Exception) {
-            // fallback: leave formatter as default
+            // fallback: leave formatter as created
         }
         return formatter
     }
@@ -28,35 +52,39 @@ object CurrencyUtils {
             NumberFormat.getNumberInstance().format(amount)
         }
 
-        // If user has a custom symbol set in prefs (e.g., "S/"), prefer it.
+        // We want the symbol ALWAYS prefixed. Build a locale-aware numeric string then prefix the symbol.
+        val code = prefs.currency.ifBlank { "USD" }
+        val currency = try { Currency.getInstance(code) } catch (e: Exception) { null }
+
+        // Prefer user-provided symbol if present
         val userSymbol = prefs.currencySymbol
-        if (!userSymbol.isNullOrBlank()) {
-            // Try to replace the formatter's symbol or currency code with the user's symbol.
-            val code = prefs.currency.ifBlank { "USD" }
-            val currency = try { Currency.getInstance(code) } catch (e: Exception) { null }
-            val candidates = mutableListOf<String>()
-            currency?.let {
-                try {
-                    candidates.add(it.getSymbol(Locale.getDefault()))
-                } catch (_: Exception) {}
-                try { candidates.add(it.currencyCode) } catch (_: Exception) {}
+        val symbol = if (!userSymbol.isNullOrBlank()) {
+            userSymbol
+        } else {
+            // try currency symbol for the formatter's locale
+            try {
+                if (currency != null) currency.getSymbol(Locale.getDefault()) else formatter.currency?.getSymbol(Locale.getDefault()) ?: currency?.currencyCode ?: ""
+            } catch (e: Exception) {
+                currency?.currencyCode ?: ""
             }
-
-            var result = formatted
-            candidates.distinct().forEach { c ->
-                if (!c.isNullOrBlank()) result = result.replace(c, userSymbol)
-            }
-
-            // If no replacement happened, as a last resort prefix the numeric portion with the user symbol.
-            if (result == formatted) {
-                // Extract numeric characters and keep formatting (very conservative): remove everything except digits, grouping, decimal and minus
-                val numberOnly = NumberFormat.getNumberInstance().format(amount)
-                return "$userSymbol$numberOnly"
-            }
-
-            return result
         }
 
-        return formatted
+        // Create a number formatter matching the currency formatter's fraction settings but without the currency symbol
+        val numberFormatter = try {
+            val nf = NumberFormat.getNumberInstance(localeForCurrency(code))
+            nf.minimumFractionDigits = formatter.minimumFractionDigits
+            nf.maximumFractionDigits = formatter.maximumFractionDigits
+            nf
+        } catch (e: Exception) {
+            val nf = NumberFormat.getNumberInstance()
+            nf.minimumFractionDigits = formatter.minimumFractionDigits
+            nf.maximumFractionDigits = formatter.maximumFractionDigits
+            nf
+        }
+
+        val numeric = try { numberFormatter.format(amount) } catch (_: Exception) { amount.toString() }
+
+        // Ensure there's a space between symbol and number for readability (e.g. "S/ 1.234,56")
+        return if (symbol.isBlank()) numeric else "$symbol $numeric"
     }
 }

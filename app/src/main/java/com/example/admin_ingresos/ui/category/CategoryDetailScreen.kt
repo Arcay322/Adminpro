@@ -241,7 +241,7 @@ private fun CategoryDetailHeader(
                     }
 
                     Text(
-                        text = formatter.format(totalAmount),
+                        text = com.example.admin_ingresos.data.CurrencyUtils.format(totalAmount, LocalContext.current),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = headlineAmountColor
@@ -270,7 +270,7 @@ private fun CategoryDetailHeader(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     // Current saved amount colored according to progress
                     Text(
-                        text = "${formatter.format(totalAmount)}",
+                        text = "${com.example.admin_ingresos.data.CurrencyUtils.format(totalAmount, LocalContext.current)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = progressColor,
                         fontWeight = FontWeight.SemiBold
@@ -278,7 +278,7 @@ private fun CategoryDetailHeader(
 
                     // Show target and percentage; percentage colored according to progress
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "${formatter.format(target)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                        Text(text = "${com.example.admin_ingresos.data.CurrencyUtils.format(target, LocalContext.current)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(text = "${(progress * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = progressColor)
                     }
@@ -287,8 +287,7 @@ private fun CategoryDetailHeader(
                 Spacer(modifier = Modifier.height(16.dp))
                 BudgetProgressInfo(
                     budget = activeBudget,
-                    spentAmount = totalAmount,
-                    formatter = formatter
+                    spentAmount = totalAmount
                 )
             }
         }
@@ -299,8 +298,8 @@ private fun CategoryDetailHeader(
 private fun BudgetProgressInfo(
     budget: Budget,
     spentAmount: Double,
-    formatter: NumberFormat
 ) {
+    // formatter parameter removed
     val progress = (spentAmount / budget.amount).toFloat().coerceIn(0f, 1f)
     // Percentage text color interpolates between IncomeGreen (0f) and ExpenseRed (1f) for budgets (green -> red)
     val pctColor = lerp(IncomeGreen, ExpenseRed, progress)
@@ -311,7 +310,7 @@ private fun BudgetProgressInfo(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Presupuesto: ${formatter.format(budget.amount)}",
+                text = "Presupuesto: ${com.example.admin_ingresos.data.CurrencyUtils.format(budget.amount, LocalContext.current)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = TextSecondary
             )

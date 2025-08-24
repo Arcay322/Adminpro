@@ -36,13 +36,13 @@ fun MainBalanceCards(
     expensesSubtitle: String? = "Este mes",
     transfersSubtitle: String? = "Este mes"
 ) {
-    val prefs = com.example.admin_ingresos.data.PreferencesManager(LocalContext.current)
-    val formatter = com.example.admin_ingresos.data.CurrencyUtils.getCurrencyFormatter(LocalContext.current)
+    val context = LocalContext.current
+    val prefs = com.example.admin_ingresos.data.PreferencesManager(context)
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = modifier) {
         AdvancedBalanceCard(
             title = "Balance Total",
-            amount = formatter.format(currentBalance),
+            amount = com.example.admin_ingresos.data.CurrencyUtils.format(currentBalance, context),
             subtitle = balanceSubtitle,
             icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getNavigationIcon("DollarSign"),
             onClick = onViewDetails,
@@ -56,7 +56,7 @@ fun MainBalanceCards(
             ) {
                 InsightCard(
                     title = "Ingresos",
-                    value = formatter.format(monthlyIncome).replace(" ", "\u00A0"),
+                    value = com.example.admin_ingresos.data.CurrencyUtils.format(monthlyIncome, context).replace(" ", "\u00A0"),
                     subtitle = incomeSubtitle ?: "Este mes",
                     icon = Icons.AutoMirrored.Filled.TrendingUp,
                     color = IncomeGreen,
@@ -65,7 +65,7 @@ fun MainBalanceCards(
 
                 InsightCard(
                     title = "Gastos",
-                    value = formatter.format(monthlyExpenses).replace(" ", "\u00A0"),
+                    value = com.example.admin_ingresos.data.CurrencyUtils.format(monthlyExpenses, context).replace(" ", "\u00A0"),
                     subtitle = expensesSubtitle ?: "Este mes",
                     icon = Icons.AutoMirrored.Filled.TrendingDown,
                     color = ExpenseRed,
@@ -76,7 +76,7 @@ fun MainBalanceCards(
             Row(modifier = Modifier.fillMaxWidth()) {
                 InsightCard(
                     title = "Ahorro",
-                    value = formatter.format(monthlyTransfers).replace(" ", "\u00A0"),
+                    value = com.example.admin_ingresos.data.CurrencyUtils.format(monthlyTransfers, context).replace(" ", "\u00A0"),
                     subtitle = transfersSubtitle ?: "Este mes",
                     icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getIconFromCategoryName("ahorros"),
                     color = Color(0xFF42A5F5),

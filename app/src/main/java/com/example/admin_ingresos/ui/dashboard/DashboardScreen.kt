@@ -657,7 +657,7 @@ private fun DonutChart(
     modifier: Modifier = Modifier,
     totalAmount: Double = 0.0
 ) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+    val context = LocalContext.current
 
     Box(
         modifier = modifier,
@@ -713,7 +713,7 @@ private fun DonutChart(
                 fontWeight = FontWeight.Medium
             )
             Text(
-                text = if (totalAmount > 0) formatter.format(totalAmount) else "S/0.00",
+                text = if (totalAmount > 0) com.example.admin_ingresos.data.CurrencyUtils.format(totalAmount, context) else com.example.admin_ingresos.data.CurrencyUtils.format(0.0, context),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary,
@@ -727,7 +727,7 @@ private fun DonutChart(
 
 @Composable
 private fun CategoryLegendItem(category: CategoryData, amount: Double = 0.0) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+    val context = LocalContext.current
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -750,7 +750,7 @@ private fun CategoryLegendItem(category: CategoryData, amount: Double = 0.0) {
                 softWrap = false
             )
             Text(
-                text = if (amount > 0) formatter.format(amount) else "${category.percentage.toInt()}%",
+                text = if (amount > 0) com.example.admin_ingresos.data.CurrencyUtils.format(amount, context) else "${category.percentage.toInt()}%",
                 fontSize = 11.sp,
                 color = TextSecondary,
                 maxLines = 1,
@@ -768,7 +768,7 @@ private fun TrendsAndInsights(
     expenseChangePercent: Double = 0.0,
     categoryExpenses: List<CategoryExpense> = emptyList()
 ) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+    val context = LocalContext.current
     // compute simple savings rate and delta using provided change percents
     val savingsRate = if (monthlyIncome > 0) ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 else 0.0
     val prevIncome = if (incomeChangePercent != 0.0) monthlyIncome / (1 + (incomeChangePercent / 100.0)) else monthlyIncome
@@ -877,7 +877,7 @@ private fun RecentTransactionsSection(
 
 @Composable
 private fun DashboardTransactionItemCard(transaction: DashboardTransaction) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+    val context = LocalContext.current
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -923,9 +923,9 @@ private fun DashboardTransactionItemCard(transaction: DashboardTransaction) {
         }
 
         val amountText = when {
-            transaction.isIncome -> "+${formatter.format(transaction.amount).replace(" ", "\u00A0")}"
-            transaction.isTransfer -> formatter.format(transaction.amount).replace(" ", "\u00A0")
-            else -> "-${formatter.format(transaction.amount).replace(" ", "\u00A0")}"
+            transaction.isIncome -> "+${com.example.admin_ingresos.data.CurrencyUtils.format(transaction.amount, context).replace(" ", "\u00A0")}"
+            transaction.isTransfer -> com.example.admin_ingresos.data.CurrencyUtils.format(transaction.amount, context).replace(" ", "\u00A0")
+            else -> "-${com.example.admin_ingresos.data.CurrencyUtils.format(transaction.amount, context).replace(" ", "\u00A0")}"
         }
 
         Text(
@@ -946,7 +946,7 @@ private fun DashboardTransactionItemCard(transaction: DashboardTransaction) {
 
 @Composable
 private fun TransactionItemCard(transaction: TransactionItem) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+    val context = LocalContext.current
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -992,7 +992,7 @@ private fun TransactionItemCard(transaction: TransactionItem) {
         }
 
         Text(
-            text = "${if (transaction.isIncome) "+" else "-"}${formatter.format(transaction.amount)}",
+            text = "${if (transaction.isIncome) "+" else "-"}${com.example.admin_ingresos.data.CurrencyUtils.format(transaction.amount, context)}",
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
             color = if (transaction.isIncome) IncomeGreen else ExpenseRed
@@ -1141,7 +1141,7 @@ fun SavingsGoalCard(
     onAddMoney: ((Double) -> Unit)? = null
 ) {
     val progress = goal.progressPercentage
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+    val context = LocalContext.current
     val goalColor = Color(android.graphics.Color.parseColor(goal.color))
     var showAddMoneyDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
@@ -1248,7 +1248,7 @@ fun SavingsGoalCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = formatter.format(goal.currentAmount),
+                    text = com.example.admin_ingresos.data.CurrencyUtils.format(goal.currentAmount, context),
                     fontSize = 12.sp,
                     color = TextSecondary,
                     fontWeight = FontWeight.Medium
@@ -1261,7 +1261,7 @@ fun SavingsGoalCard(
                     color = if (goal.isCompleted) com.example.admin_ingresos.ui.theme.IncomeGreen else pctColor
                 )
                 Text(
-                    text = formatter.format(goal.targetAmount),
+                    text = com.example.admin_ingresos.data.CurrencyUtils.format(goal.targetAmount, context),
                     fontSize = 12.sp,
                     color = TextSecondary,
                     fontWeight = FontWeight.Medium

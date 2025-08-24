@@ -539,7 +539,7 @@ fun FinancialSummary(reportData: ReportData) {
         // Large balance card first (like the design samples)
         BalanceCardLarge(
             title = "Balance Total",
-            amount = formatter.format(reportData.netSavings).replace(" ", "\u00A0"),
+            amount = com.example.admin_ingresos.data.CurrencyUtils.format(reportData.netSavings, LocalContext.current).replace(" ", "\u00A0"),
             subtitle = "Actualizado ahora",
             modifier = Modifier.fillMaxWidth(),
             icon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getNavigationIcon("DollarSign")
@@ -549,7 +549,7 @@ fun FinancialSummary(reportData: ReportData) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 MiniSummaryCard(
                     title = "Ingresos",
-                    amount = formatter.format(reportData.totalIncome).replace(" ", "\u00A0"),
+                    amount = com.example.admin_ingresos.data.CurrencyUtils.format(reportData.totalIncome, LocalContext.current).replace(" ", "\u00A0"),
                     color = IncomeGreen,
                     modifier = Modifier.weight(1f),
                     leadingIcon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon(com.example.admin_ingresos.data.Transaction.TYPE_INCOME)
@@ -557,7 +557,7 @@ fun FinancialSummary(reportData: ReportData) {
 
                 MiniSummaryCard(
                     title = "Gastos",
-                    amount = formatter.format(reportData.totalExpenses).replace(" ", "\u00A0"),
+                    amount = com.example.admin_ingresos.data.CurrencyUtils.format(reportData.totalExpenses, LocalContext.current).replace(" ", "\u00A0"),
                     color = ExpenseRed,
                     modifier = Modifier.weight(1f),
                     leadingIcon = com.example.admin_ingresos.ui.icons.LucideIconMapper.getTransactionTypeIcon(com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE)
@@ -565,7 +565,7 @@ fun FinancialSummary(reportData: ReportData) {
 
                 MiniSummaryCard(
                     title = "Ahorro",
-                    amount = formatter.format(reportData.totalTransfers).replace(" ", "\u00A0"),
+                    amount = com.example.admin_ingresos.data.CurrencyUtils.format(reportData.totalTransfers, LocalContext.current).replace(" ", "\u00A0"),
                     color = Color(0xFF42A5F5),
                     modifier = Modifier.weight(1f)
                 )
@@ -835,7 +835,7 @@ private fun DonutChart(
     modifier: Modifier = Modifier,
     totalAmount: Double = 0.0
 ) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+    // Use centralized CurrencyUtils to respect user prefs and ensure symbol prefix
 
     Box(
         modifier = modifier,
@@ -891,7 +891,7 @@ private fun DonutChart(
                 fontWeight = FontWeight.Medium
             )
             Text(
-                text = if (totalAmount > 0) formatter.format(totalAmount) else "S/0.00",
+                text = if (totalAmount > 0) com.example.admin_ingresos.data.CurrencyUtils.format(totalAmount, LocalContext.current) else "S/0.00",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary,
@@ -905,7 +905,7 @@ private fun DonutChart(
 
 @Composable
 private fun CategoryLegendItem(category: CategoryData, amount: Double = 0.0) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+    // Use centralized CurrencyUtils for consistent formatting
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -928,7 +928,7 @@ private fun CategoryLegendItem(category: CategoryData, amount: Double = 0.0) {
                 softWrap = false
             )
             Text(
-                text = if (amount > 0) formatter.format(amount) else "${category.percentage.toInt()}%",
+                text = if (amount > 0) com.example.admin_ingresos.data.CurrencyUtils.format(amount, LocalContext.current) else "${category.percentage.toInt()}%",
                 fontSize = 11.sp,
                 color = TextSecondary,
                 maxLines = 1,
@@ -1016,9 +1016,9 @@ fun IncomeVsExpenseTrendChart(reportData: ReportData) {
                         }
                         // Paragraph 1: net balance summary
                         if (net > 0.0) {
-                            Text(text = "¡Excelente! Este mes tus ingresos superaron a tus gastos en ${formatter.format(net)}.", color = TextPrimary, fontWeight = FontWeight.Bold)
+                            Text(text = "¡Excelente! Este mes tus ingresos superaron a tus gastos en ${com.example.admin_ingresos.data.CurrencyUtils.format(net, LocalContext.current)}.", color = TextPrimary, fontWeight = FontWeight.Bold)
                         } else if (net < 0.0) {
-                            Text(text = "Ten cuidado, tus gastos han superado tus ingresos en ${formatter.format(-net)} este mes.", color = TextPrimary, fontWeight = FontWeight.Bold)
+                            Text(text = "Ten cuidado, tus gastos han superado tus ingresos en ${com.example.admin_ingresos.data.CurrencyUtils.format(-net, LocalContext.current)} este mes.", color = TextPrimary, fontWeight = FontWeight.Bold)
                         } else {
                             Text(text = "Ingresos y gastos están equilibrados este mes.", color = TextPrimary, fontWeight = FontWeight.Bold)
                         }
@@ -1151,7 +1151,7 @@ fun SavingsGrowthChart(reportData: ReportData) {
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                 }
-                                Text(text = "Saldo actual: ${formatter.format(last.amount)}", color = TextPrimary, fontWeight = FontWeight.Bold)
+                                Text(text = "Saldo actual: ${com.example.admin_ingresos.data.CurrencyUtils.format(last.amount, LocalContext.current)}", color = TextPrimary, fontWeight = FontWeight.Bold)
                                 Spacer(modifier = Modifier.height(6.dp))
                                 if (!growthPct.isNaN()) {
                                     val pctText = if (growthPct >= 0) "+${"%.1f".format(growthPct)}%" else "${"%.1f".format(growthPct)}%"
@@ -1341,9 +1341,9 @@ fun LineChart(data: List<TrendDataPoint>, showTransfers: Boolean = true, modifie
                     Column(modifier = Modifier.padding(8.dp)) {
                         Text(text = sdf.format(Date(point.timestamp)), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = "Ingresos: ${formatter.format(point.income).replace(" ", "\u00A0")}", color = IncomeGreen, fontSize = 12.sp, maxLines = 1)
-                        Text(text = "Gastos: ${formatter.format(point.expense).replace(" ", "\u00A0")}", color = ExpenseRed, fontSize = 12.sp, maxLines = 1)
-                        if (showTransfers) Text(text = "Ahorro: ${formatter.format(point.transfers).replace(" ", "\u00A0")}", color = Color(0xFF42A5F5), fontSize = 12.sp, maxLines = 1)
+                        Text(text = "Ingresos: ${com.example.admin_ingresos.data.CurrencyUtils.format(point.income, LocalContext.current).replace(" ", "\u00A0")}", color = IncomeGreen, fontSize = 12.sp, maxLines = 1)
+                        Text(text = "Gastos: ${com.example.admin_ingresos.data.CurrencyUtils.format(point.expense, LocalContext.current).replace(" ", "\u00A0")}", color = ExpenseRed, fontSize = 12.sp, maxLines = 1)
+                        if (showTransfers) Text(text = "Ahorro: ${com.example.admin_ingresos.data.CurrencyUtils.format(point.transfers, LocalContext.current).replace(" ", "\u00A0")}", color = Color(0xFF42A5F5), fontSize = 12.sp, maxLines = 1)
                     }
                 }
             }
@@ -1366,7 +1366,7 @@ fun TendenciasInsights(reportData: ReportData) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             InsightSmallCard(
                 title = "Ingresos",
-                value = formatter.format(reportData.totalIncome).replace(" ", "\u00A0"),
+                value = com.example.admin_ingresos.data.CurrencyUtils.format(reportData.totalIncome, LocalContext.current).replace(" ", "\u00A0"),
                 percentText = calcDeltaText(incomeDelta),
                 percentColor = if (incomeDelta >= 0) IncomeGreen else ExpenseRed,
                 iconColor = IncomeGreen,
@@ -1375,7 +1375,7 @@ fun TendenciasInsights(reportData: ReportData) {
 
             InsightSmallCard(
                 title = "Gastos",
-                value = formatter.format(reportData.totalExpenses).replace(" ", "\u00A0"),
+                value = com.example.admin_ingresos.data.CurrencyUtils.format(reportData.totalExpenses, LocalContext.current).replace(" ", "\u00A0"),
                 percentText = calcDeltaText(expenseDelta),
                 percentColor = if (expenseDelta >= 0) ExpenseRed else IncomeGreen,
                 iconColor = ExpenseRed,
@@ -1388,7 +1388,7 @@ fun TendenciasInsights(reportData: ReportData) {
         // Large wide card: Ahorro actual
         InsightLargeCard(
             title = "Ahorro actual",
-            value = formatter.format(reportData.totalTransfers).replace(" ", "\u00A0"),
+            value = com.example.admin_ingresos.data.CurrencyUtils.format(reportData.totalTransfers, LocalContext.current).replace(" ", "\u00A0"),
             percentText = calcDeltaText(savingsDelta),
             percentColor = if (savingsDelta >= 0) IncomeGreen else ExpenseRed,
             iconColor = Color(0xFF42A5F5),

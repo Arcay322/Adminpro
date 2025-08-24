@@ -65,7 +65,7 @@ fun BalanceCard(
     monthlyExpenses: Double,
     balanceChange: Double
 ) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale.US)
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -87,7 +87,7 @@ fun BalanceCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = formatter.format(balance),
+                text = com.example.admin_ingresos.data.CurrencyUtils.format(balance, context),
                 style = MaterialTheme.typography.displayMedium.copy(
                     fontWeight = FontWeight.Bold
                 ),
@@ -107,7 +107,7 @@ fun BalanceCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${if (balanceChange > 0) "+" else ""}${formatter.format(balanceChange)}",
+                        text = "${if (balanceChange > 0) "+" else ""}${com.example.admin_ingresos.data.CurrencyUtils.format(balanceChange, context)}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
                     )
@@ -140,7 +140,7 @@ fun BalanceCard(
                         )
                     }
                     Text(
-                        text = formatter.format(monthlyIncome),
+                        text = com.example.admin_ingresos.data.CurrencyUtils.format(monthlyIncome, context),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold
                         ),
@@ -168,7 +168,7 @@ fun BalanceCard(
                         )
                     }
                     Text(
-                        text = formatter.format(monthlyExpenses),
+                        text = com.example.admin_ingresos.data.CurrencyUtils.format(monthlyExpenses, context),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold
                         ),
