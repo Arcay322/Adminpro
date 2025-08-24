@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CashFlow</string>
+    <string name="dashboard_title">Dashboard</string>
+    <string name="dashboard_balance">Total Balance</string>
+    <string name="dashboard_income">Income</string>
+    <string name="dashboard_expenses">Expenses</string>
+    <string name="dashboard_recent_transactions">Recent Transactions</string>
+    <string name="dashboard_view_all">View all</string>
+    <string name="dashboard_no_transactions">No recent transactions</string>
+
+    <string name="nav_dashboard">Home</string>
+    <string name="nav_budget">Budgets</string>
+    <string name="nav_categories">Categories</string>
+    <string name="nav_history">Transactions</string>
+    <string name="nav_reports">Reports</string>
+    <string name="nav_settings">Settings</string>
+
+    <string name="transaction_add">Add transaction</string>
+    <string name="transaction_income">Income</string>
+    <string name="transaction_expense">Expense</string>
+    <string name="transaction_description">Description</string>
+    <string name="transaction_amount">Amount</string>
+    <string name="transaction_category">Category</string>
+    <string name="transaction_date">Date</string>
+    <string name="transaction_save">Save</string>
+    <string name="transaction_cancel">Cancel</string>
+
+    <string name="budget_title">Budgets</string>
+    <string name="budget_create">Create budget</string>
+    <string name="budget_progress">Progress</string>
+    <string name="budget_remaining">Remaining</string>
+    <string name="budget_spent">Spent</string>
+
+    <string name="categories_title">Categories</string>
+    <string name="categories_add">Add category</string>
+    <string name="categories_edit">Edit category</string>
+    <string name="categories_delete">Delete category</string>
+    <string name="categories_name">Name</string>
+    <string name="categories_icon">Icon</string>
+    <string name="categories_color">Color</string>
+
+    <string name="reports_title">Reports</string>
+    <string name="reports_export_pdf">Export PDF</string>
+    <string name="reports_export_excel">Export Excel</string>
+    <string name="reports_period">Period</string>
+    <string name="reports_this_month">This month</string>
+    <string name="reports_last_month">Last month</string>
+    <string name="reports_custom">Custom</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_currency">Currency</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_data_management">Data Management</string>
+    <string name="settings_about">About CashFlow</string>
+
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="back">Back</string>
+    <string name="confirm">Confirm</string>
+    <string name="loading">Loading...</string>
+    <string name="error">Error</string>
+    <string name="success">Success</string>
+
+    <string name="onboarding_welcome">Welcome to CashFlow!</string>
+    <string name="onboarding_control_finances">Take control of your personal finances smartly</string>
+    <string name="onboarding_track_expenses">Track expenses and income easily</string>
+    <string name="onboarding_smart_budgets">Create smart budgets</string>
+    <string name="onboarding_detailed_reports">Get detailed reports</string>
+    <string name="onboarding_get_started">Get started</string>
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_previous">Previous</string>
+    <string name="profile_saved">Profile saved</string>
+    <string name="confirm_delete_profile">Confirm deletion</string>
+    <string name="delete_profile_message">This will remove your profile locally. Continue?</string>
+</resources>

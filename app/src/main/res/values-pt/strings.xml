@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CashFlow</string>
+    <string name="dashboard_title">Painel</string>
+    <string name="dashboard_balance">Saldo Total</string>
+    <string name="dashboard_income">Receitas</string>
+    <string name="dashboard_expenses">Despesas</string>
+    <string name="dashboard_recent_transactions">Transações Recentes</string>
+    <string name="dashboard_view_all">Ver tudo</string>
+    <string name="dashboard_no_transactions">Sem transações recentes</string>
+
+    <string name="nav_dashboard">Início</string>
+    <string name="nav_budget">Orçamentos</string>
+    <string name="nav_categories">Categorias</string>
+    <string name="nav_history">Transações</string>
+    <string name="nav_reports">Relatórios</string>
+    <string name="nav_settings">Configurações</string>
+
+    <string name="transaction_add">Adicionar transação</string>
+    <string name="transaction_income">Receita</string>
+    <string name="transaction_expense">Despesa</string>
+    <string name="transaction_description">Descrição</string>
+    <string name="transaction_amount">Valor</string>
+    <string name="transaction_category">Categoria</string>
+    <string name="transaction_date">Data</string>
+    <string name="transaction_save">Salvar</string>
+    <string name="transaction_cancel">Cancelar</string>
+
+    <string name="budget_title">Orçamentos</string>
+    <string name="budget_create">Criar orçamento</string>
+    <string name="budget_progress">Progresso</string>
+    <string name="budget_remaining">Restante</string>
+    <string name="budget_spent">Gasto</string>
+
+    <string name="categories_title">Categorias</string>
+    <string name="categories_add">Adicionar categoria</string>
+    <string name="categories_edit">Editar categoria</string>
+    <string name="categories_delete">Excluir categoria</string>
+    <string name="categories_name">Nome</string>
+    <string name="categories_icon">Ícone</string>
+    <string name="categories_color">Cor</string>
+
+    <string name="reports_title">Relatórios</string>
+    <string name="reports_export_pdf">Exportar PDF</string>
+    <string name="reports_export_excel">Exportar Excel</string>
+    <string name="reports_period">Período</string>
+    <string name="reports_this_month">Este mês</string>
+    <string name="reports_last_month">Mês passado</string>
+    <string name="reports_custom">Personalizado</string>
+
+    <string name="settings_title">Configurações</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_currency">Moeda</string>
+    <string name="settings_notifications">Notificações</string>
+    <string name="settings_data_management">Gerenciamento de dados</string>
+    <string name="settings_about">Sobre CashFlow</string>
+
+    <string name="save">Salvar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="delete">Excluir</string>
+    <string name="edit">Editar</string>
+    <string name="back">Voltar</string>
+    <string name="confirm">Confirmar</string>
+    <string name="loading">Carregando...</string>
+    <string name="error">Erro</string>
+    <string name="success">Sucesso</string>
+
+    <string name="onboarding_welcome">Bem-vindo ao CashFlow!</string>
+    <string name="onboarding_control_finances">Gerencie suas finanças pessoais de forma inteligente</string>
+    <string name="onboarding_track_expenses">Registre despesas e receitas facilmente</string>
+    <string name="onboarding_smart_budgets">Crie orçamentos inteligentes</string>
+    <string name="onboarding_detailed_reports">Obtenha relatórios detalhados</string>
+    <string name="onboarding_get_started">Começar</string>
+    <string name="onboarding_skip">Pular</string>
+    <string name="onboarding_next">Próximo</string>
+    <string name="onboarding_previous">Anterior</string>
+    <string name="profile_saved">Perfil salvo</string>
+    <string name="confirm_delete_profile">Confirmar exclusão</string>
+    <string name="delete_profile_message">Isto removerá seu perfil localmente. Continuar?</string>
+</resources>

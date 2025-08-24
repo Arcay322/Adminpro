@@ -76,6 +76,17 @@ class MainActivity : ComponentActivity() {
                 val dark = profilePrefs.getBoolean("dark_mode", false)
                 com.example.admin_ingresos.ui.theme.AppThemeManager.setForceLight(!dark)
             }
+            // Apply saved language preference (profile_prefs). This sets the app-wide locale for resources.
+            try {
+                if (profilePrefs.contains("language")) {
+                    val lang = profilePrefs.getString("language", "es") ?: "es"
+                    val locale = java.util.Locale(lang)
+                    java.util.Locale.setDefault(locale)
+                    val config = resources.configuration
+                    config.setLocale(locale)
+                    resources.updateConfiguration(config, resources.displayMetrics)
+                }
+            } catch (_: Exception) {}
         } catch (_: Exception) {}
 
         setContent {

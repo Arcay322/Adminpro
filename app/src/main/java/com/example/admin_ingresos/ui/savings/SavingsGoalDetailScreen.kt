@@ -121,7 +121,8 @@ fun SavingsGoalDetailScreen(
                     CircularProgressIndicator(color = AccentVibrantStart)
                 }
             } else {
-                val formatter = remember { NumberFormat.getCurrencyInstance(Locale("es", "ES")) }
+                // Use central CurrencyUtils for consistent formatting across locales and user-selected currency
+                val context = LocalContext.current
 
                 // Group transactions by day for sticky headers
                 val groupedTransactions = filteredTx.groupBy { tx ->
@@ -169,7 +170,7 @@ fun SavingsGoalDetailScreen(
                                         // Color del monto interpolado de rojo -> verde según progreso
                                         val headerProgress = if (goal!!.targetAmount > 0.0) (goal!!.currentAmount / goal!!.targetAmount).toFloat().coerceIn(0f, 1f) else 0f
                                         val headerColor = lerp(ExpenseRed, IncomeGreen, headerProgress)
-                                        Text(formatter.format(goal!!.currentAmount), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = headerColor)
+                                        Text(com.example.admin_ingresos.data.CurrencyUtils.format(goal!!.currentAmount, context), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = headerColor)
                                         Text("${filteredTx.size} ${if (filteredTx.size == 1) "transacción" else "transacciones"}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                                     }
                                 }
@@ -179,8 +180,7 @@ fun SavingsGoalDetailScreen(
                                     Spacer(modifier = Modifier.height(12.dp))
                                     GoalProgressInfo(
                                         targetAmount = goal!!.targetAmount,
-                                        currentAmount = goal!!.currentAmount,
-                                        formatter = formatter
+                                        currentAmount = goal!!.currentAmount
                                     )
                                 }
                             }
@@ -267,7 +267,8 @@ private fun DateHeader(date: String) {
 }
 
 @Composable
-private fun GoalProgressInfo(targetAmount: Double, currentAmount: Double, formatter: NumberFormat) {
+private fun GoalProgressInfo(targetAmount: Double, currentAmount: Double) {
+    val context = LocalContext.current
     val progress = (currentAmount / targetAmount).toFloat().coerceIn(0f, 1f)
     // Interpolate color from red -> green based on progress
     val progressColor = lerp(ExpenseRed, IncomeGreen, progress)
@@ -278,7 +279,7 @@ private fun GoalProgressInfo(targetAmount: Double, currentAmount: Double, format
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Meta: ${formatter.format(targetAmount)}",
+                text = "Meta: ${com.example.admin_ingresos.data.CurrencyUtils.format(targetAmount, context)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = TextSecondary
             )
@@ -357,7 +358,7 @@ private fun setEndOfDay(calendar: java.util.Calendar) {
 
 @Composable
 private fun TransactionRow(transaction: Transaction) {
-    val formatter = remember { java.text.NumberFormat.getCurrencyInstance(Locale("es", "ES")) }
+    val context = LocalContext.current
     val isExpense = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE
     val isIncome = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME
     val isTransfer = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER
@@ -399,7 +400,7 @@ private fun TransactionRow(transaction: Transaction) {
         }
 
         Text(
-            text = "$sign${formatter.format(absAmt)}",
+            text = com.example.admin_ingresos.data.CurrencyUtils.format(absAmt, context).let { if (sign.isNotEmpty()) sign + it else it },
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold,
             color = amountColor

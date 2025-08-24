@@ -34,7 +34,7 @@ import com.example.admin_ingresos.data.CurrencyUtils
 private fun formatLargeNumber(amount: Double): String {
     val context = LocalContext.current
     val prefs = PreferencesManager(context)
-    val formatter = CurrencyUtils.getCurrencyFormatter(context)
+    // Use CurrencyUtils to ensure consistent symbol placement and locale-aware formatting for compact numbers
     return when {
         amount >= 1_000_000 -> {
             val millions = amount / 1_000_000
@@ -44,7 +44,7 @@ private fun formatLargeNumber(amount: Double): String {
             val thousands = amount / 1_000
             "${prefs.currencySymbol}${String.format("%.1f", thousands)}K"
         }
-        else -> formatter.format(amount)
+        else -> com.example.admin_ingresos.data.CurrencyUtils.format(amount, context)
     }
 }
 
@@ -150,17 +150,17 @@ fun BudgetSummaryItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(80.dp)
     ) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = if (value.length > 8) 12.sp else 16.sp
-            ),
-            color = color,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center
-        )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = if (value.length > 8) 12.sp else 16.sp
+                ),
+                color = color,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
+            )
         Text(
             text = title,
             style = MaterialTheme.typography.bodySmall.copy(

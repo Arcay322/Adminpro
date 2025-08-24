@@ -27,7 +27,10 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.layout.ContentScale
+import android.app.Activity
+import android.content.Context
 import androidx.compose.ui.platform.LocalContext
+import java.util.Locale
 import android.content.Intent
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +50,66 @@ import com.example.admin_ingresos.ui.components.resolvedMenuContainerColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.luminance
 
+// Helper: apply a locale and recreate the current activity to apply resource changes immediately
+fun applyLocaleAndRecreate(context: Context, language: String) {
+    try {
+        val locale = when (language) {
+            "es" -> Locale("es")
+            "en" -> Locale("en")
+            "pt" -> Locale("pt")
+            "fr" -> Locale("fr")
+            "de" -> Locale("de")
+            else -> Locale.getDefault()
+        }
+        Locale.setDefault(locale)
+        val res = context.resources
+        val config = res.configuration
+        config.setLocale(locale)
+        res.updateConfiguration(config, res.displayMetrics)
+
+        (context as? Activity)?.recreate()
+    } catch (_: Exception) {
+        // best-effort
+    }
+}
+
+@Composable
+fun DropdownMenuDemo(
+    options: List<String>,
+    selected: String,
+    onSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        Button(
+            onClick = { expanded = true },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            )
+        ) {
+            Text(selected)
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                LucideIconMapper.Navigation.down,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(resolvedMenuContainerColor())
+        ) {
+            options.forEach { opt ->
+                DropdownMenuItem(
+                    text = { Text(opt) },
+                    onClick = { onSelected(opt); expanded = false })
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
@@ -54,7 +117,8 @@ fun ProfileScreen(
     onSignOut: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
-    val profileVm: ProfileViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory(context.applicationContext as Application) {})
+    val profileVm: ProfileViewModel = viewModel(factory = object :
+        androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory(context.applicationContext as Application) {})
 
     val name by profileVm.name.collectAsState()
     val email by profileVm.email.collectAsState()
@@ -68,7 +132,8 @@ fun ProfileScreen(
     val fingerprintEnabledState by profileVm.fingerprintEnabled.collectAsState()
     val backgroundColorInt by profileVm.backgroundColor.collectAsState()
     // Helper to convert ARGB int to Compose Color
-    val backgroundColorCompose = remember(backgroundColorInt) { androidx.compose.ui.graphics.Color(backgroundColorInt) }
+    val backgroundColorCompose =
+        remember(backgroundColorInt) { androidx.compose.ui.graphics.Color(backgroundColorInt) }
     val forceLightMode by profileVm.forceLight.collectAsState()
 
     var editName by remember { mutableStateOf(name) }
@@ -89,431 +154,839 @@ fun ProfileScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri != null) {
-            pickedAvatarUri = uri
-            // save a local copy and persist avatar path
-            val savedPath = AvatarUtils.saveAvatar(context, uri)
-            if (savedPath != null) {
-                profileVm.saveProfile(editName, editEmail, android.net.Uri.fromFile(java.io.File(savedPath)).toString(), editCurrency, editDarkMode, editPhone, editBio, editLanguage, editNotificationsEnabled, editFingerprintEnabled, pinInput)
-                coroutineScope.launch { snackbarHostState.showSnackbar("Avatar guardado") }
-            } else {
-                coroutineScope.launch { snackbarHostState.showSnackbar("Error al guardar avatar") }
+    val imagePicker =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            if (uri != null) {
+                pickedAvatarUri = uri
+                // save a local copy and persist avatar path
+                val savedPath = AvatarUtils.saveAvatar(context, uri)
+                if (savedPath != null) {
+                    profileVm.saveProfile(
+                        editName,
+                        editEmail,
+                        android.net.Uri.fromFile(java.io.File(savedPath)).toString(),
+                        editCurrency,
+                        editDarkMode,
+                        editPhone,
+                        editBio,
+                        editLanguage,
+                        editNotificationsEnabled,
+                        editFingerprintEnabled,
+                        pinInput
+                    )
+                    // Apply language immediately and recreate activity so translations take effect
+                    applyLocaleAndRecreate(context, editLanguage)
+                    coroutineScope.launch { snackbarHostState.showSnackbar(context.getString(com.example.admin_ingresos.R.string.profile_saved)) }
+                } else {
+                    coroutineScope.launch { snackbarHostState.showSnackbar("Error al guardar avatar") }
+                }
             }
         }
-    }
 
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { innerPadding ->
         GlassmorphismScreen(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-                .padding(innerPadding), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            // Header
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = MaterialTheme.colorScheme.primary)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp)
+                    .padding(innerPadding), verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Header
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Text(
+                        text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.settings_title),
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(48.dp))
                 }
-                Text(text = "Perfil", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.width(48.dp))
-            }
 
-            // Avatar & basic info (centered avatar on top, name/email below; actions as overlays)
-            GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhiteStrong, cornerRadius = 20.dp) {
-                Column(modifier = Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Box(modifier = Modifier.size(96.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .size(96.dp)
-                                .clip(CircleShape)
-                                .background(Brush.linearGradient(listOf(AccentVibrantStart, AccentVibrantEnd))),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (pickedAvatarUri != null) {
-                                Image(
-                                    painter = rememberAsyncImagePainter(pickedAvatarUri),
-                                    contentDescription = "Avatar del usuario",
-                                    modifier = Modifier.size(92.dp).clip(CircleShape),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
-                                Icon(LucideIconMapper.Navigation.profile, contentDescription = "Avatar por defecto", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(44.dp))
-                            }
-                        }
-
-                        // Upload icon (always available)
-                        IconButton(
-                            onClick = { imagePicker.launch("image/*") },
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .size(34.dp)
-                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.95f), shape = CircleShape)
-                                .border(width = 1.dp, color = MaterialTheme.colorScheme.outline, shape = CircleShape)
-                        ) {
-                            Icon(LucideIconMapper.Navigation.upload, contentDescription = "Cambiar avatar", tint = MaterialTheme.colorScheme.onSurface)
-                        }
-
-                        // Delete icon overlay: appears only when there's an avatar set
-                        if (pickedAvatarUri != null) {
-                            IconButton(
-                                onClick = { pickedAvatarUri = null },
+                // Avatar & basic info (centered avatar on top, name/email below; actions as overlays)
+                GlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = GlassWhiteStrong,
+                    cornerRadius = 20.dp
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(modifier = Modifier.size(96.dp)) {
+                            Box(
                                 modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .size(28.dp)
-                                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.95f), shape = CircleShape)
-                                    .border(width = 1.dp, color = MaterialTheme.colorScheme.outline, shape = CircleShape)
+                                    .size(96.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.linearGradient(
+                                            listOf(
+                                                AccentVibrantStart,
+                                                AccentVibrantEnd
+                                            )
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Icon(LucideIconMapper.Navigation.delete, contentDescription = "Quitar avatar", tint = MaterialTheme.colorScheme.error)
+                                if (pickedAvatarUri != null) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(pickedAvatarUri),
+                                        contentDescription = "Avatar del usuario",
+                                        modifier = Modifier.size(92.dp).clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Icon(
+                                        LucideIconMapper.Navigation.profile,
+                                        contentDescription = "Avatar por defecto",
+                                        tint = MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.size(44.dp)
+                                    )
+                                }
+                            }
+
+                            // Upload icon (always available)
+                            IconButton(
+                                onClick = { imagePicker.launch("image/*") },
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .size(34.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                                        shape = CircleShape
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        color = MaterialTheme.colorScheme.outline,
+                                        shape = CircleShape
+                                    )
+                            ) {
+                                Icon(
+                                    LucideIconMapper.Navigation.upload,
+                                    contentDescription = "Cambiar avatar",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+
+                            // Delete icon overlay: appears only when there's an avatar set
+                            if (pickedAvatarUri != null) {
+                                IconButton(
+                                    onClick = { pickedAvatarUri = null },
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .size(28.dp)
+                                        .background(
+                                            MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                                            shape = CircleShape
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            color = MaterialTheme.colorScheme.outline,
+                                            shape = CircleShape
+                                        )
+                                ) {
+                                    Icon(
+                                        LucideIconMapper.Navigation.delete,
+                                        contentDescription = "Quitar avatar",
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
                             }
                         }
-                    }
 
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(text = if (editName.isNotBlank()) editName else "Usuario", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold)
-                        Text(text = if (editEmail.isNotBlank()) editEmail else "—", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
-
-            // Account details (header with icon for clarity)
-            GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhite, cornerRadius = 16.dp) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = LucideIconMapper.Navigation.profile,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "Cuenta", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
-                    }
-
-                    OutlinedTextField(
-                        value = editName,
-                        onValueChange = { editName = it },
-                        label = { Text("Nombre") },
-                        singleLine = true,
-                        colors = TextFieldDefaults.outlinedTextFieldColors(containerColor = Color.Transparent),
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary)
-                    )
-                    OutlinedTextField(
-                        value = editEmail,
-                        onValueChange = { editEmail = it },
-                        label = { Text("Correo electrónico") },
-                        singleLine = true,
-                        colors = TextFieldDefaults.outlinedTextFieldColors(containerColor = Color.Transparent),
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary)
-                    )
-                    OutlinedTextField(
-                        value = editPhone,
-                        onValueChange = { editPhone = it },
-                        label = { Text("Teléfono") },
-                        singleLine = true,
-                        colors = TextFieldDefaults.outlinedTextFieldColors(containerColor = Color.Transparent),
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary)
-                    )
-                }
-            }
-
-            // Preferences (compact header with icon)
-            GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhite, cornerRadius = 16.dp) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = LucideIconMapper.getNavigationIcon("Settings"),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "Preferencias", style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.SemiBold)
-                    }
-
-                    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = "Moneda: $editCurrency", color = MaterialTheme.colorScheme.onBackground)
-                            DropdownMenuDemo(options = listOf("PEN", "USD", "EUR", "GBP", "MXN", "CLP", "COP", "ARS", "BRL", "JPY", "CNY", "CAD", "AUD", "INR", "CHF"), selected = editCurrency, onSelected = { editCurrency = it })
-                        }
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = "Idioma: $editLanguage", color = MaterialTheme.colorScheme.onBackground)
-                            DropdownMenuDemo(options = listOf("es", "en"), selected = editLanguage, onSelected = { editLanguage = it })
-                        }
-                    }
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "Modo oscuro", color = MaterialTheme.colorScheme.onBackground)
-                        Switch(checked = darkMode, onCheckedChange = {
-                            profileVm.setDarkMode(it)
-                            editDarkMode = it
-                        }, colors = SwitchDefaults.colors(checkedThumbColor = AccentVibrantStart))
-                    }
-                    // Helper message to prevent contrast issues when changing theme vs custom background
-                    if (!darkMode) {
-                        Row(modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = LucideIconMapper.Navigation.warning,
-                                contentDescription = null,
-                                tint = AccentVibrantStart,
-                                modifier = Modifier.size(14.dp)
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = if (editName.isNotBlank()) editName else "Usuario",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontWeight = FontWeight.Bold
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (editEmail.isNotBlank()) editEmail else "—",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                // Account details (header with icon for clarity)
+                GlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = GlassWhite,
+                    cornerRadius = 16.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = LucideIconMapper.Navigation.profile,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Cuenta",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        OutlinedTextField(
+                            value = editName,
+                            onValueChange = { editName = it },
+                            label = { Text("Nombre") },
+                            singleLine = true,
+                            colors = TextFieldDefaults.outlinedTextFieldColors(containerColor = Color.Transparent),
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary)
+                        )
+                        OutlinedTextField(
+                            value = editEmail,
+                            onValueChange = { editEmail = it },
+                            label = { Text("Correo electrónico") },
+                            singleLine = true,
+                            colors = TextFieldDefaults.outlinedTextFieldColors(containerColor = Color.Transparent),
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary)
+                        )
+                        OutlinedTextField(
+                            value = editPhone,
+                            onValueChange = { editPhone = it },
+                            label = { Text("Teléfono") },
+                            singleLine = true,
+                            colors = TextFieldDefaults.outlinedTextFieldColors(containerColor = Color.Transparent),
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary)
+                        )
+                    }
+                }
+
+                // Preferences (compact header with icon)
+                GlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = GlassWhite,
+                    cornerRadius = 16.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = LucideIconMapper.getNavigationIcon("Settings"),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Preferencias",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = TextPrimary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Moneda: $editCurrency",
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                DropdownMenuDemo(
+                                    options = listOf(
+                                        "PEN",
+                                        "USD",
+                                        "EUR",
+                                        "GBP",
+                                        "MXN",
+                                        "CLP",
+                                        "COP",
+                                        "ARS",
+                                        "BRL",
+                                        "JPY",
+                                        "CNY",
+                                        "CAD",
+                                        "AUD",
+                                        "INR",
+                                        "CHF"
+                                    ), selected = editCurrency, onSelected = { editCurrency = it })
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Idioma: $editLanguage",
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                DropdownMenuDemo(
+                                    options = listOf("es", "en", "pt", "fr", "de"),
+                                    selected = editLanguage,
+                                    onSelected = { editLanguage = it })
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Modo oscuro",
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Switch(
+                                checked = darkMode,
+                                onCheckedChange = {
+                                    profileVm.setDarkMode(it)
+                                    editDarkMode = it
+                                },
+                                colors = SwitchDefaults.colors(checkedThumbColor = AccentVibrantStart)
+                            )
+                        }
+                        // Helper message to prevent contrast issues when changing theme vs custom background
+                        if (!darkMode) {
+                            Row(
+                                modifier = Modifier.padding(top = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = LucideIconMapper.Navigation.warning,
+                                    contentDescription = null,
+                                    tint = AccentVibrantStart,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "cambia a un fondo oscuro antes de activar",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                            }
+                        } else {
+                            Row(
+                                modifier = Modifier.padding(top = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = LucideIconMapper.Navigation.warning,
+                                    contentDescription = null,
+                                    tint = AccentVibrantStart,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Cambia a un fondo claro antes de desactivar.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
-                    } else {
-                        Row(modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = LucideIconMapper.Navigation.warning,
-                                contentDescription = null,
-                                tint = AccentVibrantStart,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                text = "Cambia a un fondo claro antes de desactivar.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                text = "Notificaciones",
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Switch(
+                                checked = editNotificationsEnabled,
+                                onCheckedChange = { editNotificationsEnabled = it })
+                        }
+                    }
+                }
+
+                // Personalización - Color de fondo (compact header with icon)
+                GlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = GlassWhite,
+                    cornerRadius = 16.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = LucideIconMapper.getIconFromEmoji("🎨"),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Personalización",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
-                    }
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "Notificaciones", color = MaterialTheme.colorScheme.onBackground)
-                        Switch(checked = editNotificationsEnabled, onCheckedChange = { editNotificationsEnabled = it })
-                    }
-                }
-            }
 
-            // Personalización - Color de fondo (compact header with icon)
-            GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhite, cornerRadius = 16.dp) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = LucideIconMapper.getIconFromEmoji("🎨"),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
+                        Text(
+                            text = "Color de fondo",
+                            color = MaterialTheme.colorScheme.onBackground
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "Personalización", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
-                    }
-
-                    Text(text = "Color de fondo", color = MaterialTheme.colorScheme.onBackground)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Temas oscuros", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodyMedium)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    val darkSwatches = listOf(
-                        Color(0xFF000000), Color(0xFF05060a), Color(0xFF0B1220), Color(0xFF111827), Color(0xFF141925),
-                        Color(0xFF1F2937), Color(0xFF23303D), Color(0xFF2B3442), Color(0xFF3A3F47), Color(0xFF4B5563),
-                        Color(0xFF2B0B0B), Color(0xFF1B1822), Color(0xFF0B2133)
-                    )
-
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                        items(darkSwatches) { swatch ->
-                            val swatchInt = swatch.copy(alpha = 1f).toArgb()
-                            val selected = swatchInt == backgroundColorInt
-                            val checkTint = if (swatch.luminance() > 0.5f) Color.Black else Color.White
-                            Box(modifier = Modifier
-                                .padding(vertical = 4.dp)
-                                .size(if (selected) 52.dp else 44.dp)
-                                .clip(CircleShape)
-                                .background(swatch)
-                                // dark outline to keep swatches visible in light mode
-                                .border(width = 1.dp, color = Color(0xFF0B1220), shape = CircleShape)
-                                // selection highlight (keeps current behavior)
-                                .then(if (selected) Modifier.border(width = 2.dp, color = AccentVibrantStart, shape = CircleShape) else Modifier)
-                                .clickable { profileVm.setBackgroundColor(swatchInt) }
-                            ) {
-                                if (selected) Icon(LucideIconMapper.Navigation.check, contentDescription = null, tint = checkTint, modifier = Modifier.align(Alignment.Center))
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(text = "Temas claros", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodyMedium)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    val lightSwatches = listOf(
-                        Color(0xFFFFFFFF), Color(0xFFF8FAFC), Color(0xFFF1F5F9), Color(0xFFE6EEF6), Color(0xFFFDF2F8),
-                        Color(0xFFFFFBF0), Color(0xFFFFFBF7), Color(0xFFF7FEE7), Color(0xFFFDFCE7), Color(0xFFF3F4F6),
-                        Color(0xFFFFF1F2), Color(0xFFF2F8FF), Color(0xFFF2FFF7)
-                    )
-
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                        items(lightSwatches) { swatch ->
-                            val swatchInt = swatch.copy(alpha = 1f).toArgb()
-                            val selected = swatchInt == backgroundColorInt
-                            val checkTint = if (swatch.luminance() > 0.5f) Color.Black else Color.White
-                            Box(modifier = Modifier
-                                .padding(vertical = 4.dp)
-                                .size(if (selected) 52.dp else 44.dp)
-                                .clip(CircleShape)
-                                .background(swatch)
-                                .border(width = 1.dp, color = Color(0xFF0B1220), shape = CircleShape)
-                                .then(if (selected) Modifier.border(width = 2.dp, color = AccentVibrantStart, shape = CircleShape) else Modifier)
-                                .clickable { profileVm.setBackgroundColor(swatchInt) }
-                            ) {
-                                if (selected) Icon(LucideIconMapper.Navigation.check, contentDescription = null, tint = checkTint, modifier = Modifier.align(Alignment.Center))
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Color de tema", color = MaterialTheme.colorScheme.onBackground)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    val primaryColorInt by profileVm.primaryColor.collectAsState()
-                    val primaryOptions = listOf(
-                        Color(0xFF0EA5A4), Color(0xFF06B6D4), Color(0xFF00BFA5), Color(0xFF06B6D4), Color(0xFF2196F3),
-                        Color(0xFF2563EB), Color(0xFF3B82F6), Color(0xFF6366F1), Color(0xFF7C3AED), Color(0xFF8B5CF6),
-                        Color(0xFFEC4899), Color(0xFFF472B6), Color(0xFFF97316), Color(0xFFF59E0B), Color(0xFFFBBF24),
-                        Color(0xFFFCD34D), Color(0xFF10B981), Color(0xFF34D399), Color(0xFF84CC16), Color(0xFF4CAF50),
-                        Color(0xFF2DD4BF), Color(0xFF06B6D4), Color(0xFF00BCD4), Color(0xFF00ACC1), Color(0xFF00838F),
-                        Color(0xFF795548), Color(0xFF9C27B0), Color(0xFFE91E63), Color(0xFFD84315), Color(0xFF374151)
-                    )
-
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                        items(primaryOptions) { p ->
-                            val pInt = p.toArgb()
-                            val selectedPrimary = pInt == primaryColorInt
-                            Box(modifier = Modifier
-                                .padding(vertical = 4.dp)
-                                .size(if (selectedPrimary) 52.dp else 44.dp)
-                                .clip(CircleShape)
-                                .background(p)
-                                .border(width = 1.dp, color = Color(0xFF0B1220), shape = CircleShape)
-                                .clickable { profileVm.setPrimaryColor(pInt) }
-                                .then(if (selectedPrimary) Modifier.border(width = 2.dp, color = AccentVibrantStart, shape = CircleShape) else Modifier)
-                            ) {
-                                if (selectedPrimary) Icon(LucideIconMapper.Navigation.check, contentDescription = null, tint = if (p.luminance() > 0.5f) Color.Black else Color.White, modifier = Modifier.align(Alignment.Center))
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-            }
-
-            // Security (header with icon)
-            GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhite, cornerRadius = 16.dp) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = LucideIconMapper.getIconFromEmoji("🛡️"),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Temas oscuros",
+                            color = MaterialTheme.colorScheme.onBackground,
+                            style = MaterialTheme.typography.bodyMedium
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "Seguridad", style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.SemiBold)
-                    }
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "Huella dactilar", color = TextPrimary)
-                        val fpEnabled = editFingerprintEnabled
-                        Switch(checked = fpEnabled, onCheckedChange = { editFingerprintEnabled = it }, colors = SwitchDefaults.colors(checkedThumbColor = AccentVibrantStart))
-                    }
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "PIN de seguridad", color = TextPrimary)
-                                Button(onClick = { showPinDialog = true }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) {
-                                    Text("Configurar PIN")
+                        Spacer(modifier = Modifier.height(6.dp))
+                        val darkSwatches = listOf(
+                            Color(0xFF000000),
+                            Color(0xFF05060a),
+                            Color(0xFF0B1220),
+                            Color(0xFF111827),
+                            Color(0xFF141925),
+                            Color(0xFF1F2937),
+                            Color(0xFF23303D),
+                            Color(0xFF2B3442),
+                            Color(0xFF3A3F47),
+                            Color(0xFF4B5563),
+                            Color(0xFF2B0B0B),
+                            Color(0xFF1B1822),
+                            Color(0xFF0B2133)
+                        )
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(darkSwatches) { swatch ->
+                                val swatchInt = swatch.copy(alpha = 1f).toArgb()
+                                val selected = swatchInt == backgroundColorInt
+                                val checkTint =
+                                    if (swatch.luminance() > 0.5f) Color.Black else Color.White
+                                Box(
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp)
+                                        .size(if (selected) 52.dp else 44.dp)
+                                        .clip(CircleShape)
+                                        .background(swatch)
+                                        // dark outline to keep swatches visible in light mode
+                                        .border(
+                                            width = 1.dp,
+                                            color = Color(0xFF0B1220),
+                                            shape = CircleShape
+                                        )
+                                        // selection highlight (keeps current behavior)
+                                        .then(
+                                            if (selected) Modifier.border(
+                                                width = 2.dp,
+                                                color = AccentVibrantStart,
+                                                shape = CircleShape
+                                            ) else Modifier
+                                        )
+                                        .clickable { profileVm.setBackgroundColor(swatchInt) }
+                                ) {
+                                    if (selected) Icon(
+                                        LucideIconMapper.Navigation.check,
+                                        contentDescription = null,
+                                        tint = checkTint,
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
                                 }
-                    }
-                }
-            }
-
-            // Help & Support (compact header + icon)
-            GlassCard(modifier = Modifier.fillMaxWidth(), backgroundColor = GlassWhite, cornerRadius = 16.dp) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = LucideIconMapper.Navigation.info,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "Ayuda y soporte", style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.SemiBold)
-                    }
-                    Text(text = "Preguntas frecuentes", color = TextPrimary)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    val ctx = LocalContext.current
-                    Button(onClick = {
-                        val intent = Intent(Intent.ACTION_SENDTO).apply {
-                            data = Uri.parse("mailto:support@example.com")
-                            putExtra(Intent.EXTRA_SUBJECT, "Soporte Adminpro")
+                            }
                         }
-                        ctx.startActivity(intent)
-                    }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) {
-                        Text("Contactar soporte")
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Temas claros",
+                            color = MaterialTheme.colorScheme.onBackground,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        val lightSwatches = listOf(
+                            Color(0xFFFFFFFF),
+                            Color(0xFFF8FAFC),
+                            Color(0xFFF1F5F9),
+                            Color(0xFFE6EEF6),
+                            Color(0xFFFDF2F8),
+                            Color(0xFFFFFBF0),
+                            Color(0xFFFFFBF7),
+                            Color(0xFFF7FEE7),
+                            Color(0xFFFDFCE7),
+                            Color(0xFFF3F4F6),
+                            Color(0xFFFFF1F2),
+                            Color(0xFFF2F8FF),
+                            Color(0xFFF2FFF7)
+                        )
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(lightSwatches) { swatch ->
+                                val swatchInt = swatch.copy(alpha = 1f).toArgb()
+                                val selected = swatchInt == backgroundColorInt
+                                val checkTint =
+                                    if (swatch.luminance() > 0.5f) Color.Black else Color.White
+                                Box(
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp)
+                                        .size(if (selected) 52.dp else 44.dp)
+                                        .clip(CircleShape)
+                                        .background(swatch)
+                                        .border(
+                                            width = 1.dp,
+                                            color = Color(0xFF0B1220),
+                                            shape = CircleShape
+                                        )
+                                        .then(
+                                            if (selected) Modifier.border(
+                                                width = 2.dp,
+                                                color = AccentVibrantStart,
+                                                shape = CircleShape
+                                            ) else Modifier
+                                        )
+                                        .clickable { profileVm.setBackgroundColor(swatchInt) }
+                                ) {
+                                    if (selected) Icon(
+                                        LucideIconMapper.Navigation.check,
+                                        contentDescription = null,
+                                        tint = checkTint,
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(text = "Color de tema", color = MaterialTheme.colorScheme.onBackground)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        val primaryColorInt by profileVm.primaryColor.collectAsState()
+                        val primaryOptions = listOf(
+                            Color(0xFF0EA5A4),
+                            Color(0xFF06B6D4),
+                            Color(0xFF00BFA5),
+                            Color(0xFF06B6D4),
+                            Color(0xFF2196F3),
+                            Color(0xFF2563EB),
+                            Color(0xFF3B82F6),
+                            Color(0xFF6366F1),
+                            Color(0xFF7C3AED),
+                            Color(0xFF8B5CF6),
+                            Color(0xFFEC4899),
+                            Color(0xFFF472B6),
+                            Color(0xFFF97316),
+                            Color(0xFFF59E0B),
+                            Color(0xFFFBBF24),
+                            Color(0xFFFCD34D),
+                            Color(0xFF10B981),
+                            Color(0xFF34D399),
+                            Color(0xFF84CC16),
+                            Color(0xFF4CAF50),
+                            Color(0xFF2DD4BF),
+                            Color(0xFF06B6D4),
+                            Color(0xFF00BCD4),
+                            Color(0xFF00ACC1),
+                            Color(0xFF00838F),
+                            Color(0xFF795548),
+                            Color(0xFF9C27B0),
+                            Color(0xFFE91E63),
+                            Color(0xFFD84315),
+                            Color(0xFF374151)
+                        )
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(primaryOptions) { p ->
+                                val pInt = p.toArgb()
+                                val selectedPrimary = pInt == primaryColorInt
+                                Box(
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp)
+                                        .size(if (selectedPrimary) 52.dp else 44.dp)
+                                        .clip(CircleShape)
+                                        .background(p)
+                                        .border(
+                                            width = 1.dp,
+                                            color = Color(0xFF0B1220),
+                                            shape = CircleShape
+                                        )
+                                        .clickable { profileVm.setPrimaryColor(pInt) }
+                                        .then(
+                                            if (selectedPrimary) Modifier.border(
+                                                width = 2.dp,
+                                                color = AccentVibrantStart,
+                                                shape = CircleShape
+                                            ) else Modifier
+                                        )
+                                ) {
+                                    if (selectedPrimary) Icon(
+                                        LucideIconMapper.Navigation.check,
+                                        contentDescription = null,
+                                        tint = if (p.luminance() > 0.5f) Color.Black else Color.White,
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
-            }
 
-            // Actions (icons + clearer spacing)
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Button(onClick = {
-                    profileVm.setBackgroundColor(backgroundColorInt)
-                    profileVm.saveProfile(editName, editEmail, pickedAvatarUri?.toString(), editCurrency, editDarkMode, editPhone, editBio, editLanguage, editNotificationsEnabled, editFingerprintEnabled, pinInput)
-                    coroutineScope.launch { snackbarHostState.showSnackbar("Perfil guardado") }
-                }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) {
-                    Text("Guardar")
+                // Security (header with icon)
+                GlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = GlassWhite,
+                    cornerRadius = 16.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = LucideIconMapper.getIconFromEmoji("🛡️"),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Seguridad",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = TextPrimary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "Huella dactilar", color = TextPrimary)
+                            val fpEnabled = editFingerprintEnabled
+                            Switch(
+                                checked = fpEnabled,
+                                onCheckedChange = { editFingerprintEnabled = it },
+                                colors = SwitchDefaults.colors(checkedThumbColor = AccentVibrantStart)
+                            )
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "PIN de seguridad", color = TextPrimary)
+                            Button(
+                                onClick = { showPinDialog = true },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            ) {
+                                Text("Configurar PIN")
+                            }
+                        }
+                    }
                 }
-                Spacer(modifier = Modifier.width(12.dp))
-                OutlinedButton(onClick = {
-                    showDeleteDialog = true
-                }, modifier = Modifier.weight(1f), colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)) {
-                    Text("Eliminar cuenta")
+
+                // Help & Support (compact header + icon)
+                GlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = GlassWhite,
+                    cornerRadius = 16.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = LucideIconMapper.Navigation.info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Ayuda y soporte",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = TextPrimary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        Text(text = "Preguntas frecuentes", color = TextPrimary)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        val ctx = LocalContext.current
+                        Button(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                    data = Uri.parse("mailto:support@example.com")
+                                    putExtra(Intent.EXTRA_SUBJECT, "Soporte Adminpro")
+                                }
+                                ctx.startActivity(intent)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            Text("Contactar soporte")
+                        }
+                    }
                 }
-            }
 
-            // Save feedback handled via Scaffold snackbarHostState
+                // Actions (icons + clearer spacing)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Button(
+                        onClick = {
+                            profileVm.setBackgroundColor(backgroundColorInt)
+                            profileVm.saveProfile(
+                                editName,
+                                editEmail,
+                                pickedAvatarUri?.toString(),
+                                editCurrency,
+                                editDarkMode,
+                                editPhone,
+                                editBio,
+                                editLanguage,
+                                editNotificationsEnabled,
+                                editFingerprintEnabled,
+                                pinInput
+                            )
+                            // apply selected language immediately and recreate activity for full resource reload
+                            applyLocaleAndRecreate(context, editLanguage)
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Text("Guardar")
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    OutlinedButton(
+                        onClick = {
+                            showDeleteDialog = true
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Eliminar cuenta")
+                    }
+                }
 
-            if (showDeleteDialog) {
-                ThemedAlertDialog(onDismissRequest = { showDeleteDialog = false }, title = { Text("Confirmar eliminación") }, text = { Text("Esto eliminará tu perfil localmente. ¿Continuar?") }, confirmButton = {
-                    Button(onClick = {
-                        profileVm.signOut()
-                        showDeleteDialog = false
-                        onSignOut?.invoke()
-                    }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = Color.White)) { Text("Eliminar") }
-                }, dismissButton = {
-                    OutlinedButton(onClick = { showDeleteDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) { Text("Cancelar") }
-                })
-            }
+                // Save feedback handled via Scaffold snackbarHostState
 
-            if (showPinDialog) {
-                ThemedAlertDialog(onDismissRequest = { showPinDialog = false }, title = { Text("Configurar PIN") }, text = {
-                    Column { OutlinedTextField(value = pinInput, onValueChange = { pinInput = it }, label = { Text("PIN (4 dígitos)") }) }
-                }, confirmButton = {
-                    Button(onClick = {
-                        profileVm.saveProfile(editName, editEmail, pickedAvatarUri?.toString(), editCurrency, editDarkMode, editPhone, editBio, editLanguage, editNotificationsEnabled, editFingerprintEnabled, pinInput)
-                        pinInput = ""
-                        showPinDialog = false
-                        coroutineScope.launch { snackbarHostState.showSnackbar("PIN guardado") }
-                    }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) { Text("Guardar") }
-                }, dismissButton = {
-                    OutlinedButton(onClick = { showPinDialog = false }, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) { Text("Cancelar") }
-                })
+                if (showDeleteDialog) {
+                    ThemedAlertDialog(
+                        onDismissRequest = { showDeleteDialog = false },
+                        title = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.confirm_delete_profile)) },
+                        text = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.delete_profile_message)) },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    profileVm.signOut()
+                                    showDeleteDialog = false
+                                    onSignOut?.invoke()
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = Color.White
+                                )
+                            ) { Text("Eliminar") }
+                        },
+                        dismissButton = {
+                            OutlinedButton(
+                                onClick = { showDeleteDialog = false },
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                            ) { Text("Cancelar") }
+                        })
+                }
+
+                if (showPinDialog) {
+                    ThemedAlertDialog(
+                        onDismissRequest = { showPinDialog = false },
+                        title = { Text("Configurar PIN") },
+                        text = {
+                            Column {
+                                OutlinedTextField(
+                                    value = pinInput,
+                                    onValueChange = { pinInput = it },
+                                    label = { Text("PIN (4 dígitos)") })
+                            }
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    profileVm.saveProfile(
+                                        editName,
+                                        editEmail,
+                                        pickedAvatarUri?.toString(),
+                                        editCurrency,
+                                        editDarkMode,
+                                        editPhone,
+                                        editBio,
+                                        editLanguage,
+                                        editNotificationsEnabled,
+                                        editFingerprintEnabled,
+                                        pinInput
+                                    )
+                                    pinInput = ""
+                                    showPinDialog = false
+                                    // apply and recreate so language changes take effect immediately
+                                    applyLocaleAndRecreate(context, editLanguage)
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar(
+                                            context.getString(
+                                                com.example.admin_ingresos.R.string.profile_saved
+                                            )
+                                        )
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            ) { Text("Guardar") }
+                        },
+                        dismissButton = {
+                            OutlinedButton(
+                                onClick = { showPinDialog = false },
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                            ) { Text("Cancelar") }
+                        })
+                }
             }
         }
     }
-}
 
-}
-
-@Composable
-private fun DropdownMenuDemo(options: List<String>, selected: String, onSelected: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    Box {
-        Button(onClick = { expanded = true }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface, contentColor = MaterialTheme.colorScheme.onSurface)) {
-            Text(selected)
-            Spacer(modifier = Modifier.width(8.dp))
-            Icon(LucideIconMapper.Navigation.down, contentDescription = null, modifier = Modifier.size(16.dp))
-        }
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.background(resolvedMenuContainerColor())) {
-            options.forEach { opt ->
-                DropdownMenuItem(text = { Text(opt) }, onClick = { onSelected(opt); expanded = false })
-            }
-        }
-    }
 }
 
