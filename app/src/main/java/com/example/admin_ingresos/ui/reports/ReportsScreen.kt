@@ -192,7 +192,7 @@ fun ReportsScreen(initialSection: String = "") {
                             Icon(
                                 imageVector = LucideIconMapper.Navigation.reports,
                                 contentDescription = "Reportes",
-                                tint = AccentVibrantStart,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(28.dp)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
@@ -215,7 +215,7 @@ fun ReportsScreen(initialSection: String = "") {
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(onClick = { showExportDialog = true }) {
-                                Icon(Icons.Default.Share, contentDescription = "Exportar", tint = com.example.admin_ingresos.ui.theme.TextPrimary)
+                                Icon(Icons.Default.Share, contentDescription = "Exportar", tint = MaterialTheme.colorScheme.primary)
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                             IconButton(onClick = {
@@ -224,7 +224,7 @@ fun ReportsScreen(initialSection: String = "") {
                                     snackbarHostState.showSnackbar("Abriendo diálogo de descargas...")
                                 }
                             }) {
-                                Icon(LucideIconMapper.Navigation.download, contentDescription = "Descargar", tint = com.example.admin_ingresos.ui.theme.TextPrimary)
+                                Icon(LucideIconMapper.Navigation.download, contentDescription = "Descargar", tint = MaterialTheme.colorScheme.primary)
                             }
                         }
                     }

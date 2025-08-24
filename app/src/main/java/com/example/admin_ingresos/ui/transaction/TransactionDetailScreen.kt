@@ -150,16 +150,16 @@ fun TransactionDetailScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Detalle", style = MaterialTheme.typography.titleLarge) },
-                navigationIcon = {
-                        IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás") }
-                },
+        navigationIcon = {
+            IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.primary) }
+        },
                 actions = {
                     // Use Lucide icons for edit/delete with requested tints
                     IconButton(onClick = { /* TODO: navegar a editar */ }) {
                         Icon(
                             imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.Navigation.edit,
                             contentDescription = "Editar",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }

@@ -592,7 +592,7 @@ fun ModernHistoryHeader() {
             Icon(
                 imageVector = LucideIconMapper.Navigation.transactions,
                 contentDescription = "Transacciones",
-                tint = AccentVibrantStart,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(28.dp)
             )
 

@@ -153,7 +153,7 @@ fun CategoryScreen(
                             Icon(
                                 imageVector = LucideIconMapper.getNavigationIcon("tag"),
                                 contentDescription = "Categorías",
-                                tint = AccentVibrantStart,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(28.dp)
                             )
 

@@ -423,7 +423,7 @@ private fun DashboardHeader(
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                IconButton(
+        IconButton(
                     onClick = onNotificationClick,
                     modifier = Modifier
                         .size(48.dp)
@@ -435,7 +435,7 @@ private fun DashboardHeader(
                     Icon(
                         imageVector = LucideIconMapper.Navigation.notifications,
                         contentDescription = "Notificaciones",
-                        tint = TextPrimary
+            tint = MaterialTheme.colorScheme.primary
                     )
                 }
 

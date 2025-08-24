@@ -103,7 +103,7 @@ fun CategoryDetailScreen(
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
                                 contentDescription = "Volver atrás",
-                                tint = TextPrimary
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     },
