@@ -447,7 +447,7 @@ fun ModernTransactionItem(
         isTransfer -> Color(0xFF2196F3) // blue for savings/transfer
         else -> Color(0xFFE57373)
     }
-    val currencyFormat = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
+    val currencyFormat = com.example.admin_ingresos.data.CurrencyUtils.getCurrencyFormatter(LocalContext.current)
     
     GlassCard(
         modifier = Modifier
@@ -623,7 +623,7 @@ fun ModernTransactionStats(
     onClose: () -> Unit = {},
     onAnalyticsClick: () -> Unit = {}
 ) {
-    val currencyFormat = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
+    val currencyFormat = com.example.admin_ingresos.data.CurrencyUtils.getCurrencyFormatter(LocalContext.current)
     
     // Calcular estadísticas
     val totalIncome = transactions.filter { it.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME }.sumOf { it.amount }

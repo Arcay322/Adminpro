@@ -21,6 +21,7 @@ import com.example.admin_ingresos.ui.icons.LucideIconMapper
 import com.example.admin_ingresos.ui.theme.*
 import java.text.NumberFormat
 import java.util.Locale
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun MainBalanceCards(
@@ -35,7 +36,8 @@ fun MainBalanceCards(
     expensesSubtitle: String? = "Este mes",
     transfersSubtitle: String? = "Este mes"
 ) {
-    val formatter = NumberFormat.getCurrencyInstance(java.util.Locale("es", "PE"))
+    val prefs = com.example.admin_ingresos.data.PreferencesManager(LocalContext.current)
+    val formatter = com.example.admin_ingresos.data.CurrencyUtils.getCurrencyFormatter(LocalContext.current)
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = modifier) {
         AdvancedBalanceCard(

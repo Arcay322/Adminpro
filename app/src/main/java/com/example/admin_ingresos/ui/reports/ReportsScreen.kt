@@ -532,7 +532,8 @@ fun DateRangeSelector(selectedPreset: DateRangePreset, onPresetSelected: (DateRa
 
 @Composable
 fun FinancialSummary(reportData: ReportData) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+    val prefs = com.example.admin_ingresos.data.PreferencesManager(LocalContext.current)
+    val formatter = com.example.admin_ingresos.data.CurrencyUtils.getCurrencyFormatter(LocalContext.current)
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         // Large balance card first (like the design samples)
@@ -1000,7 +1001,7 @@ fun IncomeVsExpenseTrendChart(reportData: ReportData) {
                 val borderColor = if (net >= 0.0) IncomeGreen.copy(alpha = 0.28f) else ExpenseRed.copy(alpha = 0.28f)
 
                 GlassCard(modifier = Modifier.padding(top = 8.dp), backgroundColor = containerColor, borderColor = borderColor) {
-                    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "PE"))
+                    val formatter = com.example.admin_ingresos.data.CurrencyUtils.getCurrencyFormatter(LocalContext.current)
                     Column(modifier = Modifier.padding(12.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(

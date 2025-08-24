@@ -186,7 +186,8 @@ private fun CategoryDetailHeader(
     transactionCount: Int,
     activeBudget: Budget?
 ) {
-    val formatter = remember { NumberFormat.getCurrencyInstance(Locale("es", "ES")) }
+    val context = LocalContext.current
+    val formatter = remember(context) { com.example.admin_ingresos.data.CurrencyUtils.getCurrencyFormatter(context) }
     val categoryColor by remember(category.color) { mutableStateOf(Color(android.graphics.Color.parseColor(category.color))) }
     val amountColor = if (category.type == CategoryType.GASTO) ExpenseRed else AccentVibrantStart
 
@@ -400,7 +401,8 @@ private fun DateHeader(date: String) {
 
 @Composable
 private fun TransactionListItem(transaction: Transaction) {
-    val formatter = remember { NumberFormat.getCurrencyInstance(Locale("es", "ES")) }
+    val context = LocalContext.current
+    val formatter = remember(context) { com.example.admin_ingresos.data.CurrencyUtils.getCurrencyFormatter(context) }
     val isGasto = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_EXPENSE
     val isIngreso = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_INCOME
     val isAhorro = transaction.type == com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER

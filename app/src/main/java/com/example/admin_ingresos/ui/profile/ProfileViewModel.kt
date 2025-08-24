@@ -4,11 +4,13 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.util.Locale
 import kotlinx.coroutines.flow.StateFlow
 import com.example.admin_ingresos.ui.profile.SecurityUtils
 import com.example.admin_ingresos.ui.theme.BackgroundStart
 import androidx.compose.ui.graphics.toArgb
 import com.example.admin_ingresos.ui.theme.AppThemeManager
+import com.example.admin_ingresos.data.PreferencesManager
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs = application.getSharedPreferences("profile_prefs", Context.MODE_PRIVATE)
@@ -115,6 +117,25 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         _pinCode.value = SecurityUtils.encrypt(PIN_ALIAS, pinCode) ?: ""
         // Ensure global theme manager matches the stored preference
         AppThemeManager.setForceLight(forceLightVal)
+        // Persist selected currency to the app-wide preferences so other screens
+        // can read and display the correct currency symbol.
+        try {
+            val prefsManager = PreferencesManager(getApplication())
+            prefsManager.currency = currency
+            val symbol = when (currency.uppercase(Locale.getDefault())) {
+                "PEN" -> "S/"
+                "EUR" -> "€"
+                "GBP" -> "£"
+                "JPY" -> "¥"
+                "BRL" -> "R$"
+                "CAD" -> "C$"
+                "USD" -> "$"
+                else -> "$"
+            }
+            prefsManager.currencySymbol = symbol
+        } catch (_: Exception) {
+            // ignore failures writing global prefs to avoid crashing save flow
+        }
     }
 
     fun setBackgroundColor(colorInt: Int) {

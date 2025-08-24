@@ -54,6 +54,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
+    // Compose UI is BOM-managed via platform(libs.androidx.compose.bom)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
@@ -68,8 +69,6 @@ dependencies {
     // Charts
     implementation("com.github.PhilJay:MPAndroidChart:3.1.0")
     
-    // Material Icons Extended
-    implementation("androidx.compose.material:material-icons-extended:1.6.7")
     
     // Lucide Icons 
     implementation("com.composables:icons-lucide-android:1.1.0")
@@ -85,11 +84,14 @@ dependencies {
     // Apache POI for Excel export (lightweight components)
     implementation("org.apache.poi:poi-ooxml:5.2.3")
     
-    // Foundation and Lazy components
-    implementation("androidx.compose.foundation:foundation:1.6.7")
-    
-    // Graphics layer
-    implementation("androidx.compose.ui:ui-graphics:1.6.7")
+    // Material Icons Extended (BOM-managed)
+    implementation("androidx.compose.material:material-icons-extended")
+
+    // Foundation and Lazy components (BOM-managed)
+    implementation("androidx.compose.foundation:foundation")
+
+    // Graphics layer (BOM-managed)
+    implementation("androidx.compose.ui:ui-graphics")
     
     // Color Picker
     implementation("com.github.skydoves:colorpicker-compose:1.1.2")

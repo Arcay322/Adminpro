@@ -7,6 +7,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import com.example.admin_ingresos.data.PreferencesManager
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -294,6 +298,9 @@ fun FilterBottomSheet(
                         var minAmount by remember { mutableStateOf(tempFilter.amountRange?.minAmount?.toString() ?: "") }
                         var maxAmount by remember { mutableStateOf(tempFilter.amountRange?.maxAmount?.toString() ?: "") }
 
+                        val context = LocalContext.current
+                        val prefs = PreferencesManager(context)
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -312,9 +319,9 @@ fun FilterBottomSheet(
                                 },
                                 label = { Text("Monto mínimo") },
                                 placeholder = { Text("0.00") },
-                                leadingIcon = { Text("$") },
-                                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                                leadingIcon = { Text(prefs.currencySymbol) },
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Decimal
                                 ),
                                 singleLine = true,
                                 modifier = Modifier.weight(1f)
@@ -334,9 +341,9 @@ fun FilterBottomSheet(
                                 },
                                 label = { Text("Monto máximo") },
                                 placeholder = { Text("0.00") },
-                                leadingIcon = { Text("$") },
-                                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                                leadingIcon = { Text(prefs.currencySymbol) },
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Decimal
                                 ),
                                 singleLine = true,
                                 modifier = Modifier.weight(1f)

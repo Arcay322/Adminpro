@@ -25,18 +25,24 @@ import kotlin.math.cos
 import kotlin.math.sin
 import java.text.NumberFormat
 import java.util.*
+import androidx.compose.ui.platform.LocalContext
+import com.example.admin_ingresos.data.PreferencesManager
+import com.example.admin_ingresos.data.CurrencyUtils
 
 // Función para formatear números grandes
+@Composable
 private fun formatLargeNumber(amount: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
+    val context = LocalContext.current
+    val prefs = PreferencesManager(context)
+    val formatter = CurrencyUtils.getCurrencyFormatter(context)
     return when {
         amount >= 1_000_000 -> {
             val millions = amount / 1_000_000
-            "$${String.format("%.1f", millions)}M"
+            "${prefs.currencySymbol}${String.format("%.1f", millions)}M"
         }
         amount >= 1_000 -> {
             val thousands = amount / 1_000
-            "$${String.format("%.1f", thousands)}K"
+            "${prefs.currencySymbol}${String.format("%.1f", thousands)}K"
         }
         else -> formatter.format(amount)
     }

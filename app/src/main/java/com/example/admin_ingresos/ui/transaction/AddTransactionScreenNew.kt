@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.example.admin_ingresos.data.PreferencesManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.net.Uri
@@ -373,6 +374,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     )
                 }
                 Spacer(modifier = Modifier.height(10.dp))
+                val prefs = PreferencesManager(LocalContext.current)
                 OutlinedTextField(
                     value = amount,
                     onValueChange = { newValue ->
@@ -381,7 +383,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                         }
                     },
                     label = { Text("0.00") },
-                    prefix = { Text("$") },
+                    prefix = { Text(prefs.currencySymbol) },
                     isError = amountError != null,
                     supportingText = amountError?.let { { Text(it) } },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -904,6 +906,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
+                val prefs2 = PreferencesManager(LocalContext.current)
                 OutlinedTextField(
                     value = amount,
                     onValueChange = { newValue ->
@@ -914,8 +917,9 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     },
                     label = { Text("0.00") },
                     prefix = {
+                        val p = PreferencesManager(LocalContext.current)
                         Text(
-                            text = "$",
+                            text = p.currencySymbol,
                             style = MaterialTheme.typography.titleLarge,
                             color = if (type == "Ingreso") IncomeGreen else Color(0xFFE57373)
                         )
