@@ -447,8 +447,6 @@ fun ModernTransactionItem(
         isTransfer -> Color(0xFF2196F3) // blue for savings/transfer
         else -> Color(0xFFE57373)
     }
-    val currencyFormat = com.example.admin_ingresos.data.CurrencyUtils.getCurrencyFormatter(LocalContext.current)
-    
     GlassCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -529,8 +527,10 @@ fun ModernTransactionItem(
                     else -> "" // transfers/ahorro: no sign
                 }
 
+                val formatted = com.example.admin_ingresos.data.CurrencyUtils.format(absAmt, LocalContext.current).replace(" ", "\u00A0")
+
                 Text(
-                    text = "$sign${currencyFormat.format(absAmt).replace(" ", "\u00A0")}",
+                    text = "$sign$formatted",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold
                     ),

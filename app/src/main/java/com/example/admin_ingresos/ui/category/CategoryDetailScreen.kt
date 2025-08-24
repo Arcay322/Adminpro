@@ -187,7 +187,6 @@ private fun CategoryDetailHeader(
     activeBudget: Budget?
 ) {
     val context = LocalContext.current
-    val formatter = remember(context) { com.example.admin_ingresos.data.CurrencyUtils.getCurrencyFormatter(context) }
     val categoryColor by remember(category.color) { mutableStateOf(Color(android.graphics.Color.parseColor(category.color))) }
     val amountColor = if (category.type == CategoryType.GASTO) ExpenseRed else AccentVibrantStart
 
@@ -435,8 +434,8 @@ private fun TransactionListItem(transaction: Transaction) {
                 color = TextPrimary.copy(alpha = 0.75f)
             )
         }
-        val absAmount = kotlin.math.abs(transaction.amount)
-        val formatted = formatter.format(absAmount)
+    val absAmount = kotlin.math.abs(transaction.amount)
+    val formatted = com.example.admin_ingresos.data.CurrencyUtils.format(absAmount, LocalContext.current)
         val sign = when {
             isGasto -> "-"
             isIngreso -> "+"
