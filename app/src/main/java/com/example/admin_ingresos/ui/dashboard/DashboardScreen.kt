@@ -252,7 +252,7 @@ fun DashboardScreen(
                     ) {
                         GlassCard(
                             modifier = Modifier.fillMaxWidth(),
-                            backgroundColor = GlassWhite,
+                            backgroundColor = GlassWhiteSubtle,
                             cornerRadius = 20.dp
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
@@ -394,7 +394,7 @@ private fun DashboardHeader(
 
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        backgroundColor = GlassWhiteStrong,
+        backgroundColor = GlassWhiteSubtle,
         cornerRadius = 24.dp
     ) {
         Row(
@@ -428,9 +428,9 @@ private fun DashboardHeader(
                     modifier = Modifier
                         .size(48.dp)
                         .background(
-                            GlassWhite,
-                            CircleShape
-                        )
+                                GlassWhiteSubtle,
+                                CircleShape
+                            )
                 ) {
                     Icon(
                         imageVector = LucideIconMapper.Navigation.notifications,
@@ -576,7 +576,7 @@ private fun QuickActionButton(
 private fun ExpensesByCategoryChart(categories: List<CategoryExpense>, onNavigateToReportsSection: (String) -> Unit) {
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        backgroundColor = GlassWhite,
+        backgroundColor = GlassWhiteSubtle,
         cornerRadius = 20.dp
     ) {
         Column {
@@ -778,7 +778,7 @@ private fun TrendsAndInsights(
 
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        backgroundColor = GlassWhite,
+        backgroundColor = GlassWhiteSubtle,
         cornerRadius = 20.dp
     ) {
         Column {
@@ -838,7 +838,7 @@ private fun RecentTransactionsSection(
 ) {
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        backgroundColor = GlassWhite,
+        backgroundColor = GlassWhiteSubtle,
         cornerRadius = 20.dp
     ) {
         Column {
@@ -1006,7 +1006,7 @@ private fun SavingsGoalsSection(savingsGoalViewModel: com.example.admin_ingresos
 
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        backgroundColor = GlassWhite,
+        backgroundColor = GlassWhiteSubtle,
         cornerRadius = 20.dp
     ) {
         Column {
