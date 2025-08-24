@@ -471,7 +471,8 @@ private fun QuickActionsSection(
 ) {
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        backgroundColor = GlassWhite,
+        // Use the subtle glass tint to match other cards in dark mode
+        backgroundColor = GlassWhiteSubtle,
         cornerRadius = 20.dp
     ) {
         Column {

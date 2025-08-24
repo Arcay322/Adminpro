@@ -9,6 +9,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -236,36 +238,62 @@ fun ProfileScreen(
                     Text(text = "Personalización", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
                     Text(text = "Color de fondo", color = MaterialTheme.colorScheme.onBackground)
                     Spacer(modifier = Modifier.height(8.dp))
-                    val swatches = listOf(
-                        androidx.compose.ui.graphics.Color(0xFF000000), // Negro
-                        androidx.compose.ui.graphics.Color(0xFF111111),
-                        androidx.compose.ui.graphics.Color(0xFF1F2937), // Gris oscuro
-                        androidx.compose.ui.graphics.Color(0xFF374151),
-                        androidx.compose.ui.graphics.Color(0xFF4B5563),
-                        androidx.compose.ui.graphics.Color(0xFF6B7280), // Gris medio
-                        androidx.compose.ui.graphics.Color(0xFFD1D5DB), // Gris claro
-                        androidx.compose.ui.graphics.Color(0xFFF3F4F6),
-                        androidx.compose.ui.graphics.Color(0xFFFFFFFF) // Blanco
+                    // Background palettes split by recommended usage: dark-mode friendly and light-mode friendly
+                    Text(text = "Colores de fondo — oscuros (recomendado para modo oscuro)", color = MaterialTheme.colorScheme.onBackground)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    val darkSwatches = listOf(
+                        Color(0xFF000000), Color(0xFF05060a), Color(0xFF0B1220), Color(0xFF111827), Color(0xFF141925),
+                        Color(0xFF1F2937), Color(0xFF23303D), Color(0xFF2B3442), Color(0xFF3A3F47), Color(0xFF4B5563),
+                        // slightly tinted dark colors (deep variants so they read as background)
+                        Color(0xFF2B0B0B), // deep maroon
+                        Color(0xFF1B1822), // deep purple
+                        Color(0xFF0B2133)  // deep teal
                     )
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        swatches.forEach { swatch ->
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        items(darkSwatches) { swatch ->
                             val swatchInt = swatch.copy(alpha = 1f).toArgb()
                             val selected = swatchInt == backgroundColorInt
-                            val checkTint = if (swatch.luminance() > 0.5f) androidx.compose.ui.graphics.Color.Black else androidx.compose.ui.graphics.Color.White
+                            val checkTint = if (swatch.luminance() > 0.5f) Color.Black else Color.White
                             Box(modifier = Modifier
-                                .size(if (selected) 48.dp else 40.dp)
+                                .padding(vertical = 4.dp)
+                                .size(if (selected) 52.dp else 44.dp)
                                 .clip(CircleShape)
                                 .background(swatch)
-                                .padding(2.dp)
                                 .then(if (selected) Modifier.border(width = 2.dp, color = AccentVibrantStart, shape = CircleShape) else Modifier)
-                                .clickable {
-                                    profileVm.setBackgroundColor(swatchInt)
-                                }
+                                .clickable { profileVm.setBackgroundColor(swatchInt) }
                             ) {
-                                if (selected) {
-                                    Icon(LucideIconMapper.Navigation.check, contentDescription = null, tint = checkTint, modifier = Modifier.align(Alignment.Center))
-                                }
+                                if (selected) Icon(LucideIconMapper.Navigation.check, contentDescription = null, tint = checkTint, modifier = Modifier.align(Alignment.Center))
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(text = "Colores de fondo — claros (recomendado para modo claro)", color = MaterialTheme.colorScheme.onBackground)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    val lightSwatches = listOf(
+                        Color(0xFFFFFFFF), Color(0xFFF8FAFC), Color(0xFFF1F5F9), Color(0xFFE6EEF6), Color(0xFFFDF2F8),
+                        Color(0xFFFFFBF0), Color(0xFFFFFBF7), Color(0xFFF7FEE7), Color(0xFFFDFCE7), Color(0xFFF3F4F6),
+                        // soft tinted light variants for colored backgrounds but still light
+                        Color(0xFFFFF1F2), // light rose
+                        Color(0xFFF2F8FF), // light blue
+                        Color(0xFFF2FFF7)  // light mint
+                    )
+
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        items(lightSwatches) { swatch ->
+                            val swatchInt = swatch.copy(alpha = 1f).toArgb()
+                            val selected = swatchInt == backgroundColorInt
+                            val checkTint = if (swatch.luminance() > 0.5f) Color.Black else Color.White
+                            Box(modifier = Modifier
+                                .padding(vertical = 4.dp)
+                                .size(if (selected) 52.dp else 44.dp)
+                                .clip(CircleShape)
+                                .background(swatch)
+                                .then(if (selected) Modifier.border(width = 2.dp, color = AccentVibrantStart, shape = CircleShape) else Modifier)
+                                .clickable { profileVm.setBackgroundColor(swatchInt) }
+                            ) {
+                                if (selected) Icon(LucideIconMapper.Navigation.check, contentDescription = null, tint = checkTint, modifier = Modifier.align(Alignment.Center))
                             }
                         }
                     }
@@ -275,30 +303,23 @@ fun ProfileScreen(
                     Text(text = "Color de tema", color = MaterialTheme.colorScheme.onBackground)
                     Spacer(modifier = Modifier.height(6.dp))
                     val primaryColorInt by profileVm.primaryColor.collectAsState()
+                    // Expanded primary palette with many options
                     val primaryOptions = listOf(
-                        AccentVibrantStart,
-                        AccentVibrantMid,
-                        AccentVibrantEnd,
-                        Color(0xFF00BFA5), // teal
-                        Color(0xFF2196F3), // blue
-                        Color(0xFF4CAF50), // green
-                        Color(0xFFFFC107), // amber
-                        Color(0xFFFF5722), // deep orange
-                        Color(0xFFE91E63), // pink
-                        Color(0xFF9C27B0), // purple
-                        Color(0xFF795548), // brown
-                        Color(0xFF607D8B), // blue grey
-                        Color(0xFFFFEB3B), // yellow
-                        Color(0xFF00BCD4)  // cyan
+                        Color(0xFF0EA5A4), Color(0xFF06B6D4), Color(0xFF00BFA5), Color(0xFF06B6D4), Color(0xFF2196F3),
+                        Color(0xFF2563EB), Color(0xFF3B82F6), Color(0xFF6366F1), Color(0xFF7C3AED), Color(0xFF8B5CF6),
+                        Color(0xFFEC4899), Color(0xFFF472B6), Color(0xFFF97316), Color(0xFFF59E0B), Color(0xFFFBBF24),
+                        Color(0xFFFCD34D), Color(0xFF10B981), Color(0xFF34D399), Color(0xFF84CC16), Color(0xFF4CAF50),
+                        Color(0xFF2DD4BF), Color(0xFF06B6D4), Color(0xFF00BCD4), Color(0xFF00ACC1), Color(0xFF00838F),
+                        Color(0xFF795548), Color(0xFF9C27B0), Color(0xFFE91E63), Color(0xFFD84315), Color(0xFF374151)
                     )
 
-                    // Color swatches
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        primaryOptions.forEach { p ->
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        items(primaryOptions) { p ->
                             val pInt = p.toArgb()
                             val selectedPrimary = pInt == primaryColorInt
                             Box(modifier = Modifier
-                                .size(if (selectedPrimary) 48.dp else 40.dp)
+                                .padding(vertical = 4.dp)
+                                .size(if (selectedPrimary) 52.dp else 44.dp)
                                 .clip(CircleShape)
                                 .background(p)
                                 .clickable { profileVm.setPrimaryColor(pInt) }

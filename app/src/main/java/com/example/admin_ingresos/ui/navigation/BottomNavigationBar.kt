@@ -36,7 +36,10 @@ fun BottomNavigationBar(navController: NavController) {
     val currentRoute = navBackStackEntry?.destination?.route
     
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
+        // Use a very low-opacity primary to create a subtle, tinted navigation bar
+        // (matches the selected theme but "muy bajito" / difuminado).
+        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.06f),
+        // Default content color falls back to onSurface; each item overrides colors explicitly.
         contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         items.forEach { item ->
@@ -87,12 +90,14 @@ fun BottomNavigationBar(navController: NavController) {
                         }
                     }
                 },
+                // Selected icons/text use the full primary for clear contrast; unselected use onSurfaceVariant.
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = MaterialTheme.colorScheme.primary,
                     selectedTextColor = MaterialTheme.colorScheme.primary,
                     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                    // indicator uses a soft tint of primary
+                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 )
             )
         }

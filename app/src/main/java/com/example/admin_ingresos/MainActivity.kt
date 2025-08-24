@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -61,6 +62,11 @@ class MainActivity : ComponentActivity() {
                 // Accept any stored int (including 0xFFFFFFFF for white which is -1 as signed int)
                 val saved = profilePrefs.getInt("background_color", Int.MIN_VALUE)
                 com.example.admin_ingresos.ui.theme.AppThemeManager.setBackgroundColor(saved)
+            }
+            // Restore saved primary color if present so user's theme choice persists
+            if (profilePrefs.contains("primary_color")) {
+                val savedPrimary = profilePrefs.getInt("primary_color", com.example.admin_ingresos.ui.theme.AccentVibrantStart.toArgb())
+                com.example.admin_ingresos.ui.theme.AppThemeManager.setPrimaryColor(savedPrimary)
             }
             if (profilePrefs.contains("force_light_mode")) {
                 val force = profilePrefs.getBoolean("force_light_mode", false)
