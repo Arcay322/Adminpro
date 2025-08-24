@@ -84,24 +84,105 @@
     <string name="onboarding_skip">Saltar</string>
     <string name="onboarding_next">Siguiente</string>
     <string name="onboarding_previous">Anterior</string>
+
+    <!-- Profile -->
     <string name="profile_saved">Perfil guardado</string>
     <string name="confirm_delete_profile">Confirmar eliminación</string>
     <string name="delete_profile_message">Esto eliminará tu perfil localmente. ¿Continuar?</string>
-        <string name="profile_customization">Personalización</string>
-        <string name="profile_background_color">Color de fondo</string>
-        <string name="profile_dark_themes">Temas oscuros</string>
-        <string name="profile_light_themes">Temas claros</string>
-        <string name="profile_theme_color">Color de tema</string>
+    <string name="profile_customization">Personalización</string>
+    <string name="profile_background_color">Color de fondo</string>
+    <string name="profile_dark_themes">Temas oscuros</string>
+    <string name="profile_light_themes">Temas claros</string>
+    <string name="profile_theme_color">Color de tema</string>
     <string name="profile_security">Seguridad</string>
-        <string name="profile_user_avatar">Avatar del usuario</string>
-        <string name="profile_default_avatar">Avatar por defecto</string>
-        <string name="profile_change_avatar">Cambiar avatar</string>
-        <string name="profile_remove_avatar">Quitar avatar</string>
-        <string name="profile_empty_placeholder">—</string>
-        <string name="profile_fingerprint">Huella dactilar</string>
-        <string name="profile_pin">PIN de seguridad</string>
-        <string name="profile_configure_pin">Configurar PIN</string>
-        <string name="profile_help_support">Ayuda y soporte</string>
-        <string name="profile_faq">Preguntas frecuentes</string>
-        <string name="profile_contact_support">Contactar soporte</string>
+    <string name="profile_user_avatar">Avatar del usuario</string>
+    <string name="profile_default_avatar">Avatar por defecto</string>
+    <string name="profile_change_avatar">Cambiar avatar</string>
+    <string name="profile_remove_avatar">Quitar avatar</string>
+    <string name="profile_empty_placeholder">—</string>
+    <string name="profile_fingerprint">Huella dactilar</string>
+    <string name="profile_pin">PIN de seguridad</string>
+    <string name="profile_configure_pin">Configurar PIN</string>
+    <string name="profile_help_support">Ayuda y soporte</string>
+    <string name="profile_faq">Preguntas frecuentes</string>
+    <string name="profile_contact_support">Contactar soporte</string>
+
+    <!-- New UI keys added -->
+    <string name="new_label">Nueva</string>
+    <string name="select_category">Seleccionar categoría</string>
+    <string name="new_category">Agrega tu primera categoría para organizar mejor tus transacciones</string>
+    <string name="new_payment_method">Método de Pago</string>
+    <string name="add">Agregar</string>
+    <string name="receipt_attached">Foto del Recibo (Opcional)</string>
+    <string name="attach">- Adjunta</string>
+    <string name="camera">Cámara</string>
+    <string name="gallery">Galería</string>
+    <string name="change_photo">Cambiar foto</string>
+    <string name="change_photo_question">¿Cómo quieres cambiar la foto?</string>
+    <string name="continue_label">Continuar</string>
+    <string name="placeholder_amount">0.00</string>
+    <string name="placeholder_description">¿En qué gastaste o ganaste dinero?</string>
+    <string name="payment_method_name">Nombre del método</string>
+    <string name="create">Crear</string>
+        <string name="example_payment_method">Ej: Tarjeta de crédito</string>
+    <string name="suggestions">Sugerencias</string>
+    <string name="new_category_label">Nueva Categoría</string>
+    <string name="example_category_names">Ej: Comida, Transporte</string>
+    <string name="attach_option_from_gallery">Desde galería</string>
+    <string name="take_photo">Tomar foto</string>
+    <string name="transaction_saved_title">¡Transacción guardada!</string>
+    <string name="transaction_saved_message">La transacción se agregó correctamente.</string>
+    <string name="accept">Aceptar</string>
+    <string name="transaction_detail_title">Detalle</string>
+    <string name="no_description">Sin descripción</string>
+    <string name="receipt_attached_label">Comprobante adjunto</string>
+    <string name="view_photo">Ver foto</string>
+    <string name="tap_thumbnail">Toca la miniatura para ver en pantalla completa.</string>
+    <string name="insight_savings_title">Tu Ahorro en %1$s</string>
+    <string name="insight_income_title">Tu Ingreso en %1$s</string>
+    <string name="insight_expense_title">Tu Gasto en %1$s</string>
+    <string name="this_category">esta categoría</string>
+    <string name="last_month">Último mes</string>
+    <string name="no_comparison">Sin comparación</string>
+    <string name="average_label">Promedio: %1$s</string>
+    
+    
+    
+    
+    <!-- Added keys used by CashFlowComponents.kt -->
+    <string name="not_configured">No configurado</string>
+    <string name="none_label">Ninguno</string>
+    <string name="delete_photo">Eliminar foto</string>
+    <!-- duplicate block removed to fix resource merge duplicate key errors -->
+    <!-- Reintroduced defaults required by Kotlin code -->
+    <string name="transaction_type_title">Tipo de transacción</string>
+    <string name="example_transaction_description">Ej: Compra de supermercado</string>
+    <string name="select_payment_method">Selecciona un método de pago</string>
+    <string name="receipt_label">Recibo</string>
+    <string name="attach_photo_text">Adjuntar una foto</string>
+    <string name="attach_label">Adjuntar</string>
+    <string name="image_uploaded">Imagen subida</string>
+    <string name="notifications_title">Notificaciones</string>
+    <string name="notifications_empty">No hay notificaciones nuevas.</string>
+    <string name="close_label">Cerrar</string>
+    <string name="error_loading">Error al cargar datos</string>
+    <string name="error_unknown">Error desconocido</string>
+    <string name="retry">Reintentar</string>
+    <string name="weekly_flow_title">Flujo Semanal</string>
+    <string name="legend_income">Ingreso</string>
+    <string name="legend_expense">Gasto</string>
+    <string name="legend_saving">Ahorro</string>
+    <string name="total_label">Total</string>
+    <string name="expenses_by_category_title">Gastos por Categoría</string>
+    <string name="view_all">Ver todo</string>
+    <string name="no_expenses_this_month">Sin gastos este mes</string>
+    <string name="trends_insights_title">Tendencias e Insights</string>
+    <string name="vs_last_month">vs. mes pasado</string>
+    <string name="recent_transactions_title">Transacciones Recientes</string>
+    <string name="start_recording_transactions">¡Comienza a registrar transacciones!</string>
+    <string name="add_transaction_button">Agregar Transacción</string>
+    <string name="greeting_morning">Buenos días</string>
+    <string name="greeting_afternoon">Buenas tardes</string>
+    <string name="greeting_evening">Buenas noches</string>
+    <string name="user_default_name">Usuario</string>
 </resources>

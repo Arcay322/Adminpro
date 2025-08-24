@@ -60,7 +60,7 @@ fun CashFlowHeader(
                         modifier = Modifier.padding(end = 8.dp)
                     )
                     Text(
-                        text = "CashFlow",
+                        text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.app_name),
                         style = MaterialTheme.typography.headlineSmall.copy(
                             fontWeight = FontWeight.Bold
                         ),
@@ -129,7 +129,7 @@ fun CashFlowCard(
 @Composable
 fun GlassmorphismBalanceCard(
     balance: String,
-    title: String = "Balance Total",
+    title: String = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.dashboard_balance),
     subtitle: String? = null,
     modifier: Modifier = Modifier
 ) {
@@ -574,7 +574,7 @@ fun TypeSelectorCard(
             modifier = Modifier.padding(20.dp)
         ) {
             Text(
-                text = "Tipo de Transacción",
+                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_type_title),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold
                 ),
@@ -586,8 +586,8 @@ fun TypeSelectorCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                TypeOptionCard(
-                    text = "Gasto",
+                    TypeOptionCard(
+                    text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_expense),
                     icon = Icons.Default.TrendingDown,
                     selected = selectedType == "Gasto",
                     onClick = { onTypeSelected("Gasto") },
@@ -596,7 +596,7 @@ fun TypeSelectorCard(
                 )
                 
                 TypeOptionCard(
-                    text = "Ingreso",
+                    text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_income),
                     icon = Icons.Default.TrendingUp,
                     selected = selectedType == "Ingreso",
                     onClick = { onTypeSelected("Ingreso") },
@@ -664,7 +664,7 @@ fun AmountInputCard(
             modifier = Modifier.padding(20.dp)
         ) {
             Text(
-                text = "Monto",
+                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_amount),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold
                 ),
@@ -675,9 +675,9 @@ fun AmountInputCard(
             OutlinedTextField(
                 value = amount,
                 onValueChange = onAmountChange,
-                placeholder = { 
+                    placeholder = { 
                     Text(
-                        "0.00",
+                        androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.placeholder_amount),
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Light
                         )
@@ -736,7 +736,7 @@ fun DescriptionInputCard(
             modifier = Modifier.padding(20.dp)
         ) {
             Text(
-                text = "Descripción",
+                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_description),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold
                 ),
@@ -747,7 +747,7 @@ fun DescriptionInputCard(
             OutlinedTextField(
                 value = description,
                 onValueChange = onDescriptionChange,
-                placeholder = { Text("¿En qué gastaste o ganaste dinero?") },
+                placeholder = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.placeholder_description)) },
                 leadingIcon = { 
                     Icon(
                         imageVector = Icons.Default.Description,
@@ -762,7 +762,7 @@ fun DescriptionInputCard(
             if (suggestions.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "Sugerencias",
+                    text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.suggestions),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -824,7 +824,7 @@ fun EnhancedCategorySelector(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Nueva")
+                    Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.new_label))
                 }
             }
             
@@ -833,8 +833,8 @@ fun EnhancedCategorySelector(
             if (categories.isEmpty()) {
                 EmptyState(
                     icon = Icons.Default.Category,
-                    title = "Sin categorías",
-                    description = "Agrega tu primera categoría para organizar mejor tus transacciones"
+                    title = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.nav_categories),
+                    description = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.new_category)
                 )
             } else {
                 // Dropdown style selector
@@ -843,7 +843,7 @@ fun EnhancedCategorySelector(
                     onExpandedChange = { expanded = !expanded }
                 ) {
                     OutlinedTextField(
-                        value = selectedCategory?.name ?: "Seleccionar categoría",
+                        value = selectedCategory?.name ?: androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.select_category),
                         onValueChange = { },
                         readOnly = true,
                         trailingIcon = {
@@ -879,7 +879,7 @@ fun EnhancedCategorySelector(
                         modifier = Modifier.background(resolvedMenuContainerColor())
                     ) {
                         categories.forEach { category ->
-                            DropdownMenuItem(
+                                DropdownMenuItem(
                                 text = {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically
@@ -916,7 +916,7 @@ fun EnhancedCategorySelector(
     }
     
     if (showAddCategoryDialog) {
-        AddCategoryDialog(
+                AddCategoryDialog(
             onDismiss = { showAddCategoryDialog = false },
             onAddCategory = { categoryName ->
                 onNewCategoryAdded(categoryName)
@@ -972,18 +972,18 @@ fun AddCategoryDialog(
     
     ThemedAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nueva Categoría") },
+    title = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.new_category_label)) },
         text = {
             OutlinedTextField(
                 value = categoryName,
                 onValueChange = { categoryName = it },
-                label = { Text("Nombre de la categoría") },
-                placeholder = { Text("Ej: Comida, Transporte") },
+                label = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.categories_name)) },
+                placeholder = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.example_category_names)) },
                 singleLine = true
             )
         },
         confirmButton = {
-            Button(
+                Button(
                 onClick = { 
                     if (categoryName.isNotBlank()) {
                         onAddCategory(categoryName.trim())
@@ -992,12 +992,12 @@ fun AddCategoryDialog(
                 enabled = categoryName.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
             ) {
-                Text("Agregar")
+                Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.add))
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) {
-                Text("Cancelar")
+                OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) {
+                Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.cancel))
             }
         }
     )
@@ -1013,13 +1013,13 @@ private fun AddPaymentMethodDialog(
     
     ThemedAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nuevo Método de Pago") },
+        title = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.new_payment_method)) },
         text = {
             OutlinedTextField(
                 value = methodName,
                 onValueChange = { methodName = it },
-                label = { Text("Nombre del método de pago") },
-                placeholder = { Text("Ej: Efectivo, Tarjeta, Transferencia") },
+                label = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.payment_method_name)) },
+                placeholder = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.example_payment_method)) },
                 singleLine = true
             )
         },
@@ -1033,12 +1033,12 @@ private fun AddPaymentMethodDialog(
                 enabled = methodName.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
             ) {
-                Text("Agregar")
+                Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.add))
             }
         },
         dismissButton = {
             OutlinedButton(onClick = onDismiss, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)) {
-                Text("Cancelar")
+                Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.cancel))
             }
         }
     )
@@ -1080,7 +1080,7 @@ fun PaymentMethodCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = "Método de Pago",
+                            text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.new_payment_method),
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1119,7 +1119,7 @@ fun PaymentMethodCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Agregar",
+                                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.add),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -1144,7 +1144,7 @@ fun PaymentMethodCard(
                     
                     if (paymentMethods.isEmpty()) {
                         Text(
-                            text = "No hay métodos de pago configurados",
+                            text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_help_support),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(vertical = 8.dp)
@@ -1193,7 +1193,7 @@ fun PaymentMethodCard(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Agregar método de pago",
+                                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.add),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -1242,7 +1242,7 @@ fun ActionButtons(
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
             ) {
                 Text(
-                    text = "Cancelar",
+                    text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.cancel),
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
@@ -1267,7 +1267,7 @@ fun ActionButtons(
                     Spacer(modifier = Modifier.width(8.dp))
                 }
                 Text(
-                    text = "Guardar",
+                    text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.save),
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
@@ -1341,13 +1341,13 @@ fun ReceiptPhotoCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Foto del Recibo (Opcional)",
+                        text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.receipt_attached),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (photoUri != null) {
                         Text(
-                            text = " - Adjunta",
+                            text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.attach),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -1394,12 +1394,12 @@ fun ReceiptPhotoCard(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Foto adjunta",
+                                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.receipt_attached_label),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Toca para cambiar",
+                                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.tap_thumbnail),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1424,7 +1424,7 @@ fun ReceiptPhotoCard(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Cámara")
+                        Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.camera))
                     }
                     
                     OutlinedButton(
@@ -1439,7 +1439,7 @@ fun ReceiptPhotoCard(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Galería")
+                        Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.gallery))
                     }
                 }
             }
@@ -1450,8 +1450,8 @@ fun ReceiptPhotoCard(
     if (showImageOptions) {
         ThemedAlertDialog(
             onDismissRequest = { showImageOptions = false },
-            title = { Text("Cambiar foto") },
-            text = { Text("¿Cómo quieres cambiar la foto?") },
+            title = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.change_photo)) },
+            text = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.change_photo_question)) },
             confirmButton = {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1462,7 +1462,7 @@ fun ReceiptPhotoCard(
                             cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
                         }
                     ) {
-                        Text("Cámara")
+                        Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.camera))
                     }
                     TextButton(
                         onClick = {
@@ -1470,13 +1470,13 @@ fun ReceiptPhotoCard(
                             galleryLauncher.launch("image/*")
                         }
                     ) {
-                        Text("Galería")
+                        Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.gallery))
                     }
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showImageOptions = false }) {
-                    Text("Cancelar")
+                    Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.cancel))
                 }
             }
         )
@@ -1513,7 +1513,7 @@ fun TransactionSuccessDialog(
             },
             title = {
                 Text(
-                    text = "¡${transactionType} registrado!",
+                    text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_saved_title),
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold
                     ),
@@ -1525,7 +1525,7 @@ fun TransactionSuccessDialog(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Se ha guardado exitosamente:",
+                        text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_saved_message),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
@@ -1548,7 +1548,7 @@ fun TransactionSuccessDialog(
                         containerColor = if (transactionType == "Ingreso") Color(0xFF4CAF50) else Color(0xFFE57373)
                     )
                 ) {
-                    Text("Continuar", color = MaterialTheme.colorScheme.onPrimary)
+                    Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.continue_label), color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
         )

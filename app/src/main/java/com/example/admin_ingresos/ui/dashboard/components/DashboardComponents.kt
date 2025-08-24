@@ -79,7 +79,7 @@ fun BalanceCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Balance Total",
+                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.dashboard_balance),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
             )
@@ -134,7 +134,7 @@ fun BalanceCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Ingresos",
+                            text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.dashboard_income),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -162,7 +162,7 @@ fun BalanceCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Gastos",
+                            text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.dashboard_expenses),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

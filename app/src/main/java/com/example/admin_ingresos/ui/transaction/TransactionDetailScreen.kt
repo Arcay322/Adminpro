@@ -149,16 +149,16 @@ fun TransactionDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Detalle", style = MaterialTheme.typography.titleLarge) },
+                title = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_detail_title), style = MaterialTheme.typography.titleLarge) },
         navigationIcon = {
-            IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.primary) }
+            IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.back), tint = MaterialTheme.colorScheme.primary) }
         },
                 actions = {
                     // Use Lucide icons for edit/delete with requested tints
                     IconButton(onClick = { /* TODO: navegar a editar */ }) {
                         Icon(
                             imageVector = com.example.admin_ingresos.ui.icons.LucideIconMapper.Navigation.edit,
-                            contentDescription = "Editar",
+                            contentDescription = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.edit),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -210,7 +210,7 @@ fun TransactionDetailScreen(
                             Spacer(modifier = Modifier.width(12.dp))
 
                             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Text(categoryName ?: "Sin categoría", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = com.example.admin_ingresos.ui.theme.TextPrimary)
+                                        Text(categoryName ?: androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.profile_empty_placeholder), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = com.example.admin_ingresos.ui.theme.TextPrimary)
 
                                 // Amount and type row
                                 val formatted = com.example.admin_ingresos.data.CurrencyUtils.format(tx.amount, context)
@@ -254,7 +254,7 @@ fun TransactionDetailScreen(
                             }
 
                             // Notes / Description
-                            Text(text = tx.description.ifBlank { "Sin descripción" }, style = MaterialTheme.typography.bodyMedium, maxLines = 6, overflow = TextOverflow.Ellipsis)
+                            Text(text = tx.description.ifBlank { androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.no_description) }, style = MaterialTheme.typography.bodyMedium, maxLines = 6, overflow = TextOverflow.Ellipsis)
 
                             // ID subtle
                             Text("ID: ${tx.id}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -266,7 +266,7 @@ fun TransactionDetailScreen(
                         var showFull by remember { mutableStateOf(false) }
                         CashFlowCard(modifier = Modifier.fillMaxWidth(), containerColor = bgColor.copy(alpha = 0.18f), borderColor = bgColor.copy(alpha = 0.20f)) {
                             Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text("Comprobante adjunto", style = MaterialTheme.typography.titleSmall)
+                                Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.receipt_attached_label), style = MaterialTheme.typography.titleSmall)
                                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                     val painter = rememberAsyncImagePainter(tx.receiptPhotoUri)
                                     Image(
@@ -282,9 +282,9 @@ fun TransactionDetailScreen(
 
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text("Ver foto", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                                        Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.view_photo), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
                                         Spacer(modifier = Modifier.height(6.dp))
-                                        Text("Toca la miniatura para ver en pantalla completa.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.tap_thumbnail), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
                             }
@@ -311,9 +311,9 @@ fun TransactionDetailScreen(
                         CashFlowCard(modifier = Modifier.fillMaxWidth(), containerColor = bgColor.copy(alpha = 0.18f), borderColor = bgColor.copy(alpha = 0.20f)) {
                             Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 val title = when {
-                                    tx.type.equals(com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER, ignoreCase = true) -> "Tu Ahorro en ${categoryName ?: "esta categoría"}"
-                                    tx.type.equals(com.example.admin_ingresos.data.Transaction.TYPE_INCOME, ignoreCase = true) -> "Tu Ingreso en ${categoryName ?: "esta categoría"}"
-                                    else -> "Tu Gasto en ${categoryName ?: "esta categoría"}"
+                                    tx.type.equals(com.example.admin_ingresos.data.Transaction.TYPE_TRANSFER, ignoreCase = true) -> androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.insight_savings_title, categoryName ?: androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.this_category))
+                                    tx.type.equals(com.example.admin_ingresos.data.Transaction.TYPE_INCOME, ignoreCase = true) -> androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.insight_income_title, categoryName ?: androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.this_category))
+                                    else -> androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.insight_expense_title, categoryName ?: androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.this_category))
                                 }
                                 Text(title, style = MaterialTheme.typography.titleSmall)
 
@@ -326,7 +326,7 @@ fun TransactionDetailScreen(
 
                                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                     Column {
-                                        Text("Último mes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.last_month), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         Text(com.example.admin_ingresos.data.CurrencyUtils.format(last, context, maxFractionDigits = 0), style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
                                     }
 
@@ -340,12 +340,12 @@ fun TransactionDetailScreen(
                                                 )
                                                 Text(text = "${if (pctChange > 0) "+" else ""}${"%.0f".format(pctChange)}%", style = MaterialTheme.typography.bodyMedium, color = if (changeIsUp) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
                                             } else {
-                                                Text(text = "Sin comparación", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                Text(text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.no_comparison), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                         }
 
                                         Spacer(modifier = Modifier.height(6.dp))
-                                        Text("Promedio: ${com.example.admin_ingresos.data.CurrencyUtils.format(avg, context, maxFractionDigits = 0)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.average_label, com.example.admin_ingresos.data.CurrencyUtils.format(avg, context, maxFractionDigits = 0)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
 

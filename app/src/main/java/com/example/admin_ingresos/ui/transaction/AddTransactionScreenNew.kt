@@ -270,7 +270,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
         ) {
             Column(Modifier.padding(horizontal = 8.dp, vertical = 12.dp)) {
                 Text(
-                    text = "Tipo de Transacción",
+                    text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_type_title),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 10.dp)
@@ -302,7 +302,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Ingreso",
+                                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_income),
                                 color = if (type == "Ingreso") Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodySmall,
                                 maxLines = 1,
@@ -334,7 +334,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Gasto",
+                                text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_expense),
                                 color = if (type == "Gasto") Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodySmall,
                                 maxLines = 1,
@@ -368,7 +368,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        "Monto",
+                        androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_amount),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -382,7 +382,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                             amount = newValue
                         }
                     },
-                    label = { Text("0.00") },
+                    label = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.placeholder_amount)) },
                     prefix = { Text(prefs.currencySymbol) },
                     isError = amountError != null,
                     supportingText = amountError?.let { { Text(it) } },
@@ -420,7 +420,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        "Descripción",
+                        androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_description),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -429,7 +429,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Ej: Compra de supermercado") },
+                    label = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.example_transaction_description)) },
                     isError = descriptionError != null,
                     supportingText = descriptionError?.let { { Text(it) } },
                     modifier = Modifier.fillMaxWidth(),
@@ -463,8 +463,8 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                             modifier = Modifier.size(22.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "Categoría",
+                Text(
+                    androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_category),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -482,7 +482,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                             onValueChange = {},
                             readOnly = true,
                             label = {
-                                if (selectedCategory == null) Text("Selecciona una categoría")
+                                if (selectedCategory == null) Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.select_category))
                             },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             modifier = Modifier
@@ -601,7 +601,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "Método de pago",
+                            androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.new_payment_method),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -622,7 +622,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                             onClick = { payMenuExpanded = true },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text(selectedPaymentMethodName ?: "Selecciona un método de pago")
+                            Text(selectedPaymentMethodName ?: androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.select_payment_method))
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                     }
@@ -655,13 +655,13 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                     if (showAddPaymentMethodDialog) {
                         ThemedAlertDialog(
                             onDismissRequest = { showAddPaymentMethodDialog = false },
-                            title = { Text("Nuevo método de pago") },
+                            title = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.new_payment_method)) },
                             text = {
                                 Column {
                                     OutlinedTextField(
                                         value = newPaymentMethodName,
                                         onValueChange = { newPaymentMethodName = it },
-                                        label = { Text("Nombre del método") },
+                                        label = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.payment_method_name)) },
                                         isError = newPaymentMethodError != null,
                                         singleLine = true
                                     )
@@ -706,14 +706,14 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                                         contentColor = MaterialTheme.colorScheme.onPrimary
                                     )
                                 ) {
-                                    Text("Crear")
+                                    Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.create))
                                 }
                             },
                             dismissButton = {
                                 OutlinedButton(
                                     onClick = { showAddPaymentMethodDialog = false },
                                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
-                                ) { Text("Cancelar") }
+                                ) { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.cancel)) }
                             }
                         )
                     }
@@ -753,21 +753,21 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
             ) {
                 Column(Modifier.padding(8.dp)) {
                     Text(
-                        "Recibo",
+                        androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.receipt_label),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            "Adjuntar foto o recibo",
+                            androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.attach_photo_text),
                             modifier = Modifier.weight(1f),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         TextButton(onClick = { showPhotoMenu = true }) {
                             Icon(Icons.Default.AddAPhoto, contentDescription = "Adjuntar foto")
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Adjuntar")
+                            Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.attach_label))
                         }
                     }
                     if (receiptPhotoUri != null) {
@@ -785,7 +785,7 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            "Imagen subida",
+                            androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.image_uploaded),
                             color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -796,11 +796,11 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                         onDismissRequest = { showPhotoMenu = false },
                         modifier = Modifier.background(resolvedMenuContainerColor())
                     ) {
-                        DropdownMenuItem(text = { Text("Desde galería") }, onClick = {
+                        DropdownMenuItem(text = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.attach_option_from_gallery)) }, onClick = {
                             galleryLauncher.launch("image/*")
                             showPhotoMenu = false
                         })
-                        DropdownMenuItem(text = { Text("Tomar foto") }, onClick = {
+                        DropdownMenuItem(text = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.take_photo)) }, onClick = {
                             val uri = createImageFile()
                             if (uri != null) {
                                 cameraImageUri = uri
@@ -833,11 +833,11 @@ fun AddTransactionScreenNew(onSave: () -> Unit, onCancel: () -> Unit) {
                             modifier = Modifier.size(48.dp)
                         )
                     },
-                    title = { Text("¡Transacción guardada!") },
-                    text = { Text("La transacción se agregó correctamente.") },
+                    title = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_saved_title)) },
+                    text = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.transaction_saved_message)) },
                     confirmButton = {
                         Button(onClick = { showSuccessMessage = false }) {
-                            Text("Aceptar")
+                            Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.accept))
                         }
                     }
                 )

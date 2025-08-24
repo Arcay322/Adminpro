@@ -73,7 +73,8 @@ fun DashboardScreen(
     // State to show the add-savings-goal dialog from the Quick Actions
     var showAddGoalTop by remember { mutableStateOf(false) }
 
-    var userName by remember { mutableStateOf("Usuario") }
+    val defaultUserName = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.user_default_name)
+    var userName by remember { mutableStateOf(defaultUserName) }
 
     var showNotificationsDialog by remember { mutableStateOf(false) }
 
@@ -111,16 +112,21 @@ fun DashboardScreen(
     if (showNotificationsDialog) {
         AlertDialog(
             onDismissRequest = { showNotificationsDialog = false },
-            title = { Text("Notificaciones") },
-            text = { Text("No hay notificaciones nuevas.") },
+            title = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.notifications_title)) },
+            text = { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.notifications_empty)) },
             confirmButton = {
-                TextButton(onClick = { showNotificationsDialog = false }) { Text("Cerrar") }
+                TextButton(onClick = { showNotificationsDialog = false }) { Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.close_label)) }
             }
         )
     }
 
     // Profile now has its own screen (navigates to "profile").
     // showProfileDialog removed in favor of navigation.
+
+    // Localized greetings
+    val greetingMorning = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.greeting_morning)
+    val greetingAfternoon = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.greeting_afternoon)
+    val greetingEvening = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.greeting_evening)
 
     LazyColumn(
         modifier = Modifier
@@ -157,18 +163,18 @@ fun DashboardScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Error,
-                        contentDescription = "Error",
+                        contentDescription = null,
                         tint = ExpenseRed,
                         modifier = Modifier.size(48.dp)
                     )
                     Text(
-                        text = "Error al cargar datos",
+                        text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.error_loading),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = TextPrimary
                     )
                     Text(
-                        text = uiState.error ?: "Error desconocido",
+                        text = uiState.error ?: androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.error_unknown),
                         fontSize = 14.sp,
                         color = TextSecondary,
                         textAlign = TextAlign.Center
@@ -179,7 +185,7 @@ fun DashboardScreen(
                             containerColor = AccentVibrantStart
                         )
                     ) {
-                        Text("Reintentar")
+                        Text(androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.retry))
                     }
                 }
             }
@@ -260,7 +266,7 @@ fun DashboardScreen(
                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
                                     Column(horizontalAlignment = Alignment.Start) {
                                         Text(
-                                            text = "Flujo Semanal",
+                                            text = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.weekly_flow_title),
                                             fontSize = 18.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = TextPrimary
@@ -269,9 +275,9 @@ fun DashboardScreen(
                                         Spacer(modifier = Modifier.height(8.dp))
 
                                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                            LegendItem(color = IncomeGreen, label = "Ingreso")
-                                            LegendItem(color = ExpenseRed, label = "Gasto")
-                                            LegendItem(color = Color(0xFF42A5F5), label = "Ahorro")
+                                            LegendItem(color = IncomeGreen, label = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.legend_income))
+                                            LegendItem(color = ExpenseRed, label = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.legend_expense))
+                                            LegendItem(color = Color(0xFF42A5F5), label = androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.legend_saving))
                                         }
                                     }
                                 }
@@ -387,9 +393,9 @@ private fun DashboardHeader(
 ) {
     val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
     val greeting = when (currentHour) {
-        in 5..11 -> "Buenos días"
-        in 12..17 -> "Buenas tardes"
-        else -> "Buenas noches"
+        in 5..11 -> androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.greeting_morning)
+        in 12..17 -> androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.greeting_afternoon)
+        else -> androidx.compose.ui.res.stringResource(id = com.example.admin_ingresos.R.string.greeting_evening)
     }
 
     GlassCard(
@@ -416,7 +422,7 @@ private fun DashboardHeader(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = SimpleDateFormat("EEEE, d 'de' MMMM", Locale("es", "ES")).format(Date()),
+                    text = java.text.DateFormat.getDateInstance(java.text.DateFormat.LONG, Locale.getDefault()).format(Date()),
                     fontSize = 12.sp,
                     color = TextSecondary
                 )
