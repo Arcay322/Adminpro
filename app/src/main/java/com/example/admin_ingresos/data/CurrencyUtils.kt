@@ -11,6 +11,9 @@ object CurrencyUtils {
         "USD" -> Locale.US
         "EUR" -> Locale("es", "ES")
         "GBP" -> Locale("en", "GB")
+    "CLP" -> Locale("es", "CL")
+    "COP" -> Locale("es", "CO")
+    "ARS" -> Locale("es", "AR")
         "JPY" -> Locale("ja", "JP")
         "INR" -> Locale("en", "IN")
         "BRL" -> Locale("pt", "BR")

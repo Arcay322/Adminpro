@@ -234,7 +234,7 @@ fun ProfileScreen(
                     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Text(text = "Moneda: $editCurrency", color = MaterialTheme.colorScheme.onBackground)
-                            DropdownMenuDemo(options = listOf("PEN", "USD", "EUR"), selected = editCurrency, onSelected = { editCurrency = it })
+                            DropdownMenuDemo(options = listOf("PEN", "USD", "EUR", "GBP", "MXN", "CLP", "COP", "ARS", "BRL", "JPY", "CNY", "CAD", "AUD", "INR", "CHF"), selected = editCurrency, onSelected = { editCurrency = it })
                         }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Text(text = "Idioma: $editLanguage", color = MaterialTheme.colorScheme.onBackground)
